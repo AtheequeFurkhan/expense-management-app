@@ -1,4 +1,4 @@
-// Copyright (c) 2025 WSO2 LLC. (https://www.wso2.com).
+// Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
@@ -13,11 +13,12 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { Box } from "@mui/material";
-import { useState, useEffect } from "react";
 import { useTheme } from "@mui/material/styles";
 import MarkdownPreview from "@uiw/react-markdown-preview";
+
+import { useEffect, useState } from "react";
+
 import { fetchAppConfig } from "@slices/configSlice/config";
 import { useAppDispatch, useAppSelector } from "@slices/store";
 
@@ -40,7 +41,8 @@ function UserGuide() {
       .catch((error) => console.error("Error fetching README.md file:", error));
   }, [dispatch]);
 
-  const supportTeamEmails = useAppSelector((state) => state.appConfig.config?.supportTeamEmails) || [];
+  const supportTeamEmails =
+    useAppSelector((state) => state.appConfig.config?.supportTeamEmails) || [];
   const supportTeams = supportTeamEmails
     .map(({ team, email }) => `- For **${team.toLowerCase()}**, email: [${email}](mailto:${email})`)
     .join("\n");
