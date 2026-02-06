@@ -1,4 +1,4 @@
-// Copyright (c) 2025 WSO2 LLC. (https://www.wso2.com).
+// Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import CloseIcon from "@mui/icons-material/Close";
 import LoadingButton from "@mui/lab/LoadingButton";
 import {
@@ -57,7 +56,7 @@ const AddCollectionModal: React.FC<{ toggleClose: () => void }> = ({ toggleClose
       dispatch(resetSubmitState()); // Resetting the submit state
       toggleClose();
     }
-}, [collection.submitState, dispatch, toggleClose]);
+  }, [collection.submitState, dispatch, toggleClose]);
   const formik = useFormik({
     initialValues: {
       collectionName: "",

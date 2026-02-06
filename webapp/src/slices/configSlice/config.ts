@@ -1,4 +1,4 @@
-// Copyright (c) 2025 WSO2 LLC. (https://www.wso2.com).
+// Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
 // Version 2.0 (the "License"); you may not use this file except
@@ -13,16 +13,14 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios, { HttpStatusCode } from "axios";
 
+import { State } from "@/types/types";
 import { AppConfig } from "@config/config";
 import { SnackMessage } from "@config/constant";
 import { enqueueSnackbarMessage } from "@slices/commonSlice/common";
 import { APIService } from "@utils/apiService";
-
-import { State } from "@/types/types";
 
 interface SupportTeamEmail {
   team: string;
@@ -51,9 +49,7 @@ export const fetchAppConfig = createAsyncThunk(
   "appConfig/fetchAppConfig",
   async (_, { dispatch, rejectWithValue }) => {
     try {
-      const response = await APIService.getInstance().get(
-        AppConfig.serviceUrls.appConfig,
-      );
+      const response = await APIService.getInstance().get(AppConfig.serviceUrls.appConfig);
       return response.data as AppConfigInfo;
     } catch (error) {
       if (axios.isCancel(error)) {
@@ -99,8 +95,7 @@ const AppConfigSlice = createSlice({
       .addCase(fetchAppConfig.rejected, (state, action) => {
         state.state = State.failed;
         state.stateMessage = "Failed to fetch application configurations.";
-        state.errorMessage =
-          (action.payload as string) ?? action.error?.message ?? null;
+        state.errorMessage = (action.payload as string) ?? action.error?.message ?? null;
       });
   },
 });
