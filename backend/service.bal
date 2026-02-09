@@ -13,9 +13,9 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import sample_app.authorization;
-import sample_app.database;
-import sample_app.entity;
+import expense_management.authorization;
+import expense_management.database;
+import expense_management.entity;
 
 import ballerina/cache;
 import ballerina/http;
@@ -30,8 +30,8 @@ final cache:Cache cache = new ({
 });
 
 @display {
-    label: "Sample Application",
-    id: "domain/sample-application"
+    label: "Expense Management App",
+    id: "domain/expense-management-app"
 }
 
 service class ErrorInterceptor {
