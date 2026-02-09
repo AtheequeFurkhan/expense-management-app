@@ -5,7 +5,7 @@
 
 [ballerina]
 dependencies-toml-version = "2"
-distribution-version = "2201.10.4"
+distribution-version = "2201.13.1"
 
 [[package]]
 org = "ballerina"
@@ -431,7 +431,7 @@ modules = [
 
 [[package]]
 org = "wso2"
-name = "sample_app"
+name = "expense_management"
 version = "1.0.0"
 dependencies = [
 	{org = "ballerina", name = "cache"},
@@ -447,9 +447,9 @@ dependencies = [
 	{org = "ballerinax", name = "mysql.driver"}
 ]
 modules = [
-	{org = "wso2", packageName = "sample_app", moduleName = "sample_app"},
-	{org = "wso2", packageName = "sample_app", moduleName = "sample_app.authorization"},
-	{org = "wso2", packageName = "sample_app", moduleName = "sample_app.database"},
-	{org = "wso2", packageName = "sample_app", moduleName = "sample_app.entity"}
+	{org = "wso2", packageName = "expense_management", moduleName = "expense_management"},
+	{org = "wso2", packageName = "expense_management", moduleName = "expense_management.authorization"},
+	{org = "wso2", packageName = "expense_management", moduleName = "expense_management.database"},
+	{org = "wso2", packageName = "expense_management", moduleName = "expense_management.entity"}
 ]
 

@@ -1,30 +1,30 @@
-[sample_app.authorization.authorizedRoles]
+[expense_management.authorization.authorizedRoles]
 employeeRole = 
 headPeopleOperationsRole =
 
-[sample_app.appConfig]
+[expense_management.appConfig]
 sampleAppConfig = 
 
-[sample_app.database]
+[expense_management.database]
 connectTimeout = 
-[sample_app.database.databaseConfig]
+[expense_management.database.databaseConfig]
 database = 
 host = 
 password = 
 port = 
 user = 
-[sample_app.database.databaseConfig.connectionPool]
+[expense_management.database.databaseConfig.connectionPool]
 maxConnectionLifeTime = 
 maxOpenConnections = 
 minIdleConnections = 
 
-[sample_app.entity] 
+[expense_management.entity] 
 hrEntityBaseUrl = 
-[sample_app.entity.oauthConfig]
+[expense_management.entity.oauthConfig]
 clientId = 
 clientSecret = 
 tokenUrl = 
-[sample_app.entity.retryConfig]
+[expense_management.entity.retryConfig]
 backOffFactor = 
 count = 
 interval = 
