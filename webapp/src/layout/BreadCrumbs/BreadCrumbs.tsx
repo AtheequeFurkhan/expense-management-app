@@ -13,108 +13,50 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Tooltip, Typography, useTheme } from "@mui/material";
-import Breadcrumbs from "@mui/material/Breadcrumbs";
-import { Link, useLocation } from "react-router-dom";
+import { Breadcrumbs, Link, Typography, useTheme } from "@wso2/oxygen-ui";
+import { ChevronRight, Home } from "@wso2/oxygen-ui-icons-react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-export default function BasicBreadcrumbs() {
-  const MAX_LENGTH = 5;
-
+function BreadCrumbs() {
   const location = useLocation();
+  const navigate = useNavigate();
   const theme = useTheme();
-
-  const { pathname } = location;
-  const pathnames = pathname === "/" ? [] : pathname.split("/");
-
-  const renderBreadCrumbs = () => {
-    let routeTo = "";
-
-    return (
-      <Breadcrumbs
-        separator="›"
-        aria-label="breadcrumb"
-        sx={{
-          "& .MuiBreadcrumbs-separator": {
-            mx: "8px",
-          },
-        }}
-      >
-        {pathnames.map((path, index) => {
-          const isLong = path.length > MAX_LENGTH;
-          const isLast = pathnames.length - 1 === index;
-          routeTo += `${path}/`;
-
-          const label =
-            !isLast && isLong ? (
-              <Typography
-                key={`${path}-short`}
-                variant="caption"
-                sx={{ color: theme.palette.customText.primary.p3.active }}
-              >
-                {path.slice(0, 4)}...
-              </Typography>
-            ) : (
-              <Typography
-                key={`${path}-full`}
-                variant="caption"
-                sx={{ color: theme.palette.customText.primary.p3.active }}
-              >
-                {path}
-              </Typography>
-            );
-
-          return isLong && !isLast ? (
-            <Tooltip key={path} title={path} placement="bottom">
-              <Box
-                component={Link}
-                to={routeTo}
-                sx={{
-                  textDecoration: "none",
-                  padding: theme.spacing(0.5),
-                  borderRadius: "4px",
-                  transition: "all 0.2s",
-                  display: "flex",
-                  alignItems: "center",
-                  "&:hover": {
-                    color: theme.palette.customText.primary.p2.active,
-                  },
-                }}
-              >
-                {label}
-              </Box>
-            </Tooltip>
-          ) : (
-            <Box
-              component={Link}
-              to={routeTo}
-              key={index}
-              sx={{
-                textDecoration: "none",
-                padding: theme.spacing(0.5),
-                borderRadius: "4px",
-                transition: "all 0.2s",
-                display: "flex",
-                alignItems: "center",
-                "&:hover": {
-                  color: theme.palette.customText.primary.p2.active,
-                },
-              }}
-            >
-              {label}
-            </Box>
-          );
-        })}
-      </Breadcrumbs>
-    );
-  };
+  const pathnames = location.pathname.split("/").filter((x) => x);
 
   return (
-    <Box
-      sx={{
-        ml: -0.5,
-      }}
-    >
-      {renderBreadCrumbs()}
-    </Box>
+    <Breadcrumbs separator={<ChevronRight size={16} />} aria-label="breadcrumb" sx={{ mb: 2 }}>
+      <Link
+        underline="hover"
+        color="inherit"
+        onClick={() => navigate("/")}
+        sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
+      >
+        <Home size={18} style={{ marginRight: theme.spacing(0.5) }} />
+        Home
+      </Link>
+      {pathnames.map((value, index) => {
+        const to = `/${pathnames.slice(0, index + 1).join("/")}`;
+        const isLast = index === pathnames.length - 1;
+        const label = value.charAt(0).toUpperCase() + value.slice(1).replace(/-/g, " ");
+
+        return isLast ? (
+          <Typography key={to} color="text.primary">
+            {label}
+          </Typography>
+        ) : (
+          <Link
+            key={to}
+            underline="hover"
+            color="inherit"
+            onClick={() => navigate(to)}
+            sx={{ cursor: "pointer" }}
+          >
+            {label}
+          </Link>
+        );
+      })}
+    </Breadcrumbs>
   );
 }
+
+export default BreadCrumbs;

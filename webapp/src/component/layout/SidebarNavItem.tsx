@@ -13,121 +13,86 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, useTheme } from "@mui/material";
-import Tooltip from "@mui/material/Tooltip";
-import { Link } from "react-router-dom";
+import {
+  Collapse,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  useTheme,
+} from "@wso2/oxygen-ui";
+import { ChevronDown, ChevronUp } from "@wso2/oxygen-ui-icons-react";
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import { RouteDetail } from "@/types/types";
+import SidebarSubMenu from "@component/layout/SidebarSubMenu";
 
-import LinkItem from "./LinkItem";
-import SidebarSubMenu from "./SidebarSubMenu";
-
-function SidebarNavItem({
-  route,
-  isActive,
-  open,
-  onClick,
-}: {
-  route: RouteDetail;
-  isActive: boolean;
+interface SidebarNavItemProps {
+  item: {
+    label: string;
+    path?: string;
+    icon?: React.ReactNode;
+    children?: Array<{
+      label: string;
+      path: string;
+      icon?: React.ReactNode;
+    }>;
+  };
   open: boolean;
-  onClick: () => void;
-}) {
+}
+
+function SidebarNavItem({ item, open }: SidebarNavItemProps) {
   const theme = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [expanded, setExpanded] = useState(false);
+  const hasChildren = item.children && item.children.length > 0;
+  const isActive = item.path ? location.pathname === item.path : false;
+
+  const handleClick = () => {
+    if (hasChildren) {
+      setExpanded(!expanded);
+    } else if (item.path) {
+      navigate(item.path);
+    }
+  };
 
   return (
-    <Box
-      sx={{
-        position: "relative",
-        transition: "box-shadow 0.2s",
-        display: "flex",
-        flexDirection: "column",
-        gap: 1,
-        width: "100%",
-      }}
-    >
-      <Tooltip
-        title={!open ? route.text : ""}
-        placement="right"
-        arrow
-        disableHoverListener={open}
-        slotProps={{
-          popper: { className: "z-[9999]" },
-          tooltip: {
-            sx: {
-              backgroundColor: theme.palette.neutral[1700],
-              color: theme.palette.neutral.white,
-              padding: theme.spacing(0.75, 1.5),
-              borderRadius: "4px",
-              fontSize: "12px",
-              boxShadow: theme.shadows[8],
-            },
-          },
-          arrow: {
-            sx: {
-              color: theme.palette.neutral[1700],
-            },
+    <>
+      <ListItemButton
+        onClick={handleClick}
+        selected={isActive}
+        sx={{
+          minHeight: 48,
+          justifyContent: open ? "initial" : "center",
+          px: 2.5,
+          "&.Mui-selected": {
+            backgroundColor: theme.palette.action.selected,
           },
         }}
       >
-        {route.element ? (
-          <Link
-            to={route.path}
-            style={{ width: "100%", display: "block", textDecoration: "none" }}
-            onClick={onClick}
-          >
-            <LinkItem
-              label={route.text}
-              icon={route.icon}
-              open={open}
-              isActive={isActive}
-              hasChildren={!!(route.children && route.children.length > 0)}
-              route={route}
-            />
-          </Link>
-        ) : (
-          <Box
-            component="button"
-            sx={{
-              width: "100%",
-              cursor: "pointer",
-              border: "none",
-              background: "none",
-              padding: 0,
-            }}
-            onClick={onClick}
-          >
-            <LinkItem
-              label={route.text}
-              icon={route.icon}
-              open={open}
-              isActive={isActive}
-              hasChildren={!!(route.children && route.children.length > 0)}
-              route={route}
-            />
-          </Box>
-        )}
-      </Tooltip>
-
-      {/* Render expanded children, outside the Tooltip */}
-      {route && route.children?.length && isActive && (
-        <Box
-          key="nested"
+        <ListItemIcon
           sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: theme.spacing(1.5),
-            alignItems: "center",
+            minWidth: 0,
+            mr: open ? 2 : "auto",
             justifyContent: "center",
-            marginLeft: open ? theme.spacing(2.5) : 0,
-            borderLeft: open ? `1px solid ${theme.palette.neutral["1000"]}` : "none",
-            paddingX: "8px",
           }}
         >
-          <SidebarSubMenu parentRoute={route} open={open} />
-        </Box>
+          {item.icon}
+        </ListItemIcon>
+        <ListItemText primary={item.label} sx={{ opacity: open ? 1 : 0 }} />
+        {hasChildren && open && (expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />)}
+      </ListItemButton>
+      {hasChildren && (
+        <Collapse in={expanded} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {item.children?.map((child) => (
+              <SidebarSubMenu key={child.label} item={child} open={open} />
+            ))}
+          </List>
+        </Collapse>
       )}
-    </Box>
+    </>
   );
 }
 

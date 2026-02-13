@@ -13,7 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box } from "@mui/material";
+import { Box, useTheme } from "@wso2/oxygen-ui";
 import { useTheme } from "@mui/material/styles";
 import MarkdownPreview from "@uiw/react-markdown-preview";
 

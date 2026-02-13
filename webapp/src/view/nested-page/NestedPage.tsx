@@ -13,11 +13,16 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import { Box, Typography } from "@wso2/oxygen-ui";
 
-export default function NestedPage() {
+function NestedPage() {
   return (
-    <div>
-      <div>Nested page</div>
-    </div>
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h5" gutterBottom>
+        Nested Page
+      </Typography>
+    </Box>
   );
 }
+
+export default NestedPage;

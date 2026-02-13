@@ -13,11 +13,19 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import { Box, Typography } from "@wso2/oxygen-ui";
 
-export default function Home() {
+function Home() {
   return (
-    <div>
-      <div>Home</div>
-    </div>
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h4" fontWeight="bold" gutterBottom>
+        Home
+      </Typography>
+      <Typography variant="body1" color="text.secondary">
+        Welcome to the Expense Management App.
+      </Typography>
+    </Box>
   );
 }
+
+export default Home;

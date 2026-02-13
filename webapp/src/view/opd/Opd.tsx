@@ -1,3 +1,4 @@
+// filepath: /Users/atheeque/Desktop/expense-management-app/webapp/src/view/opd/Opd.tsx
 // Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
@@ -13,30 +14,16 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Card, CardContent, Typography } from "@wso2/oxygen-ui";
+import { Box } from "@wso2/oxygen-ui";
 
-interface CommonCardProps {
-  title: string;
-  description?: string;
-  children?: React.ReactNode;
-}
+import OpdPage from "@view/opd/panels/opdPage";
 
-function CommonCard({ title, description, children }: CommonCardProps) {
+function Opd() {
   return (
-    <Card>
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          {title}
-        </Typography>
-        {description && (
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            {description}
-          </Typography>
-        )}
-        {children}
-      </CardContent>
-    </Card>
+    <Box>
+      <OpdPage />
+    </Box>
   );
 }
 
-export default CommonCard;
+export default Opd;

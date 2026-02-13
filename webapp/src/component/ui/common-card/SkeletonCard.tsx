@@ -13,91 +13,23 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import CallIcon from "@mui/icons-material/Call";
-import EmailIcon from "@mui/icons-material/Email";
-import LocationOnIcon from "@mui/icons-material/LocationOn";
-import { Avatar, Grid, Paper, Skeleton, Stack, Typography } from "@mui/material";
+import { Card, CardContent, Skeleton, Box } from "@wso2/oxygen-ui";
 
-const SkeletonCard = () => {
+function SkeletonCard() {
   return (
-    <Paper
-      variant="outlined"
-      sx={{
-        borderRadius: 3,
-        p: 2,
-        mb: 2,
-        borderLeft: 8,
-        borderLeftColor: "divider",
-      }}
-    >
-      <Stack flexDirection={"column"} sx={{ width: "100%" }}>
-        <Stack flexDirection={"row"} sx={{ m: 0, width: "100%", alignItems: "center" }}>
-          <Stack flexDirection={"row"} sx={{ alignItems: "center" }}>
-            <Skeleton variant="circular">
-              <Avatar sx={{ width: 70, height: 70 }} />
-            </Skeleton>
-            <Stack sx={{ ml: 3, alignItems: "flex-start" }} gap={0.3}>
-              <Typography variant="h5" sx={{ fontWeight: 650 }}>
-                <Skeleton variant="text" width={250} />
-              </Typography>
-
-              <Stack flexDirection={"row"} gap={0.5}>
-                <EmailIcon
-                  sx={{
-                    color: "primary.dark",
-                    fontSize: 13,
-                  }}
-                />
-                <Typography variant="body2" color="primary.dark">
-                  <Skeleton variant="text" width={100} />
-                </Typography>
-              </Stack>
-              <Stack flexDirection={"row"} gap={0.5}>
-                <CallIcon
-                  sx={{
-                    color: "secondary.dark",
-                    fontSize: 13,
-                  }}
-                />
-                <Typography variant="body2" color="secondary.dark">
-                  <Skeleton variant="text" width={100} />
-                </Typography>
-              </Stack>
-              <Stack flexDirection={"row"} gap={0.5}>
-                <LocationOnIcon
-                  sx={{
-                    color: "secondary.dark",
-                    fontSize: 13,
-                  }}
-                />
-                <Typography variant="body2" color="secondary.dark">
-                  <Skeleton variant="text" width={100} />
-                </Typography>
-              </Stack>
-            </Stack>
-          </Stack>
-          <Stack sx={{ ml: "auto" }}>
-            <Stack
-              flexDirection={"row"}
-              gap={1.2}
-              sx={{ ml: "auto", mb: 1.5 }}
-              alignItems={"center"}
-            >
-              <Skeleton variant="circular" />
-              <Skeleton variant="circular" />
-              <Skeleton variant="circular" />
-            </Stack>
-            <Grid container flexDirection={"row"} sx={{ width: "auto", ml: "auto", mr: 1 }} gap={2}>
-              <Skeleton variant="rectangular" sx={{ width: 140, height: 50, borderRadius: 3 }} />
-              <Skeleton variant="rectangular" sx={{ width: 140, height: 50, borderRadius: 3 }} />
-              <Skeleton variant="rectangular" sx={{ width: 140, height: 50, borderRadius: 3 }} />
-              <Skeleton variant="rectangular" sx={{ width: 140, height: 50, borderRadius: 3 }} />
-            </Grid>
-          </Stack>
-        </Stack>
-      </Stack>
-    </Paper>
+    <Card>
+      <CardContent>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+          <Skeleton variant="circular" width={40} height={40} sx={{ mr: 2 }} />
+          <Box sx={{ flex: 1 }}>
+            <Skeleton variant="text" width="60%" />
+            <Skeleton variant="text" width="40%" />
+          </Box>
+        </Box>
+        <Skeleton variant="rectangular" height={100} />
+      </CardContent>
+    </Card>
   );
-};
+}
 
 export default SkeletonCard;

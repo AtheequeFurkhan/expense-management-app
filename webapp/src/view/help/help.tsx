@@ -13,23 +13,16 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import MenuBookIcon from "@mui/icons-material/MenuBook";
+import { Box } from "@wso2/oxygen-ui";
 
-import TabsPage from "@root/src/layout/pages/TabsPage";
 import UserGuide from "@view/help/panel/userGuide";
 
-export default function Help() {
+function Help() {
   return (
-    <TabsPage
-      title="Help"
-      tabsPage={[
-        {
-          tabTitle: "User Guide",
-          tabPath: "user-guide",
-          icon: <MenuBookIcon />,
-          page: <UserGuide />,
-        },
-      ]}
-    />
+    <Box>
+      <UserGuide />
+    </Box>
   );
 }
+
+export default Help;

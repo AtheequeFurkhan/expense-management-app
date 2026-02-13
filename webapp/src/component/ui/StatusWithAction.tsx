@@ -13,69 +13,50 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Button, Container } from "@mui/material";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
+import { Box, Button, Typography } from "@wso2/oxygen-ui";
 
-interface PreLoaderProps {
-  message?: string | null;
-  hideLogo?: boolean;
-  action: () => void;
+interface StatusWithActionProps {
+  title: string;
+  description?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  icon?: React.ReactNode;
 }
 
-const StatusWithAction = (props: PreLoaderProps) => {
+function StatusWithAction({
+  title,
+  description,
+  actionLabel,
+  onAction,
+  icon,
+}: StatusWithActionProps) {
   return (
     <Box
       sx={{
-        background: "#E7EBF0",
         display: "flex",
-        pt: "20vh",
         flexDirection: "column",
-        height: "100vh",
+        alignItems: "center",
+        justifyContent: "center",
+        py: 6,
+        textAlign: "center",
       }}
     >
-      <Container maxWidth="md">
-        <Box>
-          <Grid
-            container
-            direction="column"
-            justifyContent="center"
-            alignItems="center"
-            spacing={2}
-          >
-            <Grid size={{ xs: 12 }}>
-              {!props.hideLogo && (
-                <img
-                  alt="logo"
-                  width="150"
-                  height="auto"
-                  src="https://wso2.cachefly.net/wso2/sites/images/brand/downloads/wso2-logo.png"
-                />
-              )}
-            </Grid>
-            <Grid size={{ xs: 12 }}></Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Typography variant="h5">{props.message}</Typography>
-            </Grid>
-            <Grid size={{ xs: 12 }}></Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <Button
-                size="large"
-                variant="contained"
-                style={{ color: "#fff" }}
-                color="success"
-                onClick={() => props.action()}
-              >
-                SignIn
-              </Button>
-            </Grid>
-          </Grid>
-        </Box>
-      </Container>
+      {icon && <Box sx={{ mb: 2 }}>{icon}</Box>}
+      <Typography variant="h6" gutterBottom>
+        {title}
+      </Typography>
+      {description && (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          {description}
+        </Typography>
+      )}
+      {actionLabel && onAction && (
+        <Button variant="contained" onClick={onAction}>
+          {actionLabel}
+        </Button>
+      )}
     </Box>
   );
-};
+}
 
 export default StatusWithAction;

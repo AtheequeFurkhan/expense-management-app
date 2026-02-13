@@ -13,8 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Divider, Stack, Tooltip, Typography, useTheme } from "@mui/material";
-import { ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
+import { Box, Divider, Stack, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
+import { ChevronLeft, ChevronRight, Moon, Sun } from "@wso2/oxygen-ui-icons-react";
 import { matchPath, useLocation } from "react-router-dom";
 
 import { useMemo, useState } from "react";

@@ -13,84 +13,27 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Typography, useTheme } from "@mui/material";
-import { ChevronDown as ChevronDownIcon } from "lucide-react";
-import { ChevronUp as ChevronUpIcon } from "lucide-react";
+import { Link, Typography } from "@wso2/oxygen-ui";
+import { useNavigate } from "react-router-dom";
 
-import React from "react";
-
-import { RouteDetail } from "@root/src/types/types";
-
-interface ListItemLinkProps {
-  icon?: React.ReactElement;
+interface LinkItemProps {
   label: string;
-  open: boolean;
-  isActive: boolean;
-  hasChildren: boolean;
-  route?: RouteDetail;
+  path: string;
 }
 
-const LinkItem = (props: ListItemLinkProps) => {
-  const { icon, label, open, isActive, hasChildren } = props;
-  const theme = useTheme();
+function LinkItem({ label, path }: LinkItemProps) {
+  const navigate = useNavigate();
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 1,
-        padding: 1,
-        borderRadius: "8px",
-        justifyContent: "space-between",
-        transition: "all 0.2s",
-        backgroundColor: isActive ? theme.palette.customNavigation.clickedBg : "transparent",
-        "&:hover": {
-          ...(!isActive && {
-            backgroundColor: theme.palette.customNavigation.hoverBg,
-          }),
-        },
-        color: isActive
-          ? theme.palette.customNavigation.textClicked
-          : theme.palette.customNavigation.text,
-      }}
+    <Link
+      underline="hover"
+      color="inherit"
+      onClick={() => navigate(path)}
+      sx={{ cursor: "pointer" }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: theme.spacing(1),
-          justifyContent: "flex-start",
-        }}
-      >
-        {icon && (
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              "& svg": { width: "20px", height: "20px" },
-            }}
-          >
-            {icon}
-          </Box>
-        )}
-        {open && (
-          <Typography
-            sx={{
-              fontSize: "14px",
-              fontWeight: 500,
-              lineHeight: "150%",
-              letterSpacing: "-0.03em",
-            }}
-          >
-            {label}
-          </Typography>
-        )}
-      </Box>
-      {hasChildren &&
-        open &&
-        (isActive ? <ChevronUpIcon size={18} /> : <ChevronDownIcon size={18} />)}
-    </Box>
+      <Typography variant="body2">{label}</Typography>
+    </Link>
   );
-};
+}
+
 export default LinkItem;

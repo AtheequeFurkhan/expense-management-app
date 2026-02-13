@@ -13,119 +13,45 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import LoadingButton from "@mui/lab/LoadingButton";
-import { Box, Card, CardContent, Container, Divider, Stack } from "@mui/material";
-import Grid from "@mui/material/Grid";
-import Typography from "@mui/material/Typography";
+import { Box, Button, Card, CardContent, Typography, useTheme } from "@wso2/oxygen-ui";
+import { LogIn } from "@wso2/oxygen-ui-icons-react";
+import { useAuthContext } from "@asgardeo/auth-react";
 
-import { APP_NAME } from "@root/src/config/config";
-import { APP_DESC } from "@root/src/config/constant";
-import { useAppAuthContext } from "@root/src/context/AuthContext";
-import BackgroundImage from "@src/assets/images/app-login-background.png";
-import ProductLogos from "@src/assets/images/app-login-logos.png";
-import logo from "@src/assets/images/wso2-logo-black.png";
-
-const LoginScreen = () => {
-  const { appSignIn, appSignOut } = useAppAuthContext();
+function LoginScreen() {
+  const theme = useTheme();
+  const { signIn } = useAuthContext();
 
   return (
     <Box
       sx={{
         display: "flex",
-        flexDirection: "column",
-        width: "100vw",
-        height: "100vh",
         justifyContent: "center",
-        backgroundImage: `url(${BackgroundImage})`,
-        backgroundRepeat: "no-repeat",
-        backgroundPosition: "center",
+        alignItems: "center",
+        minHeight: "100vh",
+        backgroundColor: theme.palette.background.default,
       }}
     >
-      <Container fixed maxWidth="xs">
-        <Card
-          elevation={24}
-          sx={{
-            borderRadius: 3,
-            pt: 3,
-            mx: 1,
-            backgroundColor: "white",
-          }}
-        >
-          <CardContent>
-            <Box
-              sx={{
-                px: 1,
-                backgroundColor: "white",
-              }}
-            >
-              <Grid
-                container
-                direction="column"
-                justifyContent="center"
-                alignItems="center"
-                spacing={2}
-                p={1}
-              >
-                <Grid size={{ xs: 12 }}>
-                  <img alt="logo" width="130" height="auto" src={logo}></img>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <Typography
-                    align="center"
-                    sx={{ fontWeight: "bold" }}
-                    variant="h5"
-                    color={"black"}
-                  >
-                    {APP_NAME}
-                  </Typography>
-                </Grid>
-                <Grid size={{ xs: 12 }} sx={{ pb: 2 }}>
-                  <Typography
-                    align="center"
-                    sx={{ fontSize: "1em" }}
-                    color={"black"}
-                    fontWeight={"400"}
-                  >
-                    {APP_DESC}
-                  </Typography>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <LoadingButton
-                    variant="contained"
-                    color="primary"
-                    sx={{ fontWeight: "bold" }}
-                    onClick={() => {
-                      appSignOut();
-
-                      appSignIn();
-                    }}
-                  >
-                    LOG IN
-                  </LoadingButton>
-                </Grid>
-                <Grid size={{ xs: 12 }} mt={6}>
-                  <Stack direction="column" spacing={2}>
-                    <Typography align="center" color={"black"}>
-                      Powered By
-                    </Typography>
-                    <Stack direction="row" spacing={2}>
-                      <img height={22} alt="Product logos" src={ProductLogos} />
-                    </Stack>
-                  </Stack>
-                </Grid>
-                <Grid size={{ xs: 12 }} mt={3}>
-                  <Typography align="center" color={"grey"} sx={{ fontSize: "0.8em" }}>
-                    {/* {`© ${format(new Date(), "yyyy")} WSO2 LLC`} */}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Box>
-          </CardContent>
-          <Divider />
-        </Card>
-      </Container>
+      <Card sx={{ maxWidth: 400, width: "100%", textAlign: "center" }}>
+        <CardContent sx={{ p: 4 }}>
+          <Typography variant="h4" gutterBottom fontWeight="bold">
+            Welcome
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            Sign in to continue
+          </Typography>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<LogIn size={20} />}
+            onClick={() => signIn()}
+            fullWidth
+          >
+            Sign In
+          </Button>
+        </CardContent>
+      </Card>
     </Box>
   );
-};
+}
 
 export default LoginScreen;
