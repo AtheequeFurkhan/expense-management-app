@@ -1,3 +1,4 @@
+// filepath: /Users/atheeque/Desktop/expense-management-app/webapp/src/view/page-two/PageTwo.tsx
 // Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
@@ -13,11 +14,16 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import { Box, Typography } from "@wso2/oxygen-ui";
 
-export default function NestedPage() {
+function PageTwo() {
   return (
-    <div>
-      <div>Page Two</div>
-    </div>
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h5" gutterBottom>
+        Page Two
+      </Typography>
+    </Box>
   );
 }
+
+export default PageTwo;

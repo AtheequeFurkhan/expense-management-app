@@ -1,3 +1,4 @@
+// filepath: /Users/atheeque/Desktop/expense-management-app/webapp/src/view/first-view/tool-bar/PanelOneToolbar.tsx
 // Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
@@ -13,84 +14,42 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import EditIcon from "@mui/icons-material/Edit";
-import SendIcon from "@mui/icons-material/Send";
-import { Button, IconButton, Stack } from "@mui/material";
+import { Box, Button, TextField } from "@wso2/oxygen-ui";
+import { Search } from "@wso2/oxygen-ui-icons-react";
 
-import { useConfirmationModalContext } from "@context/DialogContext";
-import { ConfirmationType } from "@utils/types";
+interface PanelOneToolbarProps {
+  onSearch?: (query: string) => void;
+  onAdd?: () => void;
+}
 
-const PanelOneToolbar = () => {
-  const dialogContext = useConfirmationModalContext();
-
+function PanelOneToolbar({ onSearch, onAdd }: PanelOneToolbarProps) {
   return (
-    <>
-      <Stack flexDirection={"row"} gap={1.5}>
-        <Button
-          sx={{ borderRadius: 3 }}
-          size="small"
-          variant="outlined"
-          onClick={() => {
-            // User confirmation handler.
-            dialogContext.showConfirmation(
-              "Do you want to Action 1?",
-              "Please note that once done, this cannot be undone.",
-              ConfirmationType.accept,
-              () => {
-                // Trigger function.
-              },
-            );
-          }}
-        >
-          Action 1
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        mb: 2,
+        gap: 2,
+      }}
+    >
+      <TextField
+        size="small"
+        placeholder="Search..."
+        slotProps={{
+          input: {
+            startAdornment: <Search size={18} style={{ marginRight: 8 }} />,
+          },
+        }}
+        onChange={(e) => onSearch?.(e.target.value)}
+      />
+      {onAdd && (
+        <Button variant="contained" onClick={onAdd}>
+          Add New
         </Button>
-        <Button
-          sx={{ borderRadius: 3, boxShadow: "none" }}
-          variant="contained"
-          size="small"
-          color="success"
-          startIcon={
-            <SendIcon
-              sx={{
-                rotate: "-40deg",
-                position: "relative",
-                top: -2,
-              }}
-            />
-          }
-          onClick={() => {
-            // User confirmation handler.
-            dialogContext.showConfirmation(
-              "Do you want to Action 2?",
-              "Please note that once done, this cannot be undone.",
-              ConfirmationType.send,
-              () => {
-                // Trigger function.
-              },
-            );
-          }}
-        >
-          Action 2
-        </Button>
-        <IconButton
-          size="small"
-          sx={{ border: 1, borderColor: "info", borderRadius: 2 }}
-          onClick={() => {
-            // User confirmation handler.
-            dialogContext.showConfirmation(
-              "Do you want to Action 3?",
-              "Please note that once done, this cannot be undone.",
-              ConfirmationType.update,
-              () => {
-                // Trigger function.
-              },
-            );
-          }}
-        >
-          <EditIcon fontSize="small" />
-        </IconButton>
-      </Stack>
-    </>
+      )}
+    </Box>
   );
-};
+}
+
 export default PanelOneToolbar;

@@ -13,69 +13,42 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Grid, Stack, Typography } from "@mui/material";
-
-import React from "react";
+import { Avatar, Box, Card, CardContent, Chip, Typography } from "@wso2/oxygen-ui";
 
 interface CandidateInfoCardProps {
-  title: string;
-  items: CandidateInfoArray[];
+  name: string;
+  email: string;
+  status?: string;
+  avatarUrl?: string;
 }
 
-interface CandidateInfoArray {
-  title: string;
-  subTitle?: string;
-  icon: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
-}
-
-const CandidateMainInfoCard = ({ title, items }: CandidateInfoCardProps) => {
+function CandidateInfoCard({ name, email, status, avatarUrl }: CandidateInfoCardProps) {
   return (
-    <Grid
-      size={{ xs: 12 }}
-      sx={{
-        p: 2,
-        border: 1,
-        borderColor: "divider",
-        borderRadius: 3,
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-      }}
-    >
-      <Typography variant="h6" sx={{ fontWeight: 600 }} color="primary.dark">
-        {title}
-      </Typography>
-      <Stack gap={1}>
-        {items.map((item) => (
-          <Stack key={item.title} flexDirection={"row"} gap={1}>
-            {React.cloneElement(item.icon, {
-              sx: {
-                color: "secondary.dark",
-                fontSize: 15,
-              },
-            })}
-            <>
-              <Typography
-                variant="body2"
-                color="secondary.main"
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  gap: 1.5,
-                  fontWeight: "bold",
-                }}
-              >
-                {item.title} :
-              </Typography>
-              <Typography variant="body1" color="secondary.dark" sx={{ fontWeight: "bold" }}>
-                {item.subTitle}
-              </Typography>
-            </>
-          </Stack>
-        ))}
-      </Stack>
-    </Grid>
+    <Card>
+      <CardContent>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Avatar src={avatarUrl} sx={{ width: 48, height: 48 }}>
+            {name?.charAt(0)?.toUpperCase()}
+          </Avatar>
+          <Box sx={{ flex: 1 }}>
+            <Typography variant="subtitle1" fontWeight="bold">
+              {name}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {email}
+            </Typography>
+          </Box>
+          {status && (
+            <Chip
+              label={status}
+              size="small"
+              color={status === "Active" ? "success" : "default"}
+            />
+          )}
+        </Box>
+      </CardContent>
+    </Card>
   );
-};
+}
 
-export default CandidateMainInfoCard;
+export default CandidateInfoCard;

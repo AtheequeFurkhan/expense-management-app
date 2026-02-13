@@ -13,50 +13,80 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Theme } from "@mui/material";
-import { Grid, Stack, Typography, alpha } from "@mui/material";
-
-import React from "react";
+import {
+  Avatar,
+  Box,
+  Card,
+  CardContent,
+  Divider,
+  Grid,
+  Typography,
+} from "@wso2/oxygen-ui";
+import { Mail, Phone } from "@wso2/oxygen-ui-icons-react";
 
 interface CandidateMainInfoCardProps {
-  title: string;
-  subTitle: string;
-  icon: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
+  name: string;
+  email: string;
+  phone?: string;
+  department?: string;
+  position?: string;
+  avatarUrl?: string;
 }
 
-const CandidateMainInfoCard = ({ title, subTitle, icon }: CandidateMainInfoCardProps) => {
+function CandidateMainInfoCard({
+  name,
+  email,
+  phone,
+  department,
+  position,
+  avatarUrl,
+}: CandidateMainInfoCardProps) {
   return (
-    <Grid
-      size={{ xs: 12 }}
-      sx={{
-        p: 1,
-        bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.action.selectedOpacity),
-        borderColor: "primary.main",
-        borderRadius: 2.5,
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
-      }}
-      gap={1}
-    >
-      {React.cloneElement(icon, {
-        sx: {
-          bgcolor: (theme: Theme) => alpha(theme.palette.primary.main, 0.3),
-          p: 0.4,
-          fontSize: 25,
-          borderRadius: 1,
-          color: "primary.main",
-        },
-      })}
-
-      <Stack gap={0.4}>
-        <Typography sx={{ fontWeight: 600, fontSize: 10 }}>{title}</Typography>
-        <Typography sx={{ fontWeight: 600, fontSize: 10 }} color="primary.dark">
-          {subTitle}
-        </Typography>
-      </Stack>
-    </Grid>
+    <Card>
+      <CardContent>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 2 }}>
+          <Avatar src={avatarUrl} sx={{ width: 64, height: 64 }}>
+            {name?.charAt(0)?.toUpperCase()}
+          </Avatar>
+          <Box>
+            <Typography variant="h6" fontWeight="bold">
+              {name}
+            </Typography>
+            {position && (
+              <Typography variant="body2" color="text.secondary">
+                {position}
+              </Typography>
+            )}
+          </Box>
+        </Box>
+        <Divider sx={{ my: 2 }} />
+        <Grid container spacing={2}>
+          <Grid size={{ xs: 12, sm: 6 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              <Mail size={16} />
+              <Typography variant="body2">{email}</Typography>
+            </Box>
+          </Grid>
+          {phone && (
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Phone size={16} />
+                <Typography variant="body2">{phone}</Typography>
+              </Box>
+            </Grid>
+          )}
+          {department && (
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <Typography variant="caption" color="text.secondary">
+                Department
+              </Typography>
+              <Typography variant="body2">{department}</Typography>
+            </Grid>
+          )}
+        </Grid>
+      </CardContent>
+    </Card>
   );
-};
+}
 
 export default CandidateMainInfoCard;

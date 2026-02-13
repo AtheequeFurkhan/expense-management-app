@@ -13,154 +13,129 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Avatar, Box, Menu, MenuItem, Stack, Tooltip, useTheme } from "@mui/material";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
+import { useBasicUserInfo, useSignOut } from "@asgardeo/auth-react";
+import {
+  AppBar,
+  Avatar,
+  Box,
+  Divider,
+  IconButton,
+  ListItemIcon,
+  Menu,
+  MenuItem,
+  Toolbar,
+  Tooltip,
+  Typography,
+  useTheme,
+} from "@wso2/oxygen-ui";
+import { LogOut, Menu as MenuIcon, PanelLeftClose } from "@wso2/oxygen-ui-icons-react";
 
-import React from "react";
+import { useEffect, useState } from "react";
 
-import Wso2Logo from "@assets/images/wso2-logo.svg";
-import { APP_NAME } from "@config/config";
-import { useAppAuthContext } from "@context/AuthContext";
-import BasicBreadcrumbs from "@layout/BreadCrumbs/BreadCrumbs";
-import { RootState, useAppSelector } from "@slices/store";
+import { useAppSelector } from "@slices/store";
 
-const Header = () => {
-  const authContext = useAppAuthContext();
+interface HeaderProps {
+  open: boolean;
+  handleDrawerToggle: () => void;
+  drawerWidth: number;
+  collapsedWidth: number;
+}
+
+function Header({ open, handleDrawerToggle, drawerWidth, collapsedWidth }: HeaderProps) {
   const theme = useTheme();
-  const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
-  const user = useAppSelector((state: RootState) => state.user);
+  const { getBasicUserInfo } = useBasicUserInfo();
+  const { signOut } = useSignOut();
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [userName, setUserName] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const menuOpen = Boolean(anchorEl);
+  const appConfig = useAppSelector((state) => state.appConfig.config);
 
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElUser(event.currentTarget);
+  useEffect(() => {
+    getBasicUserInfo().then((info) => {
+      setUserName(info?.displayName || info?.username || "");
+      setUserEmail(info?.email || "");
+    });
+  }, [getBasicUserInfo]);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleSignOut = () => {
+    signOut();
   };
 
   return (
-    <Box
+    <AppBar
+      position="fixed"
+      elevation={0}
       sx={{
-        zIndex: 10,
-        backgroundColor: theme.palette.surface.territory.active,
-        boxShadow: theme.shadows[4],
+        zIndex: theme.zIndex.drawer + 1,
+        width: `calc(100% - ${open ? drawerWidth : collapsedWidth}px)`,
+        transition: theme.transitions.create(["width", "margin"], {
+          easing: theme.transitions.easing.sharp,
+          duration: theme.transitions.duration.leavingScreen,
+        }),
+        backgroundColor: theme.palette.background.paper,
+        borderBottom: `1px solid ${theme.palette.divider}`,
       }}
     >
-      <Toolbar
-        variant="dense"
-        sx={{
-          paddingY: 0.3,
-          display: "flex",
-          gap: 0.5,
-          "&.MuiToolbar-root": {
-            pl: 0.3,
-          },
-        }}
-      >
-        <img
-          alt="wso2"
-          style={{
-            height: "40px",
-            maxWidth: "100px",
-          }}
-          onClick={() => (window.location.href = "/")}
-          src={Wso2Logo}
-        ></img>
-
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            gap: theme.spacing(0.5),
-            width: "100%",
-            alignItems: "center",
-            height: "100%",
-          }}
+      <Toolbar>
+        <IconButton
+          edge="start"
+          color="inherit"
+          aria-label="toggle drawer"
+          onClick={handleDrawerToggle}
+          sx={{ mr: 2, color: theme.palette.text.primary }}
         >
-          <Typography
-            variant="h5"
-            sx={{
-              color: theme.palette.customText.primary.p1.active,
-            }}
-          >
-            {APP_NAME}
-          </Typography>
-          <BasicBreadcrumbs />
+          {open ? <PanelLeftClose size={20} /> : <MenuIcon size={20} />}
+        </IconButton>
+
+        <Typography variant="h6" noWrap sx={{ flexGrow: 1, color: theme.palette.text.primary }}>
+          {appConfig?.appName || ""}
+        </Typography>
+
+        <Box sx={{ display: "flex", alignItems: "center" }}>
+          <Tooltip title="Account settings">
+            <IconButton onClick={handleMenuOpen} size="small" sx={{ ml: 2 }}>
+              <Avatar sx={{ width: 32, height: 32, bgcolor: theme.palette.primary.main }}>
+                {userName?.charAt(0)?.toUpperCase() || "U"}
+              </Avatar>
+            </IconButton>
+          </Tooltip>
         </Box>
 
-        <Box sx={{ flexGrow: 0 }}>
-          {user.userInfo && (
-            <>
-              <Stack flexDirection={"row"} alignItems={"center"} gap={1}>
-                <Tooltip title="Open settings">
-                  <Avatar
-                    onClick={handleOpenUserMenu}
-                    sx={{
-                      width: 48,
-                      height: 48,
-                      border: 1,
-                      borderColor: theme.palette.customBorder.territory.active,
-                    }}
-                    src={user.userInfo?.employeeThumbnail || ""}
-                    alt={user.userInfo?.firstName || "Avatar"}
-                  >
-                    {user.userInfo?.firstName?.charAt(0)}
-                  </Avatar>
-                </Tooltip>
-                <Box sx={{ width: "fit-content" }}>
-                  <Typography
-                    noWrap
-                    variant="body1"
-                    sx={{
-                      color: theme.palette.customText.primary.p2.active,
-                    }}
-                  >
-                    {user.userInfo?.firstName + " " + user.userInfo.lastName}
-                  </Typography>
-                  <Typography
-                    noWrap
-                    variant="body2"
-                    sx={{
-                      color: theme.palette.customText.primary.p3.active,
-                    }}
-                  >
-                    {user.userInfo?.jobRole}
-                  </Typography>
-                </Box>
-              </Stack>
-
-              <Menu
-                sx={{ mt: "45px" }}
-                id="menu-appbar"
-                anchorEl={anchorElUser}
-                anchorOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-                open={Boolean(anchorElUser)}
-                onClose={handleCloseUserMenu}
-              >
-                <MenuItem
-                  key={"logout"}
-                  onClick={() => {
-                    authContext.appSignOut();
-                  }}
-                >
-                  <Typography textAlign="center">Logout</Typography>
-                </MenuItem>
-              </Menu>
-            </>
-          )}
-        </Box>
+        <Menu
+          anchorEl={anchorEl}
+          open={menuOpen}
+          onClose={handleMenuClose}
+          transformOrigin={{ horizontal: "right", vertical: "top" }}
+          anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+        >
+          <Box sx={{ px: 2, py: 1 }}>
+            <Typography variant="subtitle1" fontWeight="bold">
+              {userName}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {userEmail}
+            </Typography>
+          </Box>
+          <Divider />
+          <MenuItem onClick={handleSignOut}>
+            <ListItemIcon>
+              <LogOut size={18} />
+            </ListItemIcon>
+            Sign Out
+          </MenuItem>
+        </Menu>
       </Toolbar>
-    </Box>
+    </AppBar>
   );
-};
+}
 
 export default Header;

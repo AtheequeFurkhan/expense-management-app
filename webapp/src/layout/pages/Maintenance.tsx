@@ -13,26 +13,30 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Typography } from "@mui/material";
+import { Box, Typography } from "@wso2/oxygen-ui";
+import { Wrench } from "@wso2/oxygen-ui-icons-react";
 
-import MaintenanceGif from "@assets/images/maintenance.gif";
-
-export default function MaintenancePage() {
+function Maintenance() {
   return (
     <Box
       sx={{
         display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
         flexDirection: "column",
-        minHeight: "100vh",
+        alignItems: "center",
+        justifyContent: "center",
+        minHeight: "80vh",
+        textAlign: "center",
       }}
     >
-      <img alt="maintenance" src={MaintenanceGif} />
-      <Typography variant="h4" style={{ color: "gray" }}>
-        Exciting changes are on the way! Our website is currently undergoing a transformation to
-        enhance your experience. Please check back soon to see the amazing updates.
+      <Wrench size={64} style={{ marginBottom: 16, opacity: 0.6 }} />
+      <Typography variant="h4" gutterBottom fontWeight="bold">
+        Under Maintenance
+      </Typography>
+      <Typography variant="body1" color="text.secondary">
+        We are currently performing maintenance. Please check back later.
       </Typography>
     </Box>
   );
 }
+
+export default Maintenance;

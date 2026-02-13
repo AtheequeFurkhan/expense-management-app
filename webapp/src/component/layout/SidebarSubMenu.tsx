@@ -13,60 +13,52 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  useTheme,
+} from "@wso2/oxygen-ui";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import type { RouteDetail } from "@/types/types";
+interface SidebarSubMenuProps {
+  item: {
+    label: string;
+    path: string;
+    icon?: React.ReactNode;
+  };
+  open: boolean;
+}
 
-import SubLink from "./SubLink";
+function SidebarSubMenu({ item, open }: SidebarSubMenuProps) {
+  const theme = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isActive = location.pathname === item.path;
 
-const container = {
-  open: {
-    opacity: 1,
-    transition: { staggerChildren: 0.07, delayChildren: 0.1 },
-  },
-  closed: {
-    opacity: 0,
-    transition: { staggerChildren: 0.05, staggerDirection: -1 },
-  },
-};
-
-const item = {
-  open: { opacity: 1, x: 0 },
-  closed: { opacity: 0, x: -20 },
-};
-
-function SidebarSubMenu({ parentRoute, open }: { parentRoute: RouteDetail; open: boolean }) {
   return (
-    <AnimatePresence>
-      {parentRoute.children && parentRoute.children.length > 0 && (
-        <motion.div
-          key="submenu"
-          variants={container}
-          initial="closed"
-          animate="open"
-          exit="closed"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "8px",
-            width: "100%",
-            overflow: "hidden",
-          }}
-        >
-          {parentRoute.children!.map((child) => (
-            <motion.div key={child.path} variants={item} style={{ width: "100%" }}>
-              <SubLink
-                to={child.path as string}
-                parentPath={parentRoute.path}
-                primary={child.text}
-                icon={child.icon}
-                open={open}
-              />
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <ListItemButton
+      onClick={() => navigate(item.path)}
+      selected={isActive}
+      sx={{
+        pl: open ? 4 : 2.5,
+        minHeight: 40,
+        "&.Mui-selected": {
+          backgroundColor: theme.palette.action.selected,
+        },
+      }}
+    >
+      <ListItemIcon
+        sx={{
+          minWidth: 0,
+          mr: open ? 2 : "auto",
+          justifyContent: "center",
+        }}
+      >
+        {item.icon}
+      </ListItemIcon>
+      <ListItemText primary={item.label} sx={{ opacity: open ? 1 : 0 }} />
+    </ListItemButton>
   );
 }
 
