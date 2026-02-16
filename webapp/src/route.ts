@@ -13,7 +13,17 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { CircleHelp, Home } from "@wso2/oxygen-ui-icons-react";
+import {
+  BanknoteArrowDown,
+  CircleHelp,
+  CreditCard,
+  FilePlus,
+  HeartPulse,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Users,
+} from "@wso2/oxygen-ui-icons-react";
 import { type RouteObject, createBrowserRouter } from "react-router-dom";
 
 import React from "react";
@@ -29,63 +39,61 @@ export const routes: RouteObjectWithRole[] = [
   {
     index: true,
     path: "/",
-    text: "Home",
-    icon: React.createElement(Home),
+    text: "Dashboard",
+    icon: React.createElement(LayoutDashboard),
     element: React.createElement(View.firstView),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
   },
   {
-    path: "/help",
-    text: "Help & Support",
-    icon: React.createElement(CircleHelp),
+    path: "/settings",
+    text: "Settings",
+    icon: React.createElement(Settings),
     element: React.createElement(View.help),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
     bottomNav: true,
   },
   {
-    path: "/page",
-    text: "Page 1",
-    icon: React.createElement(CircleHelp),
+    path: "/logout",
+    text: "Logout",
+    icon: React.createElement(LogOut),
+    element: React.createElement(View.help),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-    children: [
-      {
-        path: "nested-page",
-        text: "Nested Page",
-        icon: React.createElement(CircleHelp),
-        element: React.createElement(View.nestedPage),
-        allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-      },
-      {
-        path: "nested-page-2",
-        text: "Nested Page 2",
-        icon: React.createElement(CircleHelp),
-        element: React.createElement(View.nestedPage),
-        allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-      },
-    ],
+    bottomNav: true,
   },
   {
-    path: "/page-two",
-    text: "Page 2",
-    icon: React.createElement(CircleHelp),
-    element: React.createElement(View.pageTwo),
+    path: "/opd",
+    text: "OPD Claims",
+    icon: React.createElement(HeartPulse),
+    element: React.createElement(View.firstView),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-    children: [
-      {
-        path: "nested-page",
-        text: "Nested Page",
-        icon: React.createElement(CircleHelp),
-        element: React.createElement(View.nestedPage),
-        allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-      },
-      {
-        path: "nested-page-2",
-        text: "Nested Page 2",
-        icon: React.createElement(CircleHelp),
-        element: React.createElement(View.nestedPage),
-        allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-      },
-    ],
+  },
+  {
+    path: "/expense",
+    text: "Expense Claims",
+    icon: React.createElement(BanknoteArrowDown),
+    element: React.createElement(View.firstView),
+    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
+  },
+  {
+    path: "/employees",
+    text: "Employees",
+    icon: React.createElement(Users),
+    element: React.createElement(View.firstView),
+    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
+  },
+  {
+    path: "/card",
+    text: "Card Claims",
+    icon: React.createElement(CreditCard),
+    element: React.createElement(View.firstView),
+    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
+  },
+  {
+    path: "/reports",
+    text: "Reports",
+    icon: React.createElement(FilePlus),
+    element: React.createElement(View.firstView),
+    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
   },
 ];
 

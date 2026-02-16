@@ -19,14 +19,15 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useMemo, useState } from "react";
 
 import BreadCrumbs from "@layout/BreadCrumbs/BreadCrumbs";
-import { getActiveRouteDetails, routes } from "@src/route";
+import { Role } from "@slices/authSlice/auth";
+import { getActiveRouteDetails } from "@src/route";
 
 function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
 
-  const allRoutes = useMemo(() => getActiveRouteDetails([]), []);
+  const allRoutes = useMemo(() => getActiveRouteDetails([Role.ADMIN, Role.EMPLOYEE]), []);
 
   // Determine active item based on current path
   const activeItem = useMemo(() => {
@@ -45,7 +46,7 @@ function Layout() {
         <Header>
           <Header.Toggle collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
           <Header.Brand>
-            <Header.BrandTitle>Expense Management</Header.BrandTitle>
+            <Header.BrandTitle>Expense Management App</Header.BrandTitle>
           </Header.Brand>
           <Header.Spacer />
           <Header.Actions>
@@ -69,7 +70,6 @@ function Layout() {
                   </Sidebar.Item>
                 ))}
 
-              {/* Routes with children (expandable) */}
               {allRoutes
                 .filter((route) => !route.bottomNav && route.children?.length)
                 .map((route) => (
