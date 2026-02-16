@@ -36,7 +36,6 @@ import type { RouteDetail, RouteObjectWithRole } from "./types/types";
 
 export const routes: RouteObjectWithRole[] = [
   {
-    index: true,
     path: "/",
     text: "Dashboard",
     icon: React.createElement(LayoutDashboard),
@@ -60,35 +59,35 @@ export const routes: RouteObjectWithRole[] = [
     bottomNav: true,
   },
   {
-    path: "/opd",
+    path: "/opd-claim-summary",
     text: "OPD Claims",
     icon: React.createElement(HeartPulse),
     element: React.createElement(View.opd),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
   },
   {
-    path: "/expense",
+    path: "/expense-claim-summary",
     text: "Expense Claims",
     icon: React.createElement(BanknoteArrowDown),
     element: React.createElement(View.expense),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
   },
   {
-    path: "/employees",
+    path: "/employee-summary",
     text: "Employees",
     icon: React.createElement(Users),
     element: React.createElement(View.employees),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
   },
   {
-    path: "/card",
+    path: "/credit-card-summary",
     text: "Card Claims",
     icon: React.createElement(CreditCard),
     element: React.createElement(View.card),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
   },
   {
-    path: "/reports",
+    path: "/report-summary",
     text: "Reports",
     icon: React.createElement(FilePlus),
     element: React.createElement(View.reports),
