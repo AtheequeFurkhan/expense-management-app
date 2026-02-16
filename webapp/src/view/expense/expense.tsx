@@ -13,25 +13,23 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { lazy } from "react";
+import TabsPage from "@layout/pages/TabsPage";
 
-const dashboard = lazy(() => import("@view/dashboard/dashboard"));
-const opd = lazy(() => import("@view/opd/opd"));
-const expense = lazy(() => import("@view/expense/expense"));
-const employees = lazy(() => import("@view/employees/employees"));
-const card = lazy(() => import("@view/cards/cards"));
-const reports = lazy(() => import("@view/reports/reports"));
+import ExpenseClaims from "./panel/expenseClaims";
 
-const settings = lazy(() => import("@view/settings/settings"));
-const help = lazy(() => import("@view/help/help"));
-
-export const View = {
-  help,
-  dashboard,
-  opd,
-  expense,
-  employees,
-  card,
-  reports,
-  settings,
-};
+export default function OfferLetter() {
+  return (
+    <TabsPage
+      tabs={[
+        {
+          label: "Tab 1",
+          content: <ExpenseClaims />,
+        },
+        {
+          label: "Tab 2",
+          content: <></>,
+        },
+      ]}
+    />
+  );
+}

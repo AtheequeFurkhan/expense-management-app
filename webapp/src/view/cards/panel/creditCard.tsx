@@ -16,7 +16,7 @@
 // under the License.
 import { Box, Typography } from "@wso2/oxygen-ui";
 
-function TabOnePanel() {
+export default function CreditCard() {
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant="h5" gutterBottom>
@@ -26,4 +26,3 @@ function TabOnePanel() {
   );
 }
 
-export default TabOnePanel;

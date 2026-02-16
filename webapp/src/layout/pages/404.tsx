@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 import { Box, Button, Typography } from "@wso2/oxygen-ui";
-import { Home } from "@wso2/oxygen-ui-icons-react";
+import { LayoutDashboard } from "@wso2/oxygen-ui-icons-react";
 import { useNavigate } from "react-router-dom";
 
 function NotFound() {
@@ -42,7 +42,7 @@ function NotFound() {
       </Typography>
       <Button
         variant="contained"
-        startIcon={<Home size={20} />}
+        startIcon={<LayoutDashboard size={20} />}
         onClick={() => navigate("/")}
       >
         Go Home

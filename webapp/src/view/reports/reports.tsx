@@ -1,4 +1,3 @@
-// filepath: /Users/atheeque/Desktop/expense-management-app/webapp/src/view/page-two/PageTwo.tsx
 // Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
@@ -14,16 +13,23 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Typography } from "@wso2/oxygen-ui";
+import TabsPage from "@layout/pages/TabsPage";
 
-function PageTwo() {
+import Reports from "./panel/Reports";
+
+export default function OfferLetter() {
   return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h5" gutterBottom>
-        Page Two
-      </Typography>
-    </Box>
+     <TabsPage
+      tabs={[
+        {
+          label: "Tab 1",
+          content: <Reports />,
+        },
+        {
+          label: "Tab 2",
+          content: <></>,
+        },
+      ]}
+    />
   );
 }
-
-export default PageTwo;

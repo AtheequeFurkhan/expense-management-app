@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 import { Breadcrumbs, Link, Typography, useTheme } from "@wso2/oxygen-ui";
-import { ChevronRight, Home } from "@wso2/oxygen-ui-icons-react";
+import { ChevronRight, LayoutDashboard } from "@wso2/oxygen-ui-icons-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 function BreadCrumbs() {
@@ -31,8 +31,8 @@ function BreadCrumbs() {
         onClick={() => navigate("/")}
         sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
       >
-        <Home size={18} style={{ marginRight: theme.spacing(0.5) }} />
-        Home
+        <LayoutDashboard size={18} style={{ marginRight: theme.spacing(0.5) }} />
+        Dashboard
       </Link>
       {pathnames.map((value, index) => {
         const to = `/${pathnames.slice(0, index + 1).join("/")}`;

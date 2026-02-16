@@ -13,25 +13,16 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { lazy } from "react";
+import { Box } from "@wso2/oxygen-ui";
 
-const dashboard = lazy(() => import("@view/dashboard/dashboard"));
-const opd = lazy(() => import("@view/opd/opd"));
-const expense = lazy(() => import("@view/expense/expense"));
-const employees = lazy(() => import("@view/employees/employees"));
-const card = lazy(() => import("@view/cards/cards"));
-const reports = lazy(() => import("@view/reports/reports"));
+import UserGuide from "@view/help/panel/userGuide";
 
-const settings = lazy(() => import("@view/settings/settings"));
-const help = lazy(() => import("@view/help/help"));
+function Help() {
+  return (
+    <Box>
+      <UserGuide />
+    </Box>
+  );
+}
 
-export const View = {
-  help,
-  dashboard,
-  opd,
-  expense,
-  employees,
-  card,
-  reports,
-  settings,
-};
+export default Help;

@@ -1,3 +1,4 @@
+// filepath: /Users/atheeque/Desktop/expense-management-app/webapp/src/view/first-view/panel/TabOnePanel.tsx
 // Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
@@ -13,25 +14,15 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { lazy } from "react";
+import { Box, Typography } from "@wso2/oxygen-ui";
 
-const dashboard = lazy(() => import("@view/dashboard/dashboard"));
-const opd = lazy(() => import("@view/opd/opd"));
-const expense = lazy(() => import("@view/expense/expense"));
-const employees = lazy(() => import("@view/employees/employees"));
-const card = lazy(() => import("@view/cards/cards"));
-const reports = lazy(() => import("@view/reports/reports"));
+export default function ExpenseClaims() {
+  return (
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h5" gutterBottom>
+        Tab One Panel
+      </Typography>
+    </Box>
+  );
+}
 
-const settings = lazy(() => import("@view/settings/settings"));
-const help = lazy(() => import("@view/help/help"));
-
-export const View = {
-  help,
-  dashboard,
-  opd,
-  expense,
-  employees,
-  card,
-  reports,
-  settings,
-};

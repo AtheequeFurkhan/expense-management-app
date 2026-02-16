@@ -14,7 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 import { Box, Tab, Tabs } from "@wso2/oxygen-ui";
-
 import { useState } from "react";
 
 interface TabConfig {
@@ -23,19 +22,15 @@ interface TabConfig {
 }
 
 interface TabsPageProps {
-  tabs?: TabConfig[];
+  tabs: TabConfig[];
 }
 
-function TabsPage({ tabs = [] }: TabsPageProps) {
+function TabsPage({ tabs }: TabsPageProps) {
   const [value, setValue] = useState(0);
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
   };
-
-  if (!tabs || tabs.length === 0) {
-    return null;
-  }
 
   return (
     <Box>

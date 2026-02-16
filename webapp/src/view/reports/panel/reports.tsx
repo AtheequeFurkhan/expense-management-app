@@ -1,3 +1,4 @@
+// filepath: /Users/atheeque/Desktop/expense-management-app/webapp/src/view/first-view/panel/TabOnePanel.tsx
 // Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
@@ -15,17 +16,12 @@
 // under the License.
 import { Box, Typography } from "@wso2/oxygen-ui";
 
-function Home() {
+export default function Reports() {
   return (
     <Box sx={{ p: 2 }}>
-      <Typography variant="h4" fontWeight="bold" gutterBottom>
-        Home
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        Welcome to the Expense Management App.
+      <Typography variant="h5" gutterBottom>
+        Tab One Panel
       </Typography>
     </Box>
   );
 }
-
-export default Home;
