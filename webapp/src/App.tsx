@@ -20,7 +20,7 @@ import { RouterProvider } from "react-router-dom";
 import { store } from "@slices/store";
 import router from "@src/route";
 
-function App() {
+export default function App() {
   return (
     <Provider store={store}>
       <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
@@ -29,5 +29,3 @@ function App() {
     </Provider>
   );
 }
-
-export default App;

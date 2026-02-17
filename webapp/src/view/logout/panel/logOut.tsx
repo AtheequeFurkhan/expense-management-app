@@ -13,9 +13,18 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box } from "@wso2/oxygen-ui";
+import { useAuthContext } from "@asgardeo/auth-react";
+
+import { useEffect } from "react";
 
 export default function LogOut() {
-  //TODO
-  return <Box sx={{ p: 2 }}></Box>;
+  const authContext = useAuthContext();
+
+  useEffect(() => {
+    if (authContext?.signOut) {
+      authContext.signOut();
+    }
+  }, [authContext]);
+
+  return null;
 }
