@@ -31,8 +31,7 @@ import { LogOut, Menu as MenuIcon, PanelLeftClose } from "@wso2/oxygen-ui-icons-
 
 import { useCallback, useEffect, useState } from "react";
 
-import useBasicUserInfo from "../../slices/authSlice/auth";
-import useSignOut from "../../slices/authSlice/auth";
+import { useBasicUserInfo, useSignOut } from "../../slices/authSlice/auth";
 import { useAppSelector } from "../../slices/store";
 
 interface HeaderProps {
