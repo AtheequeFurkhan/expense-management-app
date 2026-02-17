@@ -15,7 +15,7 @@
 // under the License.
 import TabsPage from "@layout/pages/TabsPage";
 
-import Reports from "./panel/reports";
+import LogOut from "./panel/logOut";
 
 export default function OfferLetter() {
   return (
@@ -23,7 +23,7 @@ export default function OfferLetter() {
       tabs={[
         {
           label: "Tab 1",
-          content: <Reports />,
+          content: <LogOut />,
         },
         {
           label: "Tab 2",

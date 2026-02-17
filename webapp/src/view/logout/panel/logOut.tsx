@@ -1,3 +1,4 @@
+// filepath: /Users/atheeque/Desktop/expense-management-app/webapp/src/view/first-view/panel/TabOnePanel.tsx
 // Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
@@ -13,23 +14,14 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import TabsPage from "@layout/pages/TabsPage";
+import { Box, Typography } from "@wso2/oxygen-ui";
 
-import Reports from "./panel/reports";
-
-export default function OfferLetter() {
+export default function LogOut() {
   return (
-     <TabsPage
-      tabs={[
-        {
-          label: "Tab 1",
-          content: <Reports />,
-        },
-        {
-          label: "Tab 2",
-          content: <></>,
-        },
-      ]}
-    />
+    <Box sx={{ p: 2 }}>
+      <Typography variant="h5" gutterBottom>
+        Tab One Panel
+      </Typography>
+    </Box>
   );
 }
