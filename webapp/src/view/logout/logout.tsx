@@ -13,23 +13,10 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import TabsPage from "@layout/pages/TabsPage";
-
 import LogOut from "./panel/logOut";
 
 export default function Logout() {
   return (
-     <TabsPage
-      tabs={[
-        {
-          label: "Tab 1",
-          content: <LogOut />,
-        },
-        {
-          label: "Tab 2",
-          content: <></>,
-        },
-      ]}
-    />
+     <LogOut/>
   );
 }

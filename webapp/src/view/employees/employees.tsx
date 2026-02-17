@@ -16,7 +16,7 @@
 import TabsPage from "@layout/pages/TabsPage";
 import EmployeeDetails from "@view/employees/panel/employeeDetails";
 
-export default function Emploees() {
+export default function Employees() {
   return (
     <TabsPage
       tabs={[
