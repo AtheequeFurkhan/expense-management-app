@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { useBasicUserInfo, useSignOut } from "@asgardeo/auth-react";
 import {
   AppBar,
   Avatar,
@@ -30,9 +29,11 @@ import {
 } from "@wso2/oxygen-ui";
 import { LogOut, Menu as MenuIcon, PanelLeftClose } from "@wso2/oxygen-ui-icons-react";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { useAppSelector } from "@slices/store";
+import useBasicUserInfo from "../../slices/authSlice/auth";
+import useSignOut from "../../slices/authSlice/auth";
+import { useAppSelector } from "../../slices/store";
 
 interface HeaderProps {
   open: boolean;
@@ -45,30 +46,32 @@ function Header({ open, handleDrawerToggle, drawerWidth, collapsedWidth }: Heade
   const theme = useTheme();
   const { getBasicUserInfo } = useBasicUserInfo();
   const { signOut } = useSignOut();
+
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const menuOpen = Boolean(anchorEl);
   const appConfig = useAppSelector((state) => state.appConfig.config);
 
-  useEffect(() => {
-    getBasicUserInfo().then((info) => {
+  const fetchUserInfo = useCallback(async () => {
+    try {
+      const info = await getBasicUserInfo();
       setUserName(info?.displayName || info?.username || "");
       setUserEmail(info?.email || "");
-    });
+    } catch (error) {
+      console.error("Failed to fetch user info:", error);
+      setUserName("Unknown User");
+      setUserEmail("");
+    }
   }, [getBasicUserInfo]);
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
+  useEffect(() => {
+    fetchUserInfo();
+  }, [fetchUserInfo]);
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleSignOut = () => {
-    signOut();
-  };
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => setAnchorEl(event.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+  const handleSignOut = () => signOut();
 
   return (
     <AppBar
