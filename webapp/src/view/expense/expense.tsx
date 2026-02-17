@@ -17,7 +17,7 @@ import TabsPage from "@layout/pages/TabsPage";
 
 import ExpenseClaims from "./panel/expenseClaims";
 
-export default function OfferLetter() {
+export default function Expenses() {
   return (
     <TabsPage
       tabs={[

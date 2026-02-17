@@ -17,7 +17,7 @@ import TabsPage from "@layout/pages/TabsPage";
 
 import Reports from "./panel/reports";
 
-export default function OfferLetter() {
+export default function Report() {
   return (
      <TabsPage
       tabs={[

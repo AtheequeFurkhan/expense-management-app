@@ -1,4 +1,3 @@
-// filepath: /Users/atheeque/Desktop/expense-management-app/webapp/src/view/first-view/panel/TabOnePanel.tsx
 // Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,

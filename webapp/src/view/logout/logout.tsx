@@ -17,7 +17,7 @@ import TabsPage from "@layout/pages/TabsPage";
 
 import LogOut from "./panel/logOut";
 
-export default function OfferLetter() {
+export default function Logout() {
   return (
      <TabsPage
       tabs={[

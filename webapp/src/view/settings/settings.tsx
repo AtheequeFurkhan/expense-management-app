@@ -15,14 +15,12 @@
 // under the License.
 import { Box } from "@wso2/oxygen-ui";
 
-import UserGuide from "@view/help/panel/userGuide";
+import UserGuide from "@view/settings/panel/userSettings";
 
-function Help() {
+export default function Settings() {
   return (
     <Box>
       <UserGuide />
     </Box>
   );
 }
-
-export default Help;

@@ -17,7 +17,7 @@ import TabsPage from "@layout/pages/TabsPage";
 
 import OpdClaims from "./panel/opdClaims";
 
-export default function OfferLetter() {
+export default function Opd() {
   return (
      <TabsPage
       tabs={[

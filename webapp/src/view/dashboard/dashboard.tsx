@@ -17,7 +17,7 @@ import TabsPage from "@layout/pages/TabsPage";
 
 import FinanceDashboard from "./panel/financeDashboard";
 
-export default function OfferLetter() {
+export default function Dashboard() {
   return (
     <TabsPage
       tabs={[
