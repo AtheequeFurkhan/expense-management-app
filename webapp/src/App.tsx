@@ -14,15 +14,19 @@
 // specific language governing permissions and limitations
 // under the License.
 import { AcrylicOrangeTheme, OxygenUIThemeProvider } from "@wso2/oxygen-ui";
+import { Provider } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 
+import { store } from "@slices/store";
 import router from "@src/route";
 
 function App() {
   return (
-    <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
-      <RouterProvider router={router} />
-    </OxygenUIThemeProvider>
+    <Provider store={store}>
+      <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
+        <RouterProvider router={router} />
+      </OxygenUIThemeProvider>
+    </Provider>
   );
 }
 
