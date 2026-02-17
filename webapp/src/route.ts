@@ -54,7 +54,7 @@ export const routes: RouteObjectWithRole[] = [
     path: "/logout",
     text: "Logout",
     icon: React.createElement(LogOut),
-    element: React.createElement(View.help),
+    element: React.createElement(View.logOut),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
     bottomNav: true,
   },

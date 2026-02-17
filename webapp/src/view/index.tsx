@@ -23,6 +23,7 @@ const card = lazy(() => import("@view/cards/cards"));
 const reports = lazy(() => import("@view/reports/reports"));
 
 const settings = lazy(() => import("@view/settings/settings"));
+const logOut = lazy(() => import("@view/logout/logout"));
 const help = lazy(() => import("@view/help/help"));
 
 export const View = {
@@ -34,4 +35,5 @@ export const View = {
   card,
   reports,
   settings,
+  logOut
 };

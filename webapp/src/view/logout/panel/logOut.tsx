@@ -14,14 +14,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Typography } from "@wso2/oxygen-ui";
+import { Box } from "@wso2/oxygen-ui";
 
 export default function LogOut() {
-  return (
-    <Box sx={{ p: 2 }}>
-      <Typography variant="h5" gutterBottom>
-        Tab One Panel
-      </Typography>
-    </Box>
-  );
+  return <Box sx={{ p: 2 }}></Box>;
 }
