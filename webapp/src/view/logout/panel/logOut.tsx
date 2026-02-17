@@ -16,5 +16,6 @@
 import { Box } from "@wso2/oxygen-ui";
 
 export default function LogOut() {
+  //TODO
   return <Box sx={{ p: 2 }}></Box>;
 }
