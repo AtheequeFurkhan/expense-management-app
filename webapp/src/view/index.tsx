@@ -35,5 +35,5 @@ export const View = {
   card,
   reports,
   settings,
-  logOut
+  logOut,
 };

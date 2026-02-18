@@ -14,6 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 import { Box, Tab, Tabs } from "@wso2/oxygen-ui";
+
 import { useState } from "react";
 
 interface TabConfig {

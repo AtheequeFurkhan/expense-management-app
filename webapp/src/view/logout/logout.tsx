@@ -16,7 +16,5 @@
 import LogOut from "./panel/logOut";
 
 export default function Logout() {
-  return (
-     <LogOut/>
-  );
+  return <LogOut />;
 }

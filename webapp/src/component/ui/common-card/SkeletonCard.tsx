@@ -13,7 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Card, CardContent, Skeleton, Box } from "@wso2/oxygen-ui";
+import { Box, Card, CardContent, Skeleton } from "@wso2/oxygen-ui";
 
 function SkeletonCard() {
   return (

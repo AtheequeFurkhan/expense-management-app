@@ -22,8 +22,9 @@ import {
   useTheme,
 } from "@wso2/oxygen-ui";
 import { ChevronDown, ChevronUp } from "@wso2/oxygen-ui-icons-react";
-import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+
+import { useState } from "react";
 
 import SidebarSubMenu from "@component/layout/SidebarSubMenu";
 

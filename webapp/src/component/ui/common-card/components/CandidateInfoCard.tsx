@@ -39,11 +39,7 @@ function CandidateInfoCard({ name, email, status, avatarUrl }: CandidateInfoCard
             </Typography>
           </Box>
           {status && (
-            <Chip
-              label={status}
-              size="small"
-              color={status === "Active" ? "success" : "default"}
-            />
+            <Chip label={status} size="small" color={status === "Active" ? "success" : "default"} />
           )}
         </Box>
       </CardContent>

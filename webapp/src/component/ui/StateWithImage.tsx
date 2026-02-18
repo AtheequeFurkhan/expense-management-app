@@ -1,4 +1,3 @@
-
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
@@ -27,12 +26,7 @@ function StateWithImage({ image, title, description }: StateWithImageProps) {
         textAlign: "center",
       }}
     >
-      <Box
-        component="img"
-        src={image}
-        alt={title}
-        sx={{ width: 200, height: "auto", mb: 3 }}
-      />
+      <Box component="img" src={image} alt={title} sx={{ width: 200, height: "auto", mb: 3 }} />
       <Typography variant="h6" gutterBottom>
         {title}
       </Typography>

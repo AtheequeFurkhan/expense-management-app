@@ -36,11 +36,7 @@ function ErrorHandler({ error, onRetry }: ErrorHandlerProps) {
         {error}
       </Alert>
       {onRetry && (
-        <Button
-          variant="outlined"
-          startIcon={<RefreshCw size={18} />}
-          onClick={onRetry}
-        >
+        <Button variant="outlined" startIcon={<RefreshCw size={18} />} onClick={onRetry}>
           Retry
         </Button>
       )}

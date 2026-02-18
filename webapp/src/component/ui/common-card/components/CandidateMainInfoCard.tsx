@@ -13,15 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import {
-  Avatar,
-  Box,
-  Card,
-  CardContent,
-  Divider,
-  Grid,
-  Typography,
-} from "@wso2/oxygen-ui";
+import { Avatar, Box, Card, CardContent, Divider, Grid, Typography } from "@wso2/oxygen-ui";
 import { Mail, Phone } from "@wso2/oxygen-ui-icons-react";
 
 interface CandidateMainInfoCardProps {

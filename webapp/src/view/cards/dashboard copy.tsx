@@ -13,21 +13,29 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import AttachEmailIcon from "@mui/icons-material/AttachEmail";
+import MarkEmailReadIcon from "@mui/icons-material/MarkEmailRead";
+
 import TabsPage from "@layout/pages/TabsPage";
 
-import Reports from "./panel/reports";
+import TabOnePanel from "./panel/financeDashboard";
 
-export default function Report() {
+export default function OfferLetter() {
   return (
     <TabsPage
-      tabs={[
+      title="Menu 1"
+      tabsPage={[
         {
-          label: "Tab 1",
-          content: <Reports />,
+          tabTitle: "Tab 1",
+          tabPath: "tab-one",
+          icon: <AttachEmailIcon />,
+          page: <TabOnePanel />,
         },
         {
-          label: "Tab 2",
-          content: <></>,
+          tabTitle: "Tab 2",
+          tabPath: "tab-two",
+          icon: <MarkEmailReadIcon />,
+          page: <></>,
         },
       ]}
     />

@@ -19,7 +19,7 @@ import OpdClaims from "./panel/opdClaims";
 
 export default function Opd() {
   return (
-     <TabsPage
+    <TabsPage
       tabs={[
         {
           label: "Tab 1",
