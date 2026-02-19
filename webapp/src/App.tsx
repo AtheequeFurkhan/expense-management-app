@@ -20,6 +20,8 @@ import { RouterProvider } from "react-router-dom";
 import { store } from "@slices/store";
 import router from "@src/route";
 
+import "./styles/fonts.css";
+
 export default function App() {
   return (
     <Provider store={store}>
