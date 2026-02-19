@@ -19,7 +19,6 @@ const dashboard = lazy(() => import("@view/dashboard/dashboard"));
 const opd = lazy(() => import("@view/opd/opd"));
 const expense = lazy(() => import("@view/expense/expense"));
 const employees = lazy(() => import("@view/employees/employees"));
-const card = lazy(() => import("@view/cards/cards"));
 const reports = lazy(() => import("@view/reports/reports"));
 
 const settings = lazy(() => import("@view/settings/settings"));
@@ -32,7 +31,6 @@ export const View = {
   opd,
   expense,
   employees,
-  card,
   reports,
   settings,
   logOut,
