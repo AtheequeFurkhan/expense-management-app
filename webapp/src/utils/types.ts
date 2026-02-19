@@ -78,6 +78,6 @@ export enum ConfirmationType {
 
 export interface CommonCardProps {
   collection: Collection;
-  actions: React.ReactElement<any, string | React.JSXElementConstructor<any>>;
+  actions: React.ReactElement<unknown, string | React.JSXElementConstructor<unknown>>;
   dataCardIndex: number;
 }

@@ -32,7 +32,7 @@ interface CollectionState {
   collections: Collections | null;
   backgroundProcess: boolean;
   backgroundProcessMessage: string | null;
-  [key: string]: any; // Index signature
+  [key: string]: unknown;
 }
 
 const initialState: CollectionState = {

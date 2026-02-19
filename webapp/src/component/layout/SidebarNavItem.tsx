@@ -29,7 +29,7 @@ import { useState } from "react";
 import SidebarSubMenu from "@component/layout/SidebarSubMenu";
 
 interface SidebarNavItemProps {
-  item: {
+  route: {
     label: string;
     path?: string;
     icon?: React.ReactNode;
@@ -42,19 +42,19 @@ interface SidebarNavItemProps {
   open: boolean;
 }
 
-function SidebarNavItem({ item, open }: SidebarNavItemProps) {
+function SidebarNavItem({ route, open }: SidebarNavItemProps) {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [expanded, setExpanded] = useState(false);
-  const hasChildren = item.children && item.children.length > 0;
-  const isActive = item.path ? location.pathname === item.path : false;
+  const hasChildren = route.children && route.children.length > 0;
+  const isActive = route.path ? location.pathname === route.path : false;
 
   const handleClick = () => {
     if (hasChildren) {
       setExpanded(!expanded);
-    } else if (item.path) {
-      navigate(item.path);
+    } else if (route.path) {
+      navigate(route.path);
     }
   };
 
@@ -79,15 +79,15 @@ function SidebarNavItem({ item, open }: SidebarNavItemProps) {
             justifyContent: "center",
           }}
         >
-          {item.icon}
+          {route.icon}
         </ListItemIcon>
-        <ListItemText primary={item.label} sx={{ opacity: open ? 1 : 0 }} />
+        <ListItemText primary={route.label} sx={{ opacity: open ? 1 : 0 }} />
         {hasChildren && open && (expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />)}
       </ListItemButton>
       {hasChildren && (
         <Collapse in={expanded} timeout="auto" unmountOnExit>
           <List component="div" disablePadding>
-            {item.children?.map((child) => (
+            {route.children?.map((child) => (
               <SidebarSubMenu key={child.label} item={child} open={open} />
             ))}
           </List>

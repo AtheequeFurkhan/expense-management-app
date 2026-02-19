@@ -16,7 +16,7 @@
 import { SecureApp, useAuthContext } from "@asgardeo/auth-react";
 import { useIdleTimer } from "react-idle-timer";
 
-import React, { useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useState } from "react";
 
 import PreLoader from "@component/common/PreLoader";
 import SessionWarningDialog from "@component/common/SessionWarningDialog";
@@ -41,9 +41,7 @@ enum AppState {
 
 const AuthContext = React.createContext<AuthContextType>({} as AuthContextType);
 
-// Session timeout: 15 minutes in milliseconds
 const timeout = 15 * 60 * 1000;
-// Show warning 4 seconds before session timeout
 const promptBeforeIdle = 4_000;
 
 const AppAuthProvider = (props: { children: React.ReactNode }) => {
@@ -53,7 +51,9 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
   const dispatch = useAppDispatch();
 
   const onPrompt = () => {
-    appState === AppState.Authenticated && setSessionWarningOpen(true);
+    if (appState === AppState.Authenticated) {
+      setSessionWarningOpen(true);
+    }
   };
 
   const { activate } = useIdleTimer({
@@ -62,11 +62,6 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
     promptBeforeIdle,
     throttle: 500,
   });
-
-  const handleContinue = () => {
-    setSessionWarningOpen(false);
-    activate();
-  };
 
   const {
     signIn,
@@ -86,7 +81,30 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
     }
   }, []);
 
-  const setupAuthenticatedUser = async () => {
+  const appSignOut = useCallback(async () => {
+    setAppState(AppState.Loading);
+    await signOut();
+    setAppState(AppState.Unauthenticated);
+  }, [signOut]);
+
+  const refreshToken = useCallback(async (): Promise<{ accessToken: string }> => {
+    if (state.isAuthenticated) {
+      const accessToken = await getIDToken();
+      return { accessToken };
+    }
+
+    try {
+      await refreshAccessToken();
+      const accessToken = await getAccessToken();
+      return { accessToken };
+    } catch (error) {
+      console.error("Token refresh failed: ", error);
+      await appSignOut();
+      throw error;
+    }
+  }, [state.isAuthenticated, getIDToken, refreshAccessToken, getAccessToken, appSignOut]);
+
+  const setupAuthenticatedUser = useCallback(async () => {
     const [userInfo, idToken, decodedIdToken] = await Promise.all([
       getBasicUserInfo(),
       getIDToken(),
@@ -104,7 +122,17 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
 
     await dispatch(getUserInfo());
     await dispatch(loadPrivileges());
-  };
+  }, [getBasicUserInfo, getIDToken, getDecodedIDToken, dispatch, refreshToken]);
+
+  const appSignIn = useCallback(async () => {
+    await signIn();
+    setAppState(AppState.Loading);
+  }, [signIn]);
+
+  const handleContinue = useCallback(() => {
+    setSessionWarningOpen(false);
+    activate();
+  }, [activate]);
 
   useEffect(() => {
     let mounted = true;
@@ -126,7 +154,7 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
           if (mounted)
             setAppState(silentSignInSuccess ? AppState.Authenticating : AppState.Unauthenticated);
         }
-      } catch (err) {
+      } catch {
         if (mounted) {
           dispatch(setAuthError());
         }
@@ -138,35 +166,7 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
     return () => {
       mounted = false;
     };
-  }, [state.isAuthenticated, state.isLoading]);
-
-  const refreshToken = async (): Promise<{ accessToken: string }> => {
-    if (state.isAuthenticated) {
-      const accessToken = await getIDToken();
-      return { accessToken };
-    }
-
-    try {
-      await refreshAccessToken();
-      const accessToken = await getAccessToken();
-      return { accessToken };
-    } catch (error) {
-      console.error("Token refresh failed: ", error);
-      await appSignOut();
-      throw error;
-    }
-  };
-
-  const appSignOut = async () => {
-    setAppState(AppState.Loading);
-    await signOut();
-    setAppState(AppState.Unauthenticated);
-  };
-
-  const appSignIn = async () => {
-    await signIn();
-    setAppState(AppState.Loading);
-  };
+  }, [state.isAuthenticated, state.isLoading, dispatch, setupAuthenticatedUser, trySignInSilently]);
 
   const authContext: AuthContextType = {
     appSignIn: appSignIn,
@@ -200,8 +200,8 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
     <>
       <SessionWarningDialog
         open={sessionWarningOpen}
-        handleContinue={handleContinue}
-        appSignOut={appSignOut}
+        onContinue={handleContinue}
+        onSignOut={appSignOut}
       />
 
       <SecureApp fallback={<PreLoader isLoading message="We are getting things ready ..." />}>
@@ -211,8 +211,7 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
   );
 };
 
-const useAppAuthContext = (): AuthContextType => useContext(AuthContext);
-
-export { useAppAuthContext };
+// eslint-disable-next-line react-refresh/only-export-components
+export const useAppAuthContext = (): AuthContextType => useContext(AuthContext);
 
 export default AppAuthProvider;

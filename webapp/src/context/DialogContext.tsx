@@ -13,79 +13,259 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from "@wso2/oxygen-ui";
+import CloseIcon from "@mui/icons-material/Close";
+import DoneIcon from "@mui/icons-material/Done";
+import SaveAltIcon from "@mui/icons-material/SaveAlt";
+import SendIcon from "@mui/icons-material/Send";
+import LoadingButton from "@mui/lab/LoadingButton";
+import { IconButton, Stack, TextField } from "@mui/material";
+import Button from "@mui/material/Button";
+import Dialog from "@mui/material/Dialog";
+import DialogActions from "@mui/material/DialogActions";
+import DialogContent from "@mui/material/DialogContent";
+import DialogContentText from "@mui/material/DialogContentText";
+import DialogTitle from "@mui/material/DialogTitle";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 
-import { createContext, useCallback, useContext, useState } from "react";
+import * as React from "react";
+import { useContext, useState } from "react";
 
-interface DialogOptions {
-  title: string;
-  message: string;
-  confirmLabel?: string;
-  cancelLabel?: string;
-}
+import { ConfirmationType } from "@/types/types";
 
-interface DialogContextType {
-  showDialog: (options: DialogOptions) => Promise<boolean>;
-}
+type InputObj = {
+  label: string;
+  mandatory: boolean;
+  type: "textarea" | "date";
+};
 
-const DialogContext = createContext<DialogContextType | undefined>(undefined);
+type UseConfirmationDialogShowReturnType = {
+  show: boolean;
+  setShow: (value: boolean) => void;
+  onHide: () => void;
+};
 
-export function DialogProvider({ children }: { children: React.ReactNode }) {
-  const [dialogState, setDialogState] = useState<{
-    open: boolean;
-    options: DialogOptions;
-    resolve: ((value: boolean) => void) | null;
+const useDialogShow = (): UseConfirmationDialogShowReturnType => {
+  const [show, setShow] = useState(false);
+
+  const handleOnHide: () => void = () => {
+    setShow(false);
+  };
+
+  return {
+    show,
+    setShow,
+    onHide: handleOnHide,
+  };
+};
+
+type ConfirmationDialogContextType = {
+  showConfirmation: (
+    title: string,
+    message: string | React.ReactNode,
+    type: ConfirmationType,
+    action: () => void,
+    okText?: string,
+    cancelText?: string,
+    inputObj?: InputObj,
+  ) => void;
+};
+
+type ConfirmationModalContextProviderProps = {
+  children: React.ReactNode;
+};
+
+const ConfirmationModalContext = React.createContext<ConfirmationDialogContextType | null>(null);
+
+const ConfirmationModalContextProvider: React.FC<ConfirmationModalContextProviderProps> = (
+  props,
+) => {
+  const { setShow, show, onHide } = useDialogShow();
+
+  const [comment, setComment] = React.useState("");
+
+  const [content, setContent] = useState<{
+    title: string;
+    message: string | React.ReactNode;
+    type: ConfirmationType;
+    action: (value?: string) => void;
+    okText?: string;
+    cancelText?: string;
+    inputObj?: InputObj;
   }>({
-    open: false,
-    options: { title: "", message: "" },
-    resolve: null,
+    title: "",
+    message: "",
+    type: ConfirmationType.send,
+    action: () => {},
   });
 
-  const showDialog = useCallback((options: DialogOptions): Promise<boolean> => {
-    return new Promise((resolve) => {
-      setDialogState({ open: true, options, resolve });
+  const handleShow = (
+    title: string,
+    message: string | React.ReactNode,
+    type: ConfirmationType,
+    action: (value?: string) => void,
+    okText?: string,
+    cancelText?: string,
+    inputObj?: InputObj,
+  ) => {
+    setContent({
+      title,
+      message,
+      type,
+      action,
+      okText,
+      cancelText,
+      inputObj,
     });
-  }, []);
+    setShow(true);
+  };
 
-  const handleClose = (result: boolean) => {
-    dialogState.resolve?.(result);
-    setDialogState((prev) => ({ ...prev, open: false, resolve: null }));
+  const dialogContext: ConfirmationDialogContextType = {
+    showConfirmation: handleShow,
+  };
+
+  const handleOk = (value?: string) => {
+    content.action(value);
+    onHide();
+  };
+
+  const handleCancel = () => {
+    Reset();
+    onHide();
+  };
+
+  const Reset = () => {
+    setContent({
+      title: "",
+      message: "",
+      type: ConfirmationType.accept,
+      action: () => {},
+      okText: undefined,
+      cancelText: undefined,
+    });
+
+    setComment("");
+  };
+
+  const onChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setComment(event.target.value);
   };
 
   return (
-    <DialogContext.Provider value={{ showDialog }}>
-      {children}
-      <Dialog open={dialogState.open} onClose={() => handleClose(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>{dialogState.options.title}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>{dialogState.options.message}</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => handleClose(false)}>
-            {dialogState.options.cancelLabel || "Cancel"}
-          </Button>
-          <Button onClick={() => handleClose(true)} variant="contained" autoFocus>
-            {dialogState.options.confirmLabel || "Confirm"}
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </DialogContext.Provider>
-  );
-}
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <ConfirmationModalContext.Provider value={dialogContext}>
+        {props.children}
+        {content && (
+          <Dialog
+            open={show}
+            sx={{
+              ".MuiDialog-paper": {
+                maxWidth: 350,
+                borderRadius: 3,
+              },
+              backdropFilter: "blur(10px)",
+            }}
+          >
+            <DialogTitle
+              variant="h5"
+              sx={{
+                fontWeight: "bold",
+                borderBottom: 1,
+                borderColor: "divider",
+                mb: 1,
+                pd: 0,
+              }}
+            >
+              {content?.title}
+            </DialogTitle>
+            <IconButton
+              aria-label="close"
+              onClick={handleCancel}
+              sx={{
+                position: "absolute",
+                right: 8,
+                top: 8,
+                color: (theme) => theme.palette.secondary.dark,
+              }}
+            >
+              <CloseIcon />
+            </IconButton>
+            <DialogContent sx={{ p: 0, m: 0, paddingX: 2 }}>
+              <DialogContentText variant="body2">{content?.message}</DialogContentText>
+            </DialogContent>
+            {content.inputObj && (
+              <TextField
+                sx={{ marginX: 2, mt: 2, maxWidth: 350 }}
+                value={comment}
+                label={content.inputObj?.label}
+                type="text"
+                size="small"
+                multiline
+                rows={2}
+                maxRows={6}
+                onChange={onChange}
+              />
+            )}
 
-export function useDialog() {
-  const context = useContext(DialogContext);
+            <DialogActions sx={{ pb: 2, pt: 0, mt: 0, paddingX: 2 }}>
+              <Stack flexDirection={"row"} sx={{ mt: 1 }} gap={1}>
+                {/* Cancel button */}
+                <Button
+                  sx={{
+                    borderRadius: 2,
+                  }}
+                  onClick={handleCancel}
+                  variant="outlined"
+                  size="small"
+                >
+                  {content?.cancelText ? content.cancelText : "No"}
+                </Button>
+
+                {/* Ok button */}
+                <LoadingButton
+                  type="submit"
+                  sx={{
+                    borderRadius: 2,
+                    boxShadow: "none",
+                    border: 0.5,
+                    borderColor: "divider",
+                  }}
+                  variant="contained"
+                  size="small"
+                  disabled={content?.inputObj?.mandatory && comment === ""}
+                  onClick={() => (content?.inputObj ? handleOk(comment) : handleOk())}
+                  loadingPosition="start"
+                  startIcon={
+                    content.type === "update" ? (
+                      <SaveAltIcon />
+                    ) : content.type === "send" ? (
+                      <SendIcon />
+                    ) : (
+                      <DoneIcon />
+                    )
+                  }
+                >
+                  {content?.okText ? content.okText : "Yes"}
+                </LoadingButton>
+              </Stack>
+            </DialogActions>
+          </Dialog>
+        )}
+      </ConfirmationModalContext.Provider>
+    </LocalizationProvider>
+  );
+};
+
+const useConfirmationModalContext = (): ConfirmationDialogContextType => {
+  const context = useContext(ConfirmationModalContext);
   if (!context) {
-    throw new Error("useDialog must be used within a DialogProvider");
+    throw new Error(
+      "useConfirmationModalContext must be used within a ConfirmationModalContextProvider",
+    );
   }
   return context;
-}
+};
+// eslint-disable-next-line react-refresh/only-export-components
+export { useDialogShow, useConfirmationModalContext };
 
-export default DialogContext;
+export default ConfirmationModalContextProvider;
