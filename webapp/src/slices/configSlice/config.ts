@@ -55,23 +55,15 @@ export const fetchAppConfig = createAsyncThunk(
       if (axios.isCancel(error)) {
         return rejectWithValue("Request canceled");
       }
-      // Define a type for Axios error
-      type AxiosErrorType = {
-        response?: {
-          data?: {
-            message?: string;
-          };
-          status?: number;
-        };
-        message?: string;
-      };
-      const axiosError = error as AxiosErrorType;
       const message =
-        axiosError.response?.data?.message || axiosError.message || "An unknown error occurred.";
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        (error as Error).message ||
+        "An unknown error occurred.";
       dispatch(
         enqueueSnackbarMessage({
           message:
-            axiosError.response?.status === HttpStatusCode.InternalServerError
+            (error as { response?: { status?: HttpStatusCode } }).response?.status ===
+            HttpStatusCode.InternalServerError
               ? SnackMessage.error.fetchAppConfigMessage
               : message,
           type: "error",
