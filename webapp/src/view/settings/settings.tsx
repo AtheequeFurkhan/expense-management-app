@@ -13,11 +13,14 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import { Box } from "@wso2/oxygen-ui";
 
-export default function NestedPage() {
+import UserSetting from "@view/settings/panel/userSettings";
+
+export default function Settings() {
   return (
-    <div>
-      <div>Nested page</div>
-    </div>
+    <Box>
+      <UserSetting />
+    </Box>
   );
 }

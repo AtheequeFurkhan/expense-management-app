@@ -15,16 +15,25 @@
 // under the License.
 import { lazy } from "react";
 
+const dashboard = lazy(() => import("@view/dashboard/dashboard"));
+const opd = lazy(() => import("@view/opd/opd"));
+const expense = lazy(() => import("@view/expense/expense"));
+const employees = lazy(() => import("@view/employees/employees"));
+const card = lazy(() => import("@view/credit-cards/credit"));
+const reports = lazy(() => import("@view/reports/reports"));
+
+const settings = lazy(() => import("@view/settings/settings"));
+const logOut = lazy(() => import("@view/logout/logout"));
 const help = lazy(() => import("@view/help/help"));
-const nestedPage = lazy(() => import("@root/src/view/nested-page/NestedPage"));
-const firstView = lazy(() => import("@view/first-view/index"));
-const pageTwo = lazy(() => import("@view/page-two/PageTwo"));
-const home = lazy(() => import("@view/home/Home"));
 
 export const View = {
   help,
-  nestedPage,
-  firstView,
-  pageTwo,
-  home,
+  dashboard,
+  opd,
+  expense,
+  employees,
+  card,
+  reports,
+  settings,
+  logOut,
 };

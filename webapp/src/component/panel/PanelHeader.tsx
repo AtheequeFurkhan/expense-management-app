@@ -13,41 +13,38 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Cached } from "@mui/icons-material";
-import { Box, ButtonGroup, IconButton, Tooltip } from "@mui/material";
+import { Box, Divider, Typography } from "@wso2/oxygen-ui";
 
-import React from "react";
+interface PanelHeaderProps {
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+}
 
-function PanelHeader(props: { refresh?: () => void; header?: React.ReactNode }) {
+function PanelHeader({ title, subtitle, action }: PanelHeaderProps) {
   return (
-    <Box
-      className="panel-con"
-      sx={{
-        height: "40px",
-        width: "100%",
-        marginBottom: "0px",
-        display: "flex",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-      }}
-    >
-      {props.header && <div>{props.header}</div>}
-
-      <ButtonGroup>
-        {props.refresh && (
-          <Tooltip title={"Refresh Page"}>
-            <IconButton
-              size="small"
-              onClick={() => {
-                props.refresh && props.refresh();
-              }}
-            >
-              <Cached />
-            </IconButton>
-          </Tooltip>
-        )}
-      </ButtonGroup>
+    <Box>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 1,
+        }}
+      >
+        <Box>
+          <Typography variant="h5" fontWeight="bold">
+            {title}
+          </Typography>
+          {subtitle && (
+            <Typography variant="body2" color="text.secondary">
+              {subtitle}
+            </Typography>
+          )}
+        </Box>
+        {action && <Box>{action}</Box>}
+      </Box>
+      <Divider sx={{ mb: 2 }} />
     </Box>
   );
 }

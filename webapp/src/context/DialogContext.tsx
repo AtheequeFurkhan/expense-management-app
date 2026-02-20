@@ -125,7 +125,7 @@ const ConfirmationModalContextProvider: React.FC<ConfirmationModalContextProvide
   };
 
   const handleOk = (value?: string) => {
-    content && content.action(value);
+    content.action(value);
     onHide();
   };
 
@@ -265,7 +265,7 @@ const useConfirmationModalContext = (): ConfirmationDialogContextType => {
   }
   return context;
 };
-
+// eslint-disable-next-line react-refresh/only-export-components
 export { useDialogShow, useConfirmationModalContext };
 
 export default ConfirmationModalContextProvider;

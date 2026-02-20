@@ -1,39 +1,53 @@
+// Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
+//
+// WSO2 LLC. licenses this file to you under the Apache License,
+// Version 2.0 (the "License"); you may not use this file except
+// in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing,
+// software distributed under the License is distributed on an
+// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+// KIND, either express or implied.  See the License for the
+// specific language governing permissions and limitations
+// under the License.
 import {
+  Button,
   Dialog,
-  DialogTitle,
+  DialogActions,
   DialogContent,
   DialogContentText,
-  DialogActions,
-  Button,
-} from "@mui/material";
+  DialogTitle,
+} from "@wso2/oxygen-ui";
+import { Clock } from "@wso2/oxygen-ui-icons-react";
 
 interface SessionWarningDialogProps {
   open: boolean;
-  handleContinue: () => void;
-  appSignOut: () => void;
+  onExtend: () => void;
+  onLogout: () => void;
 }
 
-function SessionWarningDialog(props: SessionWarningDialogProps) {
-  const { open, handleContinue, appSignOut } = props;
+function SessionWarningDialog({ open, onExtend, onLogout }: SessionWarningDialogProps) {
   return (
-    <Dialog
-      open={open}
-      onClose={handleContinue}
-      aria-labelledby="alert-dialog-title"
-      aria-describedby="alert-dialog-description"
-    >
-      <DialogTitle id="alert-dialog-title">
-        {"Are you still there?"}
+    <Dialog open={open} maxWidth="xs" fullWidth>
+      <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Clock size={22} />
+        Session Expiring
       </DialogTitle>
       <DialogContent>
-        <DialogContentText id="alert-dialog-description">
-          It looks like you've been inactive for a while. Would you like to
-          continue?
+        <DialogContentText>
+          Your session is about to expire. Would you like to extend your session or log out?
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleContinue}>Continue</Button>
-        <Button onClick={() => appSignOut()}>Logout</Button>
+        <Button onClick={onLogout} color="error">
+          Log Out
+        </Button>
+        <Button onClick={onExtend} variant="contained" autoFocus>
+          Extend Session
+        </Button>
       </DialogActions>
     </Dialog>
   );

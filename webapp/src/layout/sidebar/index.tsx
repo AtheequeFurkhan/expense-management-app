@@ -15,7 +15,6 @@
 // under the License.
 import { Box, Divider, Stack, Tooltip, Typography, useTheme } from "@mui/material";
 import { ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
-import { matchPath, useLocation } from "react-router-dom";
 
 import { useMemo, useState } from "react";
 
@@ -34,16 +33,13 @@ interface SidebarProps {
 
 const Sidebar = (props: SidebarProps) => {
   const allRoutes = useMemo(() => getActiveRouteDetails(props.roles), [props.roles]);
-  const location = useLocation();
 
-  // Single state object for nav state
   const [navState, setNavState] = useState<NavState>({
     active: null,
     hovered: null,
     expanded: null,
   });
 
-  // Handlers
   const handleClick = (idx: number) => {
     setNavState((prev) => ({
       ...prev,
@@ -101,7 +97,6 @@ const Sidebar = (props: SidebarProps) => {
       </Box>
     );
 
-    // Only show tooltip when sidebar is collapsed
     if (tooltipTitle && !props.open) {
       return (
         <Tooltip
@@ -153,7 +148,6 @@ const Sidebar = (props: SidebarProps) => {
               overflow: "visible",
             }}
           >
-            {/* Navigation List */}
             <Stack
               direction="column"
               gap={1}
@@ -186,10 +180,8 @@ const Sidebar = (props: SidebarProps) => {
               })}
             </Stack>
 
-            {/* Spacer */}
             <Box sx={{ flexGrow: 1 }} />
 
-            {/* Footer Controls */}
             <Stack
               direction="column"
               gap={1}
@@ -198,14 +190,12 @@ const Sidebar = (props: SidebarProps) => {
                 alignItems: "center",
               }}
             >
-              {/* Theme Toggle */}
               {renderControlButton(
                 colorMode.mode === "dark" ? <Sun size={18} /> : <Moon size={18} />,
                 colorMode.toggleColorMode,
                 colorMode.mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode",
               )}
 
-              {/* Sidebar Toggle */}
               {renderControlButton(
                 !props.open ? <ChevronRight size={20} /> : <ChevronLeft size={20} />,
                 props.handleDrawer,
@@ -219,7 +209,6 @@ const Sidebar = (props: SidebarProps) => {
                 }}
               />
 
-              {/* Version Info */}
               {renderControlButton(
                 <Typography
                   variant="body2"

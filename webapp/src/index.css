@@ -1,8 +1,8 @@
-@import "./styles/fonts.css";
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap");
 
-body {
-  margin: 0;
-  font-family: "Poppins";
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.geist {
+  font-family: "Geist", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
 }

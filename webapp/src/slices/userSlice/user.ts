@@ -56,7 +56,7 @@ export const UserSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(getUserInfo.pending, (state, action) => {
+      .addCase(getUserInfo.pending, (state) => {
         state.state = State.loading;
         state.stateMessage = "Checking User Info...";
       })

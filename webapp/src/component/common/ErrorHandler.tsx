@@ -13,32 +13,35 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Container } from "@mui/material";
+import { Alert, Box, Button } from "@wso2/oxygen-ui";
+import { RefreshCw } from "@wso2/oxygen-ui-icons-react";
 
-import ErrorSvg from "@assets/images/error.svg";
-import Wso2Logo from "@assets/images/wso2-logo.svg";
-import StateWithImage from "@component/ui/StateWithImage";
-import { ErrorHandlerProps } from "@root/src/utils/types";
+interface ErrorHandlerProps {
+  error: string;
+  onRetry?: () => void;
+}
 
-const ErrorHandler = (props: ErrorHandlerProps) => {
+function ErrorHandler({ error, onRetry }: ErrorHandlerProps) {
   return (
     <Box
       sx={{
-        paddingX: 2,
-        paddingY: 5,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        py: 4,
       }}
     >
-      <Container maxWidth="md">
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
-          <img alt="logo" width="150" height="auto" src={Wso2Logo} />
-          <StateWithImage
-            message={props.message || "Something went wrong! Please try again later."}
-            imageUrl={ErrorSvg}
-          />
-        </Box>
-      </Container>
+      <Alert severity="error" sx={{ mb: 2, width: "100%", maxWidth: 500 }}>
+        {error}
+      </Alert>
+      {onRetry && (
+        <Button variant="outlined" startIcon={<RefreshCw size={18} />} onClick={onRetry}>
+          Retry
+        </Button>
+      )}
     </Box>
   );
-};
+}
 
 export default ErrorHandler;

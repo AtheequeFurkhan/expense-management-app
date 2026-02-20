@@ -56,13 +56,14 @@ export const fetchAppConfig = createAsyncThunk(
         return rejectWithValue("Request canceled");
       }
       const message =
-        (error as any).response?.data?.message ||
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
         (error as Error).message ||
         "An unknown error occurred.";
       dispatch(
         enqueueSnackbarMessage({
           message:
-            (error as any).response?.status === HttpStatusCode.InternalServerError
+            (error as { response?: { status?: HttpStatusCode } }).response?.status ===
+            HttpStatusCode.InternalServerError
               ? SnackMessage.error.fetchAppConfigMessage
               : message,
           type: "error",

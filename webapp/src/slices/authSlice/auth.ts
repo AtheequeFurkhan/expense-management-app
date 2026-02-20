@@ -13,8 +13,11 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import { useAuthContext } from "@asgardeo/auth-react";
 import { BasicUserInfo, DecodedIDTokenPayload } from "@asgardeo/auth-spa";
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+
+import { useCallback } from "react";
 
 import { State } from "@/types/types";
 import { SnackMessage } from "@config/constant";
@@ -142,4 +145,32 @@ export const authSlice = createSlice({
 
 export const { setUserAuthData, setAuthError } = authSlice.actions;
 export const selectRoles = (state: RootState) => state.auth.roles;
+
+// Custom hooks
+export const useBasicUserInfo = () => {
+  const authContext = useAuthContext();
+
+  const getBasicUserInfo = useCallback(async (): Promise<BasicUserInfo> => {
+    if (!authContext?.getBasicUserInfo) {
+      throw new Error("Auth context not available");
+    }
+    return await authContext.getBasicUserInfo();
+  }, [authContext]);
+
+  return { getBasicUserInfo };
+};
+
+export const useSignOut = () => {
+  const authContext = useAuthContext();
+
+  const signOut = useCallback(async () => {
+    if (!authContext?.signOut) {
+      throw new Error("Sign out not available");
+    }
+    await authContext.signOut();
+  }, [authContext]);
+
+  return { signOut };
+};
+
 export default authSlice.reducer;

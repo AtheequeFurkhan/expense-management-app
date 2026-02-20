@@ -38,8 +38,9 @@ export enum ConfirmationType {
 export interface RouteDetail {
   path: string;
   allowRoles: string[];
-  icon: React.ReactElement<any, string | React.JSXElementConstructor<any>> | undefined;
+  icon: React.ReactElement<unknown, string | React.JSXElementConstructor<unknown>> | undefined;
   text: string;
+  label: string; 
   children?: RouteObjectWithRole[];
   bottomNav?: boolean;
   element?: React.ReactNode;
@@ -47,8 +48,9 @@ export interface RouteDetail {
 
 export interface RouteObjectWithRole extends NonIndexRouteObject {
   allowRoles: string[];
-  icon: React.ReactElement<any, string | React.JSXElementConstructor<any>> | undefined;
+  icon: React.ReactElement<unknown, string | React.JSXElementConstructor<unknown>> | undefined;
   text: string;
+  label: string; 
   children?: RouteObjectWithRole[];
   bottomNav?: boolean;
   element?: React.ReactNode;

@@ -13,12 +13,21 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { HomeIcon } from "lucide-react";
-import { CircleQuestionMark } from "lucide-react";
-import type { RouteObject } from "react-router-dom";
+import {
+  BanknoteArrowDown,
+  CreditCard,
+  FilePlus,
+  HeartPulse,
+  LayoutDashboard,
+  LogOut,
+  Settings,
+  Users,
+} from "@wso2/oxygen-ui-icons-react";
+import { type RouteObject, createBrowserRouter } from "react-router-dom";
 
 import React from "react";
 
+import Layout from "@layout/Layout";
 import { Role } from "@slices/authSlice/auth";
 import { isIncludedRole } from "@utils/utils";
 import { View } from "@view/index";
@@ -28,64 +37,61 @@ import type { RouteDetail, RouteObjectWithRole } from "./types/types";
 export const routes: RouteObjectWithRole[] = [
   {
     path: "/",
-    text: "Home",
-    icon: React.createElement(HomeIcon),
-    element: React.createElement(View.firstView),
+    text: "Dashboard",
+    icon: React.createElement(LayoutDashboard),
+    element: React.createElement(View.dashboard),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
   },
   {
-    path: "/help",
-    text: "Help & Support",
-    icon: React.createElement(CircleQuestionMark),
-    element: React.createElement(View.help),
+    path: "/settings",
+    text: "Settings",
+    icon: React.createElement(Settings),
+    element: React.createElement(View.settings),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
     bottomNav: true,
   },
   {
-    path: "/page",
-    text: "Page 1",
-    icon: React.createElement(CircleQuestionMark),
+    path: "/logout",
+    text: "Logout",
+    icon: React.createElement(LogOut),
+    element: React.createElement(View.logOut),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-    children: [
-      {
-        path: "nested-page",
-        text: "Nested Page",
-        icon: React.createElement(CircleQuestionMark),
-        element: React.createElement(View.nestedPage),
-        allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-      },
-      {
-        path: "nested-page-2",
-        text: "Nested Page 2",
-        icon: React.createElement(CircleQuestionMark),
-        element: React.createElement(View.nestedPage),
-        allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-      },
-    ],
+    bottomNav: true,
   },
-
   {
-    path: "/page-two",
-    text: "Page 2",
-    icon: React.createElement(CircleQuestionMark),
-    element: React.createElement(View.pageTwo),
+    path: "/opd-claim-summary",
+    text: "OPD Claims",
+    icon: React.createElement(HeartPulse),
+    element: React.createElement(View.opd),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-    children: [
-      {
-        path: "nested-page",
-        text: "Nested Page",
-        icon: React.createElement(CircleQuestionMark),
-        element: React.createElement(View.nestedPage),
-        allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-      },
-      {
-        path: "nested-page-2",
-        text: "Nested Page 2",
-        icon: React.createElement(CircleQuestionMark),
-        element: React.createElement(View.nestedPage),
-        allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-      },
-    ],
+  },
+  {
+    path: "/expense-claim-summary",
+    text: "Expense Claims",
+    icon: React.createElement(BanknoteArrowDown),
+    element: React.createElement(View.expense),
+    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
+  },
+  {
+    path: "/employee-summary",
+    text: "Employees",
+    icon: React.createElement(Users),
+    element: React.createElement(View.employees),
+    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
+  },
+  {
+    path: "/credit-card-summary",
+    text: "Card Claims",
+    icon: React.createElement(CreditCard),
+    element: React.createElement(View.card),
+    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
+  },
+  {
+    path: "/report-summary",
+    text: "Reports",
+    icon: React.createElement(FilePlus),
+    element: React.createElement(View.reports),
+    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
   },
 ];
 
@@ -140,7 +146,7 @@ interface getActiveParentRoutesProps {
 export const getActiveParentRoutes = ({ routes, roles }: getActiveParentRoutesProps): string[] => {
   if (!routes) return [];
 
-  let activeParentPaths: string[] = [];
+  const activeParentPaths: string[] = [];
 
   routes.forEach((routeObj) => {
     if (!routeObj.element) return;
@@ -154,3 +160,18 @@ export const getActiveParentRoutes = ({ routes, roles }: getActiveParentRoutesPr
 
   return activeParentPaths;
 };
+
+/**
+ * Create the router instance.
+ * Layout wraps all routes — providing AppShell (header, sidebar, footer).
+ * Child routes render inside Layout's <Outlet />.
+ */
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: React.createElement(Layout),
+    children: routes as unknown as RouteObject[],
+  },
+]);
+
+export default router;

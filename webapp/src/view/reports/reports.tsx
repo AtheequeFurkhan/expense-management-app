@@ -13,11 +13,23 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import TabsPage from "@layout/pages/TabsPage";
 
-export default function NestedPage() {
+import Reports from "./panel/reports";
+
+export default function Report() {
   return (
-    <div>
-      <div>Page Two</div>
-    </div>
+    <TabsPage
+      tabs={[
+        {
+          label: "Tab 1",
+          content: <Reports />,
+        },
+        {
+          label: "Tab 2",
+          content: <></>,
+        },
+      ]}
+    />
   );
 }
