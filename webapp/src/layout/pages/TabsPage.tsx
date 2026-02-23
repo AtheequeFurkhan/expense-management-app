@@ -34,13 +34,15 @@ function TabsPage({ tabs }: TabsPageProps) {
   };
 
   return (
-    <Box>
+    <Box sx={{ width: "100%", maxWidth: "100%", overflow: "auto" }}>
       <Tabs value={value} onChange={handleChange}>
         {tabs.map((tab, index) => (
           <Tab key={index} label={tab.label} />
         ))}
       </Tabs>
-      <Box sx={{ pt: 2 }}>{tabs[value]?.content}</Box>
+      <Box sx={{ pt: 2, width: "100%", maxWidth: "100%", overflow: "auto" }}>
+        {tabs[value]?.content}
+      </Box>
     </Box>
   );
 }

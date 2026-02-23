@@ -55,3 +55,8 @@ export interface RouteObjectWithRole extends NonIndexRouteObject {
   bottomNav?: boolean;
   element?: React.ReactNode;
 }
+
+export interface ClaimSummary{
+  lastYearClaimAmount: number;
+  
+}

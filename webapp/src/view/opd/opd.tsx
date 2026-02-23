@@ -22,12 +22,8 @@ export default function Opd() {
     <TabsPage
       tabs={[
         {
-          label: "Tab 1",
+          label: "OPD Claims",
           content: <OpdClaims />,
-        },
-        {
-          label: "Tab 2",
-          content: <></>,
         },
       ]}
     />
