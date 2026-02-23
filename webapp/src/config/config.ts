@@ -38,6 +38,48 @@ export const AsgardeoConfig: BaseURLAuthClientConfig = {
   signOutRedirectURL: window.config?.AUTH_SIGN_OUT_REDIRECT_URL ?? "",
 };
 
+export const OPD_CHART_CONFIG = {
+  xAxisLabels: ["0-5K", "5K-10K", "10K-15K", "15K-20K", "20K-25K", "25K-30K", "30K-35K", "35K-40K"],
+  yAxisLabels: [12, 9, 6, 3, 0],
+  chartHeight: 320,
+  maxBarValue: 12,
+  barGap: "2px",
+};
+
+export const OPD_SUMMARY_CARDS_CONFIG = {
+  lastYearCard: {
+    icon: "$",
+    iconBg: "warning.light",
+    iconColor: "warning.dark",
+    title: "Claim amount in the last year",
+    suffix: "LKR",
+  },
+  currentMonthCard: {
+    icon: "↗",
+    iconBg: "primary.light",
+    iconColor: "primary.dark",
+    title: "Current month's claim amount",
+    suffix: "LKR",
+  },
+  previousYearCard: {
+    icon: "📋",
+    iconBg: "warning.light",
+    iconColor: "warning.dark",
+    title: "Claims count in previous year",
+  },
+};
+
+export const OPD_SIDE_CARDS_CONFIG = {
+  unclaimed: {
+    title: "UNCLAIMED",
+    color: "warning.main",
+  },
+  fullyClaimed: {
+    title: "FULLY CLAIMED",
+    color: "primary.dark",
+  },
+};
+
 export const APP_NAME = window.config?.APP_NAME ?? "";
 export const APP_DOMAIN = window.config?.APP_DOMAIN ?? "";
 export const ServiceBaseUrl = window.config?.REACT_APP_BACKEND_BASE_URL ?? "";

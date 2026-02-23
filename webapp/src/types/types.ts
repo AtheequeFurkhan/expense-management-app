@@ -40,7 +40,7 @@ export interface RouteDetail {
   allowRoles: string[];
   icon: React.ReactElement<unknown, string | React.JSXElementConstructor<unknown>> | undefined;
   text: string;
-  label: string; 
+  label: string;
   children?: RouteObjectWithRole[];
   bottomNav?: boolean;
   element?: React.ReactNode;
@@ -50,13 +50,12 @@ export interface RouteObjectWithRole extends NonIndexRouteObject {
   allowRoles: string[];
   icon: React.ReactElement<unknown, string | React.JSXElementConstructor<unknown>> | undefined;
   text: string;
-  label: string; 
+  label: string;
   children?: RouteObjectWithRole[];
   bottomNav?: boolean;
   element?: React.ReactNode;
 }
 
-export interface ClaimSummary{
+export interface ClaimSummary {
   lastYearClaimAmount: number;
-  
 }
