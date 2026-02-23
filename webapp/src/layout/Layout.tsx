@@ -29,7 +29,6 @@ function Layout() {
 
   const allRoutes = useMemo(() => getActiveRouteDetails([Role.ADMIN, Role.EMPLOYEE]), []);
 
-  // Determine active item based on current path
   const activeItem = useMemo(() => {
     const currentRoute = allRoutes.find((r) => r.path === location.pathname);
     return currentRoute?.path ?? "/";
@@ -106,9 +105,24 @@ function Layout() {
 
       {/* Main Content */}
       <AppShell.Main>
-        <Box sx={{ p: 2 }}>
+        <Box
+          sx={{
+            p: 2,
+            width: "100%",
+            maxWidth: "100%",
+            height: "100%",
+            boxSizing: "border-box",
+            overflowY: "auto",
+            overflowX: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            transition: "width 0.3s ease-in-out",
+          }}
+        >
           <BreadCrumbs />
-          <Outlet />
+          <Box sx={{ flex: 1, overflowY: "auto" }}>
+            <Outlet />
+          </Box>
         </Box>
       </AppShell.Main>
 
