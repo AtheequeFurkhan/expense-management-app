@@ -27,10 +27,17 @@ export const SnackMessage = {
     fetchEmployees: "Unable to retrieve list of Employees",
     fetchCustomers: "Unable to retrieve list of Customers",
     fetchAppConfigMessage: "Unable to retrieve app configurations",
+    fetchOpdStatus: "Unable to retrieve OPD Data",
+    fetchOpdDataStatus:
+      "Failed to load OPD claims data. Please check your connection and try again.",
+    fetchOpdNetworkError: "Network error. Please check your internet connection.",
+    fetchOpdServerError: "Server error. Please try again later.",
+    fetchOpdTimeout: "Request timeout. Please try again.",
   },
   warning: {},
 };
 
-export const APP_DESC = " Internal App Product Template.";
-
 export const redirectUrl = "iapm-marketplace-redirect-url";
+export const OPD_LOADING_MESSAGES = {
+  LOADING_DATA: "Loading OPD claims data...",
+};
