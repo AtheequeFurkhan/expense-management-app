@@ -15,20 +15,14 @@
 // under the License.
 import { Box, MenuItem, Select, Typography } from "@wso2/oxygen-ui";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const bars: number[] = [4, 5, 6, 7, 6, 7, 8, 9];
-const labels: string[] = [
-  "0-5K",
-  "5K-10K",
-  "10K-15K",
-  "15K-20K",
-  "20K-25K",
-  "25K-30K",
-  "30K-35K",
-  "35K-40K",
-];
-const yAxisLabels: number[] = [12, 9, 6, 3, 0];
+import {
+  OPD_CHART_CONFIG,
+  OPD_SIDE_CARDS_CONFIG,
+  OPD_SUMMARY_CARDS_CONFIG,
+} from "@root/src/config/config";
+import { APIService } from "@utils/apiService";
 
 type TrendVariant = "positive" | "negative";
 
@@ -45,6 +39,18 @@ type SummaryCardProps = {
   footerLeft?: string;
   footerRight?: string;
 };
+interface OpdClaimsData {
+  claimAmountLastYear: number;
+  currentMonthClaimAmount: number;
+  claimsCountPreviousYear: number;
+  gracePeriodClaims: number;
+  activeClaimsData: number[];
+  unclaimedCount: number;
+  fullyClaimedCount: number;
+  trendLastYear: number;
+  trendCurrentMonth: number;
+  trendPreviousYear: number;
+}
 
 function SummaryCard(props: SummaryCardProps) {
   const {
@@ -259,7 +265,77 @@ function SideCountCard({ title, value, color }: { title: string; value: string; 
 export default function OpdClaims() {
   const [month, setMonth] = useState("all");
   const [year, setYear] = useState("2025");
-  const maxBarValue = 12;
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<OpdClaimsData>({
+    claimAmountLastYear: 8124500,
+    currentMonthClaimAmount: 65210,
+    claimsCountPreviousYear: 12470,
+    gracePeriodClaims: 984,
+    activeClaimsData: [4, 5, 6, 7, 6, 7, 8, 9],
+    unclaimedCount: 22,
+    fullyClaimedCount: 9,
+    trendLastYear: -2.5,
+    trendCurrentMonth: 5.8,
+    trendPreviousYear: 2.5,
+  });
+
+  useEffect(() => {
+    const fetchOpdClaimsData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const params: Record<string, string> = {
+          year,
+        };
+
+        if (month !== "all") {
+          params.month = month;
+        }
+
+        const response = await apiService.get("/opd-claims", { params });
+
+        if (response?.data) {
+          setData({
+            claimAmountLastYear: response.data.claimAmountLastYear ?? 8124500,
+            currentMonthClaimAmount: response.data.currentMonthClaimAmount ?? 65210,
+            claimsCountPreviousYear: response.data.claimsCountPreviousYear ?? 12470,
+            gracePeriodClaims: response.data.gracePeriodClaims ?? 984,
+            activeClaimsData: response.data.activeClaimsData ?? [4, 5, 6, 7, 6, 7, 8, 9],
+            unclaimedCount: response.data.unclaimedCount ?? 22,
+            fullyClaimedCount: response.data.fullyClaimedCount ?? 9,
+            trendLastYear: response.data.trendLastYear ?? -2.5,
+            trendCurrentMonth: response.data.trendCurrentMonth ?? 5.8,
+            trendPreviousYear: response.data.trendPreviousYear ?? 2.5,
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching OPD claims:", err);
+        setError("Failed to load OPD claims data");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOpdClaimsData();
+  }, [month, year]);
+
+  if (loading) {
+    return (
+      <Box sx={{ p: 2, display: "grid", placeItems: "center", minHeight: "100vh" }}>
+        <Typography>Loading OPD claims data...</Typography>
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ p: 2, display: "grid", placeItems: "center", minHeight: "100vh" }}>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -283,40 +359,40 @@ export default function OpdClaims() {
         }}
       >
         <SummaryCard
-          icon="$"
-          iconBg="warning.light"
-          iconColor="warning.dark"
-          title="Claim amount in the last year"
-          value="8,124,500"
-          suffix="LKR"
-          trend="-2.5%"
-          trendVariant="negative"
+          icon={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.icon}
+          iconBg={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.iconBg}
+          iconColor={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.iconColor}
+          title={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.title}
+          value={data.claimAmountLastYear.toLocaleString()}
+          suffix={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.suffix}
+          trend={`${data.trendLastYear > 0 ? "+" : ""}${data.trendLastYear}%`}
+          trendVariant={data.trendLastYear < 0 ? "negative" : "positive"}
         />
 
         <SummaryCard
-          icon="↗"
-          iconBg="primary.light"
-          iconColor="primary.dark"
-          title="Current month's claim amount"
-          value="65,210"
-          suffix="LKR"
-          trend="+5.8%"
+          icon={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.icon}
+          iconBg={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.iconBg}
+          iconColor={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.iconColor}
+          title={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.title}
+          value={data.currentMonthClaimAmount.toLocaleString()}
+          suffix={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.suffix}
+          trend={`${data.trendCurrentMonth > 0 ? "+" : ""}${data.trendCurrentMonth}%`}
           trendVariant="positive"
           footerDotColor="info.main"
-          footerLeft="January 2026"
+          footerLeft={`${new Date().toLocaleString("default", { month: "long" })} ${new Date().getFullYear()}`}
         />
 
         <SummaryCard
-          icon="📋"
-          iconBg="warning.light"
-          iconColor="warning.dark"
-          title="Claims count in previous year"
-          value="12,470"
-          trend="+642"
+          icon={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.icon}
+          iconBg={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.iconBg}
+          iconColor={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.iconColor}
+          title={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.title}
+          value={data.claimsCountPreviousYear.toLocaleString()}
+          trend={`+${data.trendPreviousYear}`}
           trendVariant="positive"
           footerDotColor="warning.main"
-          footerLeft="Year 2025"
-          footerRight="984"
+          footerLeft={`Year ${year}`}
+          footerRight={data.gracePeriodClaims.toString()}
         />
       </Box>
 
@@ -382,10 +458,10 @@ export default function OpdClaims() {
                 flexDirection: "column",
                 justifyContent: "space-between",
                 pr: 1,
-                height: 320,
+                height: OPD_CHART_CONFIG.chartHeight,
               }}
             >
-              {yAxisLabels.map((label) => (
+              {OPD_CHART_CONFIG.yAxisLabels.map((label) => (
                 <Typography
                   key={label}
                   variant="caption"
@@ -397,14 +473,14 @@ export default function OpdClaims() {
             </Box>
 
             {/* Bars + Grid */}
-            <Box sx={{ flex: 1, position: "relative", height: 320 }}>
+            <Box sx={{ flex: 1, position: "relative", height: OPD_CHART_CONFIG.chartHeight }}>
               {/* Horizontal dashed grid lines */}
-              {yAxisLabels.map((label) => (
+              {OPD_CHART_CONFIG.yAxisLabels.map((label) => (
                 <Box
                   key={`grid-${label}`}
                   sx={{
                     position: "absolute",
-                    top: `${((maxBarValue - label) / maxBarValue) * 100}%`,
+                    top: `${((OPD_CHART_CONFIG.maxBarValue - label) / OPD_CHART_CONFIG.maxBarValue) * 100}%`,
                     left: 0,
                     right: 0,
                     borderTop: "1px dashed",
@@ -418,16 +494,16 @@ export default function OpdClaims() {
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(8, 1fr)",
+                  gridTemplateColumns: `repeat(${data.activeClaimsData.length}, 1fr)`,
                   height: "100%",
                   position: "relative",
                   zIndex: 1,
-                  gap: "2px",
+                  gap: OPD_CHART_CONFIG.barGap,
                 }}
               >
-                {bars.map((v, i) => (
+                {data.activeClaimsData.map((v, i) => (
                   <Box
-                    key={labels[i]}
+                    key={i}
                     sx={{
                       display: "flex",
                       flexDirection: "column",
@@ -439,7 +515,7 @@ export default function OpdClaims() {
                       <Box
                         sx={{
                           width: "100%",
-                          height: `${(v / maxBarValue) * 100}%`,
+                          height: `${(v / OPD_CHART_CONFIG.maxBarValue) * 100}%`,
                           bgcolor: "primary.main",
                           borderRadius: "2px 2px 0 0",
                           transition: "height 0.3s ease",
@@ -461,8 +537,13 @@ export default function OpdClaims() {
             }}
           >
             <Box sx={{ pr: 1 }} />
-            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(8, 1fr)" }}>
-              {labels.map((label) => (
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${data.activeClaimsData.length}, 1fr)`,
+              }}
+            >
+              {OPD_CHART_CONFIG.xAxisLabels.slice(0, data.activeClaimsData.length).map((label) => (
                 <Typography
                   key={label}
                   variant="caption"
@@ -477,8 +558,16 @@ export default function OpdClaims() {
 
         {/* Side Cards */}
         <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-          <SideCountCard title="UNCLAIMED" value="22" color="warning.main" />
-          <SideCountCard title="FULLY CLAIMED" value="9" color="primary.dark" />
+          <SideCountCard
+            title={OPD_SIDE_CARDS_CONFIG.unclaimed.title}
+            value={data.unclaimedCount.toString()}
+            color={OPD_SIDE_CARDS_CONFIG.unclaimed.color}
+          />
+          <SideCountCard
+            title={OPD_SIDE_CARDS_CONFIG.fullyClaimed.title}
+            value={data.fullyClaimedCount.toString()}
+            color={OPD_SIDE_CARDS_CONFIG.fullyClaimed.color}
+          />
         </Box>
       </Box>
     </Box>

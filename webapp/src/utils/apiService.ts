@@ -13,7 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import axios, { AxiosInstance, CancelTokenSource } from "axios";
+import axios, { AxiosInstance, AxiosRequestConfig, CancelTokenSource } from "axios";
 import * as rax from "retry-axios";
 
 export class APIService {
@@ -73,6 +73,44 @@ export class APIService {
     return APIService._cancelTokenSource;
   }
 
+  public static async get<T = unknown>(
+    url: string,
+    config?: AxiosRequestConfig,
+  ): Promise<{ data: T }> {
+    return APIService._instance.get(url, config);
+  }
+
+  public static async post<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig,
+  ): Promise<{ data: T }> {
+    return APIService._instance.post(url, data, config);
+  }
+
+  public static async put<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig,
+  ): Promise<{ data: T }> {
+    return APIService._instance.put(url, data, config);
+  }
+
+  public static async patch<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: AxiosRequestConfig,
+  ): Promise<{ data: T }> {
+    return APIService._instance.patch(url, data, config);
+  }
+
+  public static async delete<T = unknown>(
+    url: string,
+    config?: AxiosRequestConfig,
+  ): Promise<{ data: T }> {
+    return APIService._instance.delete(url, config);
+  }
+
   private static updateTokens(idToken: string) {
     APIService._idToken = idToken;
   }
@@ -80,7 +118,6 @@ export class APIService {
   private static updateRequestInterceptor() {
     APIService._instance.interceptors.request.use(
       (config) => {
-        // config.headers.set("Authorization", "Bearer " + APIService._idToken);
         config.headers.set("x-jwt-assertion", APIService._idToken);
 
         const endpoint = config.url || "";
@@ -101,3 +138,5 @@ export class APIService {
     );
   }
 }
+
+export const apiService = APIService;
