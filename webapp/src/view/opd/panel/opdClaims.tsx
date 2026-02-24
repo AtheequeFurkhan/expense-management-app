@@ -13,16 +13,13 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, MenuItem, Select, Typography } from "@wso2/oxygen-ui";
+import { Alert, Box, MenuItem, Select, Stack, Typography } from "@wso2/oxygen-ui";
 
 import { useEffect, useState } from "react";
 
-import {
-  OPD_CHART_CONFIG,
-  OPD_SIDE_CARDS_CONFIG,
-  OPD_SUMMARY_CARDS_CONFIG,
-} from "@root/src/config/config";
-import { APIService } from "@utils/apiService";
+import { OPD_CHART_CONFIG, OPD_SIDE_CARDS_CONFIG, OPD_SUMMARY_CARDS_CONFIG } from "@config/config";
+import { SnackMessage } from "@root/src/config/constant";
+import { apiService } from "@utils/apiService";
 
 type TrendVariant = "positive" | "negative";
 
@@ -39,6 +36,7 @@ type SummaryCardProps = {
   footerLeft?: string;
   footerRight?: string;
 };
+
 interface OpdClaimsData {
   claimAmountLastYear: number;
   currentMonthClaimAmount: number;
@@ -280,59 +278,96 @@ export default function OpdClaims() {
     trendPreviousYear: 2.5,
   });
 
-  useEffect(() => {
-    const fetchOpdClaimsData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchOpdClaimsData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-        const params: Record<string, string> = {
-          year,
-        };
+      const params: Record<string, string> = {
+        year,
+      };
 
-        if (month !== "all") {
-          params.month = month;
-        }
-
-        const response = await apiService.get("/opd-claims", { params });
-
-        if (response?.data) {
-          setData({
-            claimAmountLastYear: response.data.claimAmountLastYear ?? 8124500,
-            currentMonthClaimAmount: response.data.currentMonthClaimAmount ?? 65210,
-            claimsCountPreviousYear: response.data.claimsCountPreviousYear ?? 12470,
-            gracePeriodClaims: response.data.gracePeriodClaims ?? 984,
-            activeClaimsData: response.data.activeClaimsData ?? [4, 5, 6, 7, 6, 7, 8, 9],
-            unclaimedCount: response.data.unclaimedCount ?? 22,
-            fullyClaimedCount: response.data.fullyClaimedCount ?? 9,
-            trendLastYear: response.data.trendLastYear ?? -2.5,
-            trendCurrentMonth: response.data.trendCurrentMonth ?? 5.8,
-            trendPreviousYear: response.data.trendPreviousYear ?? 2.5,
-          });
-        }
-      } catch (err) {
-        console.error("Error fetching OPD claims:", err);
-        setError("Failed to load OPD claims data");
-      } finally {
-        setLoading(false);
+      if (month !== "all") {
+        params.month = month;
       }
-    };
 
+      const response = await apiService.get("/opd-claims", { params });
+
+      if (response?.data) {
+        setData({
+          claimAmountLastYear: response.data.claimAmountLastYear ?? 8124500,
+          currentMonthClaimAmount: response.data.currentMonthClaimAmount ?? 65210,
+          claimsCountPreviousYear: response.data.claimsCountPreviousYear ?? 12470,
+          gracePeriodClaims: response.data.gracePeriodClaims ?? 984,
+          activeClaimsData: response.data.activeClaimsData ?? [4, 5, 6, 7, 6, 7, 8, 9],
+          unclaimedCount: response.data.unclaimedCount ?? 22,
+          fullyClaimedCount: response.data.fullyClaimedCount ?? 9,
+          trendLastYear: response.data.trendLastYear ?? -2.5,
+          trendCurrentMonth: response.data.trendCurrentMonth ?? 5.8,
+          trendPreviousYear: response.data.trendPreviousYear ?? 2.5,
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching OPD claims:", err);
+      if (err instanceof TypeError) {
+        setError(SnackMessage.error.fetchOpdStatus);
+      } else if ((err as any)?.code === "ECONNABORTED") {
+        setError(SnackMessage.error.fetchOpdTimeout);
+      } else if ((err as any)?.response?.status >= 500) {
+        setError(SnackMessage.error.fetchOpdServerError);
+      } else {
+        setError(SnackMessage.error.fetchOpdDataStatus);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchOpdClaimsData();
   }, [month, year]);
 
   if (loading) {
     return (
-      <Box sx={{ p: 2, display: "grid", placeItems: "center", minHeight: "100vh" }}>
-        <Typography>Loading OPD claims data...</Typography>
+      <Box
+        sx={{
+          p: 2,
+          display: "grid",
+          placeItems: "center",
+          minHeight: "100vh",
+          bgcolor: "background.default",
+        }}
+      >
+        <Stack sx={{ width: "100%", maxWidth: 600 }} spacing={1}>
+          <Alert severity="info">Loading OPD claims data...</Alert>
+        </Stack>
       </Box>
     );
   }
 
   if (error) {
     return (
-      <Box sx={{ p: 2, display: "grid", placeItems: "center", minHeight: "100vh" }}>
-        <Typography color="error">{error}</Typography>
+      <Box
+        sx={{
+          p: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "70vh",
+          bgcolor: "background.default",
+          overflow: "hidden",
+        }}
+      >
+        <Stack sx={{ width: "fit-content", minWidth: "400", maxWidth: "90%" }} spacing={2}>
+          <Alert
+            severity="error"
+            sx={{
+              width: "100%",
+            }}
+          >
+            {error}
+          </Alert>
+        </Stack>
       </Box>
     );
   }
