@@ -18,8 +18,9 @@ import { Alert, Box, MenuItem, Select, Stack, Typography } from "@wso2/oxygen-ui
 import { useEffect, useState } from "react";
 
 import { OPD_CHART_CONFIG, OPD_SIDE_CARDS_CONFIG, OPD_SUMMARY_CARDS_CONFIG } from "@config/config";
-import { SnackMessage } from "@root/src/config/constant";
-import { apiService } from "@utils/apiService";
+import { OPD_LOADING_MESSAGES, SnackMessage } from "@root/src/config/constant";
+
+// import { apiService } from "@utils/apiService";
 
 type TrendVariant = "positive" | "negative";
 
@@ -283,30 +284,45 @@ export default function OpdClaims() {
       setLoading(true);
       setError(null);
 
-      const params: Record<string, string> = {
-        year,
+      // const params: Record<string, string> = {
+      //   year,
+      // };
+
+      // if (month !== "all") {
+      //   params.month = month;
+      // }
+
+      // const response = await apiService.get("/opd-claims", { params });
+
+      // if (response?.data) {
+      //   setData({
+      //     claimAmountLastYear: response.data.claimAmountLastYear ?? 8124500,
+      //     currentMonthClaimAmount: response.data.currentMonthClaimAmount ?? 65210,
+      //     claimsCountPreviousYear: response.data.claimsCountPreviousYear ?? 12470,
+      //     gracePeriodClaims: response.data.gracePeriodClaims ?? 984,
+      //     activeClaimsData: response.data.activeClaimsData ?? [4, 5, 6, 7, 6, 7, 8, 9],
+      //     unclaimedCount: response.data.unclaimedCount ?? 22,
+      //     fullyClaimedCount: response.data.fullyClaimedCount ?? 9,
+      //     trendLastYear: response.data.trendLastYear ?? -2.5,
+      //     trendCurrentMonth: response.data.trendCurrentMonth ?? 5.8,
+      //     trendPreviousYear: response.data.trendPreviousYear ?? 2.5,
+      //   });
+      // }
+
+      //TODO : Remove dummy data
+      const dummyData = {
+        claimAmountLastYear: 8124500,
+        currentMonthClaimAmount: 65210,
+        claimsCountPreviousYear: 12470,
+        gracePeriodClaims: 984,
+        activeClaimsData: [4, 5, 6, 7, 6, 7, 8, 9],
+        unclaimedCount: 22,
+        fullyClaimedCount: 9,
+        trendLastYear: -2.5,
+        trendCurrentMonth: 5.8,
+        trendPreviousYear: 2.5,
       };
-
-      if (month !== "all") {
-        params.month = month;
-      }
-
-      const response = await apiService.get("/opd-claims", { params });
-
-      if (response?.data) {
-        setData({
-          claimAmountLastYear: response.data.claimAmountLastYear ?? 8124500,
-          currentMonthClaimAmount: response.data.currentMonthClaimAmount ?? 65210,
-          claimsCountPreviousYear: response.data.claimsCountPreviousYear ?? 12470,
-          gracePeriodClaims: response.data.gracePeriodClaims ?? 984,
-          activeClaimsData: response.data.activeClaimsData ?? [4, 5, 6, 7, 6, 7, 8, 9],
-          unclaimedCount: response.data.unclaimedCount ?? 22,
-          fullyClaimedCount: response.data.fullyClaimedCount ?? 9,
-          trendLastYear: response.data.trendLastYear ?? -2.5,
-          trendCurrentMonth: response.data.trendCurrentMonth ?? 5.8,
-          trendPreviousYear: response.data.trendPreviousYear ?? 2.5,
-        });
-      }
+      setData(dummyData);
     } catch (err) {
       console.error("Error fetching OPD claims:", err);
       if (err instanceof TypeError) {
@@ -339,7 +355,7 @@ export default function OpdClaims() {
         }}
       >
         <Stack sx={{ width: "100%", maxWidth: 600 }} spacing={1}>
-          <Alert severity="info">Loading OPD claims data...</Alert>
+          <Alert severity="info">{OPD_LOADING_MESSAGES.LOADING_DATA}</Alert>
         </Stack>
       </Box>
     );
