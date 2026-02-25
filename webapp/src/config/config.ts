@@ -64,8 +64,8 @@ export const OPD_SUMMARY_CARDS_CONFIG = {
   },
   previousYearCard: {
     icon: Hash,
-    iconBg: "#85e5aa",
-    iconColor: "#00762d",
+    iconBg: "#dec3f9",
+    iconColor: "#7013cd",
     title: "Previous Year Claim Count",
   },
 };
@@ -86,7 +86,7 @@ export const APP_DOMAIN = window.config?.APP_DOMAIN ?? "";
 export const ServiceBaseUrl = window.config?.REACT_APP_BACKEND_BASE_URL ?? "";
 
 export const AppConfig = {
-  serviceUrls: {
+  serviceUrls: {     
     contacts: ServiceBaseUrl + "/contacts",
     userInfo: ServiceBaseUrl + "/user-info",
     employees: ServiceBaseUrl + "/employees",
