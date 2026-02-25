@@ -489,9 +489,9 @@ export default function OpdClaims() {
                 sx={{ borderRadius: 2, fontSize: 14, minWidth: 130 }}
               >
                 <MenuItem value="current">Current Month</MenuItem>
-                <MenuItem value="pastThree">Past 3 Months</MenuItem>
+                <MenuItem value="pastThree">Past 12 Months</MenuItem>{" "}
                 <MenuItem value="pastSix">Past 6 Months</MenuItem>
-                <MenuItem value="pastThree">Past 12 Months</MenuItem>
+                <MenuItem value="pastTwelve">Past 12 Months</MenuItem>{" "}
               </Select>
             </Box>
           </Box>
