@@ -62,6 +62,7 @@ export interface UserInfoInterface {
   workEmail: string;
   employeeThumbnail: string | null;
   jobRole: string;
+  avatar?: string;
   privileges: number[];
 }
 
