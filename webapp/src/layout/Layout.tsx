@@ -22,11 +22,13 @@ import {
   Sidebar,
   UserMenu,
 } from "@wso2/oxygen-ui";
+import { useColorScheme } from "@wso2/oxygen-ui";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useMemo, useState } from "react";
 
-import Logo from "@component/common/Logo";
+import LogoLight from "@assets/images/wso2-logo-dark.png";
+import LogoDark from "@assets/images/wso2-logo-white.png";
 import BreadCrumbs from "@layout/BreadCrumbs/BreadCrumbs";
 import { Role } from "@slices/authSlice/auth";
 import { useAppSelector } from "@slices/store";
@@ -36,6 +38,9 @@ function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+
+  const { colorScheme } = useColorScheme();
+  const logoSrc = colorScheme === "dark" ? LogoDark : LogoLight;
 
   const allRoutes = useMemo(() => getActiveRouteDetails([Role.ADMIN, Role.EMPLOYEE]), []);
   const user = useAppSelector((state) => state.user.userInfo);
@@ -57,7 +62,16 @@ function Layout() {
           <Header.Toggle collapsed={collapsed} onToggle={() => setCollapsed((prev) => !prev)} />
           <Header.Brand>
             <Header.BrandLogo>
-              <Logo />
+              <img
+                src={logoSrc}
+                alt="App Logo"
+                style={{
+                  height: 30,
+                  width: 120,
+                  objectFit: "contain",
+                  display: "block",
+                }}
+              />
             </Header.BrandLogo>
             <Header.BrandTitle>Expense Management App</Header.BrandTitle>
           </Header.Brand>
@@ -76,7 +90,7 @@ function Layout() {
                         .toUpperCase()
                     : "U")
                 }
-                name={user?.firstName || "Unknown User"}
+                name={user?.firstName || "Atheeque Furkhan"}
               />
               <UserMenu.Header
                 avatar={
@@ -90,14 +104,10 @@ function Layout() {
                     : "U")
                 }
                 email={user?.workEmail || ""}
-                name={user?.firstName || "Unknown User"}
+                name={user?.firstName || "Atheeque Furkhan"}
                 role={user?.jobRole || ""}
               />
-              <UserMenu.Logout
-                onClick={() => {
-                  /* your logout logic here */
-                }}
-              />
+              <UserMenu.Logout onClick={() => {}} />
             </UserMenu>
           </Header.Actions>
         </Header>
