@@ -14,6 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 import { BaseURLAuthClientConfig } from "@asgardeo/auth-react";
+import { ClipboardList, DollarSign, TrendingUp } from "lucide-react";
 
 declare global {
   interface Window {
@@ -48,23 +49,23 @@ export const OPD_CHART_CONFIG = {
 
 export const OPD_SUMMARY_CARDS_CONFIG = {
   lastYearCard: {
-    icon: "$",
-    iconBg: "warning.light",
-    iconColor: "warning.dark",
+    icon: DollarSign,
+    iconBg: "#fdcda0",
+    iconColor: "#fb7900",
     title: "Claim amount in the last year",
     suffix: "LKR",
   },
   currentMonthCard: {
-    icon: "↗",
-    iconBg: "primary.light",
-    iconColor: "primary.dark",
+    icon: TrendingUp,
+    iconBg: "#a0d0fd",
+    iconColor: "#005baf",
     title: "Current month's claim amount",
     suffix: "LKR",
   },
   previousYearCard: {
-    icon: "📋",
-    iconBg: "warning.light",
-    iconColor: "warning.dark",
+    icon: ClipboardList,
+    iconBg: "#85e5aa",
+    iconColor: "#00762d",
     title: "Claims count in previous year",
   },
 };

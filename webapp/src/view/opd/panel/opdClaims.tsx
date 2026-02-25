@@ -14,6 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 import { Alert, Box, MenuItem, Select, Stack, Typography } from "@wso2/oxygen-ui";
+import { LucideIcon } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
@@ -25,7 +26,7 @@ import { OPD_LOADING_MESSAGES, SnackMessage } from "@root/src/config/constant";
 type TrendVariant = "positive" | "negative";
 
 type SummaryCardProps = {
-  icon: string;
+  icon: LucideIcon;
   iconBg: string;
   iconColor: string;
   title: string;
@@ -53,7 +54,7 @@ interface OpdClaimsData {
 
 function SummaryCard(props: SummaryCardProps) {
   const {
-    icon,
+    icon: Icon,
     iconBg,
     iconColor,
     title,
@@ -90,7 +91,7 @@ function SummaryCard(props: SummaryCardProps) {
           sx={{
             width: 42,
             height: 42,
-            borderRadius: "50%",
+            borderRadius: "20%",
             bgcolor: iconBg,
             color: iconColor,
             display: "grid",
@@ -99,7 +100,7 @@ function SummaryCard(props: SummaryCardProps) {
             lineHeight: 1,
           }}
         >
-          {icon}
+          {Icon && <Icon />}
         </Box>
 
         <Box sx={{ textAlign: "right" }}>
