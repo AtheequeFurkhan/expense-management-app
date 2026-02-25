@@ -110,7 +110,7 @@ function SummaryCard(props: SummaryCardProps) {
               display: "inline-flex",
               px: 1,
               py: 0.2,
-              borderRadius: 8,
+              borderRadius: 0.5,
               bgcolor: trendBg,
               color: trendColor,
               fontWeight: 700,
