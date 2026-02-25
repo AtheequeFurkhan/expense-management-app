@@ -67,8 +67,8 @@ function SummaryCard(props: SummaryCardProps) {
     footerRight,
   } = props;
 
-  const trendColor = trendVariant === "negative" ? "error.main" : "success.main";
-  const trendBg = trendVariant === "negative" ? "error.light" : "success.light";
+  const trendColor = trendVariant === "negative" ? "#fcdfdf" : "#dcffe6";
+  const trendBg = trendVariant === "negative" ? "#f83e3e" : "#13cd4b";
 
   return (
     <Box
@@ -196,7 +196,7 @@ function SummaryCard(props: SummaryCardProps) {
             sx={{
               border: "1px solid",
               borderColor: "divider",
-              borderRadius: 10,
+              borderRadius: 0.8,
               px: 1.2,
               py: 0.4,
               display: "inline-flex",
@@ -208,16 +208,16 @@ function SummaryCard(props: SummaryCardProps) {
               variant="caption"
               sx={{ color: "text.secondary", fontWeight: 600, fontSize: 11 }}
             >
-              GRACE PERIOD CLAIMS
+              Grace Period Claims
             </Typography>
             <Typography
               variant="caption"
               sx={{
-                color: "info.main",
+                color: "#cff9ff",
                 fontWeight: 700,
                 fontSize: 12,
-                bgcolor: "info.light",
-                borderRadius: 4,
+                bgcolor: "#13b8cd",
+                borderRadius: 0.5,
                 px: 0.6,
                 py: 0.1,
               }}
