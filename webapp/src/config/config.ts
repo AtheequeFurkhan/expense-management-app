@@ -52,21 +52,21 @@ export const OPD_SUMMARY_CARDS_CONFIG = {
     icon: DollarSign,
     iconBg: "#fdcda0",
     iconColor: "#fb7900",
-    title: "Claim amount in the last year",
+    title: "Last Year Claim Amount",
     suffix: "LKR",
   },
   currentMonthCard: {
     icon: TrendingUp,
     iconBg: "#a0d0fd",
     iconColor: "#005baf",
-    title: "Current month's claim amount",
+    title: "Current Month Claim Amount",
     suffix: "LKR",
   },
   previousYearCard: {
     icon: ClipboardList,
     iconBg: "#85e5aa",
     iconColor: "#00762d",
-    title: "Claims count in previous year",
+    title: "Previous Year Claim Count",
   },
 };
 
