@@ -131,7 +131,7 @@ const Sidebar = (props: SidebarProps) => {
 
   return (
     <ColorModeContext.Consumer>
-      {(colorMode) => {
+      {(colorMode: { mode: string; toggleColorMode: (() => void) | undefined }) => {
         const currentYear = new Date().getFullYear();
 
         return (

@@ -23,7 +23,7 @@ import {
   UserMenu,
 } from "@wso2/oxygen-ui";
 import { useColorScheme } from "@wso2/oxygen-ui";
-import { LogOut, Settings, UserRound } from "lucide-react";
+import { LogOut, Settings, ShieldUser, UserRound } from "lucide-react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useMemo, useState } from "react";
@@ -98,7 +98,7 @@ function Layout() {
                 onClick={() => console.log("Settings clicked")}
               />
               <UserMenu.Item
-                icon={<Settings size={18} />}
+                icon={<ShieldUser size={18} />}
                 label="Admin Panel"
                 onClick={() => console.log("Admin panel clicked")}
               />

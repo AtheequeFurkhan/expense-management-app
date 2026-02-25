@@ -13,11 +13,22 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Alert, Box, MenuItem, Select, Stack, Typography } from "@wso2/oxygen-ui";
+import {
+  Alert,
+  Box,
+  Card,
+  CardContent,
+  MenuItem,
+  Select,
+  Skeleton,
+  Stack,
+  Typography,
+} from "@wso2/oxygen-ui";
 import { LucideIcon } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
+import SkeletonCard from "@component/ui/common-card/SkeletonCard";
 import { OPD_CHART_CONFIG, OPD_SIDE_CARDS_CONFIG, OPD_SUMMARY_CARDS_CONFIG } from "@config/config";
 import { OPD_LOADING_MESSAGES, SnackMessage } from "@root/src/config/constant";
 
@@ -287,6 +298,62 @@ export default function OpdClaims() {
     try {
       setLoading(true);
       setError(null);
+
+      if (loading) {
+        return (
+          <Box
+            sx={{
+              p: 2,
+              bgcolor: "background.default",
+              minHeight: "100%",
+              width: "100%",
+              maxWidth: "100%",
+              boxSizing: "border-box",
+              transition: "width 0.3s ease-in-out",
+            }}
+          >
+            {/* Skeleton Summary Cards */}
+            <Box
+              sx={{
+                width: "100%",
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
+                gap: 2,
+              }}
+            >
+              {[1, 2, 3].map((i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </Box>
+
+            {/* Skeleton Chart + Side Cards */}
+            <Box
+              sx={{
+                mt: 2,
+                width: "100%",
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 3fr) minmax(260px, 1fr)" },
+                gap: 2,
+                alignItems: "stretch",
+              }}
+            >
+              {/* Chart Skeleton */}
+              <Card>
+                <CardContent>
+                  <Skeleton variant="text" width="40%" height={24} sx={{ mb: 3 }} />
+                  <Skeleton variant="rectangular" width="100%" height={160} />
+                </CardContent>
+              </Card>
+              {/* Side Cards Skeleton */}
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                {[1, 2].map((i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </Box>
+            </Box>
+          </Box>
+        );
+      }
 
       // const params: Record<string, string> = {
       //   year,
