@@ -84,6 +84,7 @@ function SummaryCard(props: SummaryCardProps) {
         justifyContent: "space-between",
       }}
     >
+      {/* Header: Icon and Trend */}
       <Box
         sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 1 }}
       >
@@ -133,14 +134,14 @@ function SummaryCard(props: SummaryCardProps) {
         </Box>
       </Box>
 
-      <Box>
+      {/* Main Content: Title, Value, Suffix */}
+      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
         <Typography variant="body2" sx={{ color: "text.secondary", fontSize: 14, fontWeight: 400 }}>
           {title}
         </Typography>
-
         <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.8, mt: 0.5 }}>
           <Typography
-            sx={{ fontWeight: 700, fontSize: 32, lineHeight: 1.2, color: "text.primary" }}
+            sx={{ fontWeight: 700, fontSize: 30, lineHeight: 1.2, color: "text.primary" }}
           >
             {value}
           </Typography>
@@ -150,80 +151,82 @@ function SummaryCard(props: SummaryCardProps) {
             </Typography>
           )}
         </Box>
+      </Box>
 
-        {(footerLeft || footerRight) && (
-          <Box
+      {/* Footer */}
+      <Box
+        sx={{
+          mt: 2,
+          minHeight: 32,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 1,
+        }}
+      >
+        {footerLeft ? (
+          <Typography
+            variant="body2"
             sx={{
-              mt: 1.2,
+              color: "text.secondary",
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
-              gap: 1,
+              gap: 0.8,
+              fontSize: 13,
             }}
           >
-            {footerLeft ? (
-              <Typography
-                variant="body2"
-                sx={{
-                  color: "text.secondary",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 0.8,
-                  fontSize: 13,
-                }}
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: "50%",
-                    bgcolor: footerDotColor,
-                    flexShrink: 0,
-                  }}
-                />
-                {footerLeft}
-              </Typography>
-            ) : (
-              <Box />
-            )}
+            <Box
+              component="span"
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                bgcolor: footerDotColor,
+                flexShrink: 0,
+              }}
+            />
+            {footerLeft}
+          </Typography>
+        ) : (
+          <Box sx={{ width: 80 }} />
+        )}
 
-            {footerRight ? (
-              <Box
-                sx={{
-                  border: "1px solid",
-                  borderColor: "divider",
-                  borderRadius: 10,
-                  px: 1.2,
-                  py: 0.4,
-                  display: "inline-flex",
-                  gap: 0.8,
-                  alignItems: "center",
-                }}
-              >
-                <Typography
-                  variant="caption"
-                  sx={{ color: "text.secondary", fontWeight: 600, fontSize: 11 }}
-                >
-                  GRACE PERIOD CLAIMS
-                </Typography>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: "info.main",
-                    fontWeight: 700,
-                    fontSize: 12,
-                    bgcolor: "info.light",
-                    borderRadius: 4,
-                    px: 0.6,
-                    py: 0.1,
-                  }}
-                >
-                  {footerRight}
-                </Typography>
-              </Box>
-            ) : null}
+        {footerRight ? (
+          <Box
+            sx={{
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 10,
+              px: 1.2,
+              py: 0.4,
+              display: "inline-flex",
+              gap: 0.8,
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              variant="caption"
+              sx={{ color: "text.secondary", fontWeight: 600, fontSize: 11 }}
+            >
+              GRACE PERIOD CLAIMS
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "info.main",
+                fontWeight: 700,
+                fontSize: 12,
+                bgcolor: "info.light",
+                borderRadius: 4,
+                px: 0.6,
+                py: 0.1,
+              }}
+            >
+              {footerRight}
+            </Typography>
           </Box>
+        ) : (
+          <Box sx={{ width: 120 }} />
         )}
       </Box>
     </Box>
@@ -419,6 +422,8 @@ export default function OpdClaims() {
           suffix={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.suffix}
           trend={`${data.trendLastYear > 0 ? "+" : ""}${data.trendLastYear}%`}
           trendVariant={data.trendLastYear < 0 ? "negative" : "positive"}
+          footerDotColor="warning.main"
+          footerLeft={`Year ${year}`}
         />
 
         <SummaryCard
