@@ -266,7 +266,7 @@ function SideCountCard({ title, value, color }: { title: string; value: string; 
 }
 
 export default function OpdClaims() {
-  const [month, setMonth] = useState("all");
+  const [month, setMonth] = useState("current");
   const [year, setYear] = useState("2025");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -345,7 +345,7 @@ export default function OpdClaims() {
 
   useEffect(() => {
     fetchOpdClaimsData();
-  }, [month, year]);
+  }, [month]);
 
   if (loading) {
     return (
@@ -478,7 +478,7 @@ export default function OpdClaims() {
             sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 3 }}
           >
             <Typography sx={{ fontWeight: 700, fontSize: 18, color: "text.primary" }}>
-              Active claims count
+              Total Active Claims
             </Typography>
 
             <Box sx={{ display: "flex", gap: 1 }}>
@@ -486,22 +486,12 @@ export default function OpdClaims() {
                 size="small"
                 value={month}
                 onChange={(e) => setMonth(e.target.value as string)}
-                sx={{ borderRadius: 6, fontSize: 14, minWidth: 130 }}
+                sx={{ borderRadius: 2, fontSize: 14, minWidth: 130 }}
               >
-                <MenuItem value="all">All Months</MenuItem>
-                <MenuItem value="jan">January</MenuItem>
-                <MenuItem value="feb">February</MenuItem>
-                <MenuItem value="mar">March</MenuItem>
-              </Select>
-              <Select
-                size="small"
-                value={year}
-                onChange={(e) => setYear(e.target.value as string)}
-                sx={{ borderRadius: 6, fontSize: 14, minWidth: 80 }}
-              >
-                <MenuItem value="2024">2024</MenuItem>
-                <MenuItem value="2025">2025</MenuItem>
-                <MenuItem value="2026">2026</MenuItem>
+                <MenuItem value="current">Current Month</MenuItem>
+                <MenuItem value="pastThree">Past 3 Months</MenuItem>
+                <MenuItem value="pastSix">Past 6 Months</MenuItem>
+                <MenuItem value="pastThree">Past 12 Months</MenuItem>
               </Select>
             </Box>
           </Box>
