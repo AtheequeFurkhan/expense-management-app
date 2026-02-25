@@ -13,13 +13,23 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { AppShell, Box, ColorSchemeToggle, Footer, Header, Sidebar } from "@wso2/oxygen-ui";
+import {
+  AppShell,
+  Box,
+  ColorSchemeToggle,
+  Footer,
+  Header,
+  Sidebar,
+  UserMenu,
+} from "@wso2/oxygen-ui";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useMemo, useState } from "react";
 
+import Logo from "@component/common/Logo";
 import BreadCrumbs from "@layout/BreadCrumbs/BreadCrumbs";
 import { Role } from "@slices/authSlice/auth";
+import { useAppSelector } from "@slices/store";
 import { getActiveRouteDetails } from "@src/route";
 
 function Layout() {
@@ -28,6 +38,7 @@ function Layout() {
   const [collapsed, setCollapsed] = useState(false);
 
   const allRoutes = useMemo(() => getActiveRouteDetails([Role.ADMIN, Role.EMPLOYEE]), []);
+  const user = useAppSelector((state) => state.user.userInfo);
 
   const activeItem = useMemo(() => {
     const currentRoute = allRoutes.find((r) => r.path === location.pathname);
@@ -42,14 +53,52 @@ function Layout() {
     <AppShell>
       {/* Header */}
       <AppShell.Navbar>
-        <Header>
-          <Header.Toggle collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+        <Header minimal>
+          <Header.Toggle collapsed={collapsed} onToggle={() => setCollapsed((prev) => !prev)} />
           <Header.Brand>
+            <Header.BrandLogo>
+              <Logo />
+            </Header.BrandLogo>
             <Header.BrandTitle>Expense Management App</Header.BrandTitle>
           </Header.Brand>
           <Header.Spacer />
           <Header.Actions>
             <ColorSchemeToggle />
+            <UserMenu>
+              <UserMenu.Trigger
+                avatar={
+                  user?.avatar ||
+                  (user?.firstName
+                    ? user.firstName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                    : "U")
+                }
+                name={user?.firstName || "Unknown User"}
+              />
+              <UserMenu.Header
+                avatar={
+                  user?.avatar ||
+                  (user?.firstName
+                    ? user.firstName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                    : "U")
+                }
+                email={user?.workEmail || ""}
+                name={user?.firstName || "Unknown User"}
+                role={user?.jobRole || ""}
+              />
+              <UserMenu.Logout
+                onClick={() => {
+                  /* your logout logic here */
+                }}
+              />
+            </UserMenu>
           </Header.Actions>
         </Header>
       </AppShell.Navbar>
@@ -120,9 +169,7 @@ function Layout() {
           }}
         >
           <BreadCrumbs />
-          <Box sx={{ flex: 1, overflowY: "auto" }}>
-            <Outlet />
-          </Box>
+          <Outlet />
         </Box>
       </AppShell.Main>
 
