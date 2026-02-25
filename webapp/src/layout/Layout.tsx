@@ -23,6 +23,7 @@ import {
   UserMenu,
 } from "@wso2/oxygen-ui";
 import { useColorScheme } from "@wso2/oxygen-ui";
+import { LogOut, Settings, UserRound } from "lucide-react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useMemo, useState } from "react";
@@ -79,35 +80,33 @@ function Layout() {
           <Header.Actions>
             <ColorSchemeToggle />
             <UserMenu>
-              <UserMenu.Trigger
-                avatar={
-                  user?.avatar ||
-                  (user?.firstName
-                    ? user.firstName
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()
-                    : "U")
-                }
-                name={user?.firstName || "Atheeque Furkhan"}
-              />
+              <UserMenu.Trigger name="Admin User" avatar="AU" />
               <UserMenu.Header
-                avatar={
-                  user?.avatar ||
-                  (user?.firstName
-                    ? user.firstName
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()
-                    : "U")
-                }
-                email={user?.workEmail || ""}
-                name={user?.firstName || "Atheeque Furkhan"}
-                role={user?.jobRole || ""}
+                name="Admin User"
+                email="admin@company.com"
+                avatar="AU"
+                role="Admin"
               />
-              <UserMenu.Logout onClick={() => {}} />
+              <UserMenu.Item
+                icon={<UserRound size={18} />}
+                label="Profile"
+                onClick={() => console.log("Profile clicked")}
+              />
+              <UserMenu.Item
+                icon={<Settings size={18} />}
+                label="Settings"
+                onClick={() => console.log("Settings clicked")}
+              />
+              <UserMenu.Item
+                icon={<Settings size={18} />}
+                label="Admin Panel"
+                onClick={() => console.log("Admin panel clicked")}
+              />
+              <UserMenu.Divider />
+              <UserMenu.Logout
+                icon={<LogOut size={18} />}
+                onClick={() => console.log("Logout clicked")}
+              />
             </UserMenu>
           </Header.Actions>
         </Header>
@@ -185,7 +184,12 @@ function Layout() {
 
       {/* Footer */}
       <AppShell.Footer>
-        <Footer companyName="WSO2 LLC" year={new Date().getFullYear()} />
+        <Footer>
+          <Footer.Copyright>© 2026 WSO2 LLC. All rights reserved.</Footer.Copyright>
+          <Footer.Divider />
+          <Footer.Link href="#terms">Terms & Conditions</Footer.Link>
+          <Footer.Link href="#privacy">Privacy Policy</Footer.Link>
+        </Footer>
       </AppShell.Footer>
     </AppShell>
   );
