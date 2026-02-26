@@ -15,12 +15,13 @@
 // under the License.
 import { Box } from "@wso2/oxygen-ui";
 
-import UserSetting from "@view/settings/panel/userSettings";
+// import UserSetting from "@view/settings/panel/userSettings";
+import UnderDevelopment from "@root/src/component/common/Maintenence";
 
 export default function Settings() {
   return (
     <Box>
-      <UserSetting />
+      <UnderDevelopment />
     </Box>
   );
 }
