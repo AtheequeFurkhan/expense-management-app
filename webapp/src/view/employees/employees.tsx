@@ -14,7 +14,9 @@
 // specific language governing permissions and limitations
 // under the License.
 import TabsPage from "@layout/pages/TabsPage";
-import EmployeeDetails from "@view/employees/panel/employeeDetails";
+import UnderDevelopment from "@root/src/component/common/Maintenence";
+
+// import EmployeeDetails from "@view/employees/panel/employeeDetails";
 
 export default function Employees() {
   return (
@@ -22,11 +24,7 @@ export default function Employees() {
       tabs={[
         {
           label: "Tab 1",
-          content: <EmployeeDetails />,
-        },
-        {
-          label: "Tab 2",
-          content: <></>,
+          content: <UnderDevelopment />,
         },
       ]}
     />

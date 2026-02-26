@@ -14,8 +14,9 @@
 // specific language governing permissions and limitations
 // under the License.
 import TabsPage from "@layout/pages/TabsPage";
+import UnderDevelopment from "@root/src/component/common/Maintenence";
 
-import FinanceDashboard from "./panel/financeDashboard";
+// import FinanceDashboard from "./panel/financeDashboard";
 
 export default function Dashboard() {
   return (
@@ -23,11 +24,7 @@ export default function Dashboard() {
       tabs={[
         {
           label: "Tab 1",
-          content: <FinanceDashboard />,
-        },
-        {
-          label: "Tab 2",
-          content: <></>,
+          content: <UnderDevelopment />,
         },
       ]}
     />
