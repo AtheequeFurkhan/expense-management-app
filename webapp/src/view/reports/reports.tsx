@@ -14,8 +14,9 @@
 // specific language governing permissions and limitations
 // under the License.
 import TabsPage from "@layout/pages/TabsPage";
+import UnderDevelopment from "@root/src/component/common/Maintenence";
 
-import Reports from "./panel/reports";
+// import Reports from "./panel/reports";
 
 export default function Report() {
   return (
@@ -23,11 +24,7 @@ export default function Report() {
       tabs={[
         {
           label: "Tab 1",
-          content: <Reports />,
-        },
-        {
-          label: "Tab 2",
-          content: <></>,
+          content: <UnderDevelopment />,
         },
       ]}
     />

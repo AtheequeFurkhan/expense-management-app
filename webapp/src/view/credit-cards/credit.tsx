@@ -14,8 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 import TabsPage from "@layout/pages/TabsPage";
-
-import CreditCard from "./panel/creditCard";
+// import CreditCard from "./panel/creditCard";
+import UnderDevelopment from "@root/src/component/common/Maintenence";
 
 export default function Credit() {
   return (
@@ -23,11 +23,7 @@ export default function Credit() {
       tabs={[
         {
           label: "Tab 1",
-          content: <CreditCard />,
-        },
-        {
-          label: "Tab 2",
-          content: <></>,
+          content: <UnderDevelopment />,
         },
       ]}
     />

@@ -13,9 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Typography } from "@wso2/oxygen-ui";
-
-import maintenanceGif from "@assets/images/maintenance.gif";
+import { Alert, Box, Typography } from "@wso2/oxygen-ui";
 
 export default function UnderDevelopment() {
   return (
@@ -27,16 +25,14 @@ export default function UnderDevelopment() {
         alignItems: "center",
         justifyContent: "center",
         bgcolor: "background.default",
-        gap: 2,
+        gap: 3,
       }}
     >
-      <img src={maintenanceGif} alt="Under Development" style={{ width: 180, marginBottom: 24 }} />
-      <Typography variant="h4" color="text.secondary">
-        🚧 Under Development 🚧
-      </Typography>
-      <Typography color="text.secondary">
-        This page is currently under development. Please check back soon!
-      </Typography>
+      <Alert severity="warning" sx={{ maxWidth: 520, width: "100%", textAlign: "center" }}>
+        <Typography sx={{ fontSize: 14 }}>
+          This page is currently under development. Please check back soon!
+        </Typography>
+      </Alert>
     </Box>
   );
 }

@@ -14,8 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 import TabsPage from "@layout/pages/TabsPage";
-
-import ExpenseClaims from "./panel/expenseClaims";
+// import ExpenseClaims from "./panel/expenseClaims";
+import UnderDevelopment from "@root/src/component/common/Maintenence";
 
 export default function Expenses() {
   return (
@@ -23,11 +23,7 @@ export default function Expenses() {
       tabs={[
         {
           label: "Tab 1",
-          content: <ExpenseClaims />,
-        },
-        {
-          label: "Tab 2",
-          content: <></>,
+          content: <UnderDevelopment />,
         },
       ]}
     />
