@@ -17,7 +17,7 @@ import { useAuthContext } from "@asgardeo/auth-react";
 import { Box, Button, Card, CardContent, Typography, useTheme } from "@wso2/oxygen-ui";
 import { LogIn } from "@wso2/oxygen-ui-icons-react";
 
-function LoginScreen() {
+export default function LoginScreen() {
   const theme = useTheme();
   const { signIn } = useAuthContext();
 
@@ -53,5 +53,3 @@ function LoginScreen() {
     </Box>
   );
 }
-
-export default LoginScreen;
