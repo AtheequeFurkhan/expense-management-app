@@ -13,10 +13,12 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import { AuthProvider } from "@asgardeo/auth-react";
 import { AcrylicOrangeTheme, OxygenUIThemeProvider } from "@wso2/oxygen-ui";
 import { Provider } from "react-redux";
 import { RouterProvider } from "react-router-dom";
 
+import { AsgardeoConfig } from "@config/config";
 import { store } from "@slices/store";
 import router from "@src/route";
 
@@ -26,7 +28,9 @@ export default function App() {
   return (
     <Provider store={store}>
       <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
-        <RouterProvider router={router} />
+        <AuthProvider config={AsgardeoConfig}>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </OxygenUIThemeProvider>
     </Provider>
   );

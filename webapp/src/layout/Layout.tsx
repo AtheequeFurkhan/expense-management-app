@@ -47,8 +47,6 @@ function Layout() {
   const allRoutes = useMemo(() => getActiveRouteDetails([Role.ADMIN, Role.EMPLOYEE]), []);
   const user = useAppSelector((state) => state.user.userInfo);
 
-  const { signOut } = useAuthContext();
-
   const activeItem = useMemo(() => {
     const currentRoute = allRoutes.find((r) => r.path === location.pathname);
     return currentRoute?.path ?? "/";
@@ -56,6 +54,12 @@ function Layout() {
 
   const handleSelect = (id: string) => {
     navigate(id);
+  };
+
+  const { signOut } = useAuthContext();
+
+  const handleLogout = () => {
+    signOut();
   };
 
   return (
@@ -106,7 +110,7 @@ function Layout() {
                 onClick={() => console.log("Admin panel clicked")}
               />
               <UserMenu.Divider />
-              <UserMenu.Logout icon={<LogOut size={18} />} onClick={signOut} />
+              <UserMenu.Item icon={<LogOut size={18} />} label="Logout" onClick={handleLogout} />
             </UserMenu>
           </Header.Actions>
         </Header>
@@ -114,7 +118,17 @@ function Layout() {
 
       {/* Sidebar */}
       <AppShell.Sidebar>
-        <Sidebar collapsed={collapsed} activeItem={activeItem} onSelect={handleSelect}>
+        <Sidebar
+          collapsed={collapsed}
+          activeItem={activeItem}
+          onSelect={(id) => {
+            if (id === "/logout") {
+              handleLogout();
+            } else {
+              handleSelect(id);
+            }
+          }}
+        >
           <Sidebar.Nav>
             <Sidebar.Category>
               <Sidebar.CategoryLabel>Menu</Sidebar.CategoryLabel>
