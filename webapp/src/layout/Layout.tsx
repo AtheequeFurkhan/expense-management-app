@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import { useAuthContext } from "@asgardeo/auth-react";
 import {
   AppShell,
   Box,
@@ -45,6 +46,8 @@ function Layout() {
 
   const allRoutes = useMemo(() => getActiveRouteDetails([Role.ADMIN, Role.EMPLOYEE]), []);
   const user = useAppSelector((state) => state.user.userInfo);
+
+  const { signOut } = useAuthContext();
 
   const activeItem = useMemo(() => {
     const currentRoute = allRoutes.find((r) => r.path === location.pathname);
@@ -103,10 +106,7 @@ function Layout() {
                 onClick={() => console.log("Admin panel clicked")}
               />
               <UserMenu.Divider />
-              <UserMenu.Logout
-                icon={<LogOut size={18} />}
-                onClick={() => console.log("Logout clicked")}
-              />
+              <UserMenu.Logout icon={<LogOut size={18} />} onClick={signOut} />
             </UserMenu>
           </Header.Actions>
         </Header>
