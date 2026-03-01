@@ -171,6 +171,13 @@ function Layout() {
                   <Sidebar.ItemLabel>{route.text}</Sidebar.ItemLabel>
                 </Sidebar.Item>
               ))}
+
+            <Sidebar.Item id="/logout">
+              <Sidebar.ItemIcon>
+                <LogOut size={18} />
+              </Sidebar.ItemIcon>
+              <Sidebar.ItemLabel>Logout</Sidebar.ItemLabel>
+            </Sidebar.Item>
           </Sidebar.Footer>
         </Sidebar>
       </AppShell.Sidebar>

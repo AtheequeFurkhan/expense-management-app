@@ -17,15 +17,15 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
 import { useEffect, useMemo, useState } from "react";
 
+import AppSkeleton from "@component/common/AppSkeleton";
 import ErrorHandler from "@component/common/ErrorHandler";
-import PreLoader from "@component/common/PreLoader";
+import BackdropProgress from "@component/ui/BackdropProgress";
 import Layout from "@layout/Layout";
 import NotFoundPage from "@layout/pages/404";
 import MaintenancePage from "@layout/pages/Maintenance";
 import { RootState, useAppSelector } from "@slices/store";
 
 import { getActiveRoutesV2, routes } from "../route";
-import BackdropProgress from "../component/ui/BackdropProgress";
 
 const AppHandler = () => {
   const [appState, setAppState] = useState<"loading" | "success" | "failed" | "maintenance">(
@@ -33,7 +33,7 @@ const AppHandler = () => {
   );
 
   const auth = useAppSelector((state: RootState) => state.auth);
-  const isGlobalLoading = useAppSelector((state: RootState) => state.auth);
+  const isGlobalLoading = useAppSelector((state: RootState) => state.common.isGlobalLoading);
 
   const router = useMemo(
     () =>
@@ -63,7 +63,7 @@ const AppHandler = () => {
   const renderApp = () => {
     switch (appState) {
       case "loading":
-        return <PreLoader isLoading={true} message={"We are getting things ready ..."} />;
+        return <AppSkeleton />;
 
       case "failed":
         return <ErrorHandler message={auth.statusMessage} />;
@@ -81,6 +81,7 @@ const AppHandler = () => {
       {renderApp()}
       {appState === "success" && <BackdropProgress open={isGlobalLoading} />}
     </>
+  );
 };
 
 export default AppHandler;
