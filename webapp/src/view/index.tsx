@@ -13,18 +13,32 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { lazy } from "react";
+import { type ComponentType, type LazyExoticComponent, Suspense, lazy } from "react";
 
-const dashboard = lazy(() => import("@view/dashboard/dashboard"));
-const opd = lazy(() => import("@view/opd/opd"));
-const expense = lazy(() => import("@view/expense/expense"));
-const employees = lazy(() => import("@view/employees/employees"));
-const card = lazy(() => import("@view/credit-cards/credit"));
-const reports = lazy(() => import("@view/reports/reports"));
+import PreLoader from "@component/common/PreLoader";
 
-const settings = lazy(() => import("@view/settings/settings"));
-// const logOut = lazy(() => import("@view/logout/logout"));
-const help = lazy(() => import("@view/help/help"));
+type AnyComponent =
+  | ComponentType<Record<string, unknown>>
+  | LazyExoticComponent<ComponentType<Record<string, unknown>>>;
+
+const withSuspense = (Component: AnyComponent) => {
+  return function WrappedComponent(props: Record<string, unknown>) {
+    return (
+      <Suspense fallback={<PreLoader />}>
+        <Component {...props} />
+      </Suspense>
+    );
+  };
+};
+
+const dashboard = withSuspense(lazy(() => import("@view/dashboard/dashboard")));
+const opd = withSuspense(lazy(() => import("@view/opd/opd")));
+const expense = withSuspense(lazy(() => import("@view/expense/expense")));
+const employees = withSuspense(lazy(() => import("@view/employees/employees")));
+const card = withSuspense(lazy(() => import("@view/credit-cards/credit")));
+const reports = withSuspense(lazy(() => import("@view/reports/reports")));
+const settings = withSuspense(lazy(() => import("@view/settings/settings")));
+const help = withSuspense(lazy(() => import("@view/help/help")));
 
 export const View = {
   help,
@@ -35,5 +49,4 @@ export const View = {
   card,
   reports,
   settings,
-  // logOut,
 };
