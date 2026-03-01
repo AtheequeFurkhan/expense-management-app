@@ -19,7 +19,6 @@ import {
   FilePlus,
   HeartPulse,
   LayoutDashboard,
-  LogOut,
   Settings,
   Users,
 } from "@wso2/oxygen-ui-icons-react";
@@ -47,14 +46,6 @@ export const routes: RouteObjectWithRole[] = [
     text: "Settings",
     icon: React.createElement(Settings),
     element: React.createElement(View.settings),
-    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-    bottomNav: true,
-  },
-  {
-    path: "/logout",
-    text: "Logout",
-    icon: React.createElement(LogOut),
-    element: React.createElement(View.logOut),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
     bottomNav: true,
   },

@@ -22,12 +22,16 @@ export interface CommonState {
   message: string;
   timestamp: number | null;
   type: VariantType;
+  loadingCount: number;
+  isGlobalLoading: boolean;
 }
 
 const initialState: CommonState = {
   message: "",
   timestamp: null,
   type: "success",
+  loadingCount: 0,
+  isGlobalLoading: false,
 };
 
 export const CommonSlice = createSlice({
@@ -45,6 +49,18 @@ export const CommonSlice = createSlice({
       state.type = action.payload.type;
       state.timestamp = Date.now();
     },
+    startLoading: (state) => {
+      state.loadingCount += 1;
+      state.isGlobalLoading = state.loadingCount > 0;
+    },
+    stopLoading: (state) => {
+      state.loadingCount = Math.max(0, state.loadingCount - 1);
+      state.isGlobalLoading = state.loadingCount > 0;
+    },
+    resetLoading: (state) => {
+      state.loadingCount = 0;
+      state.isGlobalLoading = false;
+    },
   },
 });
 
@@ -60,6 +76,7 @@ export function ShowSnackBarMessage(message: string, type: VariantType) {
   };
 }
 
-export const { enqueueSnackbarMessage } = CommonSlice.actions;
+export const { enqueueSnackbarMessage, startLoading, stopLoading, resetLoading } =
+  CommonSlice.actions;
 
 export default CommonSlice.reducer;
