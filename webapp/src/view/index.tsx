@@ -15,7 +15,7 @@
 // under the License.
 import { type ComponentType, type LazyExoticComponent, Suspense, lazy } from "react";
 
-import PreLoader from "@component/common/PreLoader";
+import AppSkeleton from "@component/common/AppSkeleton";
 
 type AnyComponent =
   | ComponentType<Record<string, unknown>>
@@ -24,7 +24,7 @@ type AnyComponent =
 const withSuspense = (Component: AnyComponent) => {
   return function WrappedComponent(props: Record<string, unknown>) {
     return (
-      <Suspense fallback={<PreLoader />}>
+      <Suspense fallback={<AppSkeleton />}>
         <Component {...props} />
       </Suspense>
     );
