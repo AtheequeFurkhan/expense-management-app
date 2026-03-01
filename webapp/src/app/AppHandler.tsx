@@ -13,12 +13,14 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import { useAuthContext } from "@asgardeo/auth-react";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
 import { useEffect, useMemo, useState } from "react";
 
 import AppSkeleton from "@component/common/AppSkeleton";
 import ErrorHandler from "@component/common/ErrorHandler";
+import PreLoader from "@component/common/PreLoader";
 import BackdropProgress from "@component/ui/BackdropProgress";
 import Layout from "@layout/Layout";
 import NotFoundPage from "@layout/pages/404";
@@ -31,6 +33,8 @@ const AppHandler = () => {
   const [appState, setAppState] = useState<"loading" | "success" | "failed" | "maintenance">(
     "loading",
   );
+
+  const { state: authState, signIn } = useAuthContext();
 
   const auth = useAppSelector((state: RootState) => state.auth);
   const isGlobalLoading = useAppSelector((state: RootState) => state.common.isGlobalLoading);
@@ -49,16 +53,26 @@ const AppHandler = () => {
   );
 
   useEffect(() => {
+    if (authState?.isAuthenticated === false) {
+      void signIn();
+    }
+  }, [authState?.isAuthenticated, signIn]);
+
+  useEffect(() => {
     if (auth.status === "loading") {
       setAppState("loading");
-    } else if (auth.status === "success") {
-      setAppState("success");
-    } else if (auth.status === "failed") {
-      setAppState("failed");
     } else if (auth.mode === "maintenance") {
       setAppState("maintenance");
+    } else if (auth.status === "failed") {
+      setAppState("failed");
+    } else if (auth.status === "success") {
+      setAppState("success");
     }
   }, [auth.status, auth.mode]);
+
+  if (authState?.isAuthenticated === false) {
+    return <PreLoader isLoading={true} message={"Redirecting to login..."} />;
+  }
 
   const renderApp = () => {
     switch (appState) {
@@ -66,13 +80,16 @@ const AppHandler = () => {
         return <AppSkeleton />;
 
       case "failed":
-        return <ErrorHandler message={auth.statusMessage} />;
+        return <ErrorHandler error={auth.statusMessage || "An error occurred"} />;
 
       case "success":
         return <RouterProvider router={router} />;
 
       case "maintenance":
         return <MaintenancePage />;
+
+      default:
+        return <AppSkeleton />;
     }
   };
 
