@@ -13,26 +13,34 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Alert, Box, Typography } from "@wso2/oxygen-ui";
+import { Alert, Box, Skeleton, Typography } from "@wso2/oxygen-ui";
 
-export default function UnderDevelopment() {
+type UnderDevelopmentProps = {
+  isLoading?: boolean;
+};
+
+export default function UnderDevelopment({ isLoading = false }: UnderDevelopmentProps) {
   return (
     <Box
       sx={{
         minHeight: "60vh",
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
         bgcolor: "background.default",
-        gap: 3,
       }}
     >
-      <Alert severity="warning" sx={{ maxWidth: 520, width: "100%", textAlign: "center" }}>
-        <Typography sx={{ fontSize: 14 }}>
-          This page is currently under development. Please check back soon!
-        </Typography>
-      </Alert>
+      <Box sx={{ width: "100%", maxWidth: 520 }}>
+        {isLoading ? (
+          <Skeleton height={48} />
+        ) : (
+          <Alert severity="warning" sx={{ width: "100%", textAlign: "center" }}>
+            <Typography sx={{ fontSize: 14 }}>
+              This page is currently under development. Please check back soon!
+            </Typography>
+          </Alert>
+        )}
+      </Box>
     </Box>
   );
 }
