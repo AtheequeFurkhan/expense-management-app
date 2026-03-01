@@ -25,6 +25,7 @@ import MaintenancePage from "@layout/pages/Maintenance";
 import { RootState, useAppSelector } from "@slices/store";
 
 import { getActiveRoutesV2, routes } from "../route";
+import BackdropProgress from "../component/ui/BackdropProgress";
 
 const AppHandler = () => {
   const [appState, setAppState] = useState<"loading" | "success" | "failed" | "maintenance">(
@@ -32,6 +33,7 @@ const AppHandler = () => {
   );
 
   const auth = useAppSelector((state: RootState) => state.auth);
+  const isGlobalLoading = useAppSelector((state: RootState) => state.auth);
 
   const router = useMemo(
     () =>
@@ -74,7 +76,11 @@ const AppHandler = () => {
     }
   };
 
-  return <>{renderApp()}</>;
+  return (
+    <>
+      {renderApp()}
+      {appState === "success" && <BackdropProgress open={isGlobalLoading} />}
+    </>
 };
 
 export default AppHandler;
