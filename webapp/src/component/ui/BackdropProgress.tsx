@@ -13,26 +13,24 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Backdrop, CircularProgress, useTheme } from "@wso2/oxygen-ui";
+import { Backdrop, CircularProgress } from "@wso2/oxygen-ui";
 
 interface BackdropProgressProps {
   open: boolean;
 }
 
-function BackdropProgress({ open }: BackdropProgressProps) {
-  const theme = useTheme();
-
+const BackdropProgress = ({ open }: BackdropProgressProps) => {
   return (
     <Backdrop
-      sx={{
-        color: theme.palette.common.white,
-        zIndex: theme.zIndex.drawer + 1,
-      }}
       open={open}
+      sx={(theme) => ({
+        color: "#fff",
+        zIndex: theme.zIndex.drawer + 2000,
+      })}
     >
       <CircularProgress color="inherit" />
     </Backdrop>
   );
-}
+};
 
 export default BackdropProgress;
