@@ -38,10 +38,8 @@ const employees = withSuspense(lazy(() => import("@view/employees/employees")));
 const card = withSuspense(lazy(() => import("@view/credit-cards/credit")));
 const reports = withSuspense(lazy(() => import("@view/reports/reports")));
 const settings = withSuspense(lazy(() => import("@view/settings/settings")));
-const help = withSuspense(lazy(() => import("@view/help/help")));
 
 export const View = {
-  help,
   dashboard,
   opd,
   expense,

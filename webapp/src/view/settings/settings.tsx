@@ -16,7 +16,7 @@
 import { Box } from "@wso2/oxygen-ui";
 
 // import UserSetting from "@view/settings/panel/userSettings";
-import UnderDevelopment from "@root/src/component/common/Maintenence";
+import UnderDevelopment from "@src/layout/pages/Maintenance";
 
 export default function Settings() {
   return (

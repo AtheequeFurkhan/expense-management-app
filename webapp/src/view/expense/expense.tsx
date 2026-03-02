@@ -15,7 +15,7 @@
 // under the License.
 import TabsPage from "@layout/pages/TabsPage";
 // import ExpenseClaims from "./panel/expenseClaims";
-import UnderDevelopment from "@root/src/component/common/Maintenence";
+import UnderDevelopment from "@src/layout/pages/Maintenance";
 
 export default function Expenses() {
   return (

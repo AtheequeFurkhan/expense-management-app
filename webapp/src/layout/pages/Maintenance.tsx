@@ -13,30 +13,34 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Typography } from "@wso2/oxygen-ui";
-import { Wrench } from "@wso2/oxygen-ui-icons-react";
+import { Alert, Box, Skeleton, Typography } from "@wso2/oxygen-ui";
 
-function Maintenance() {
+type UnderDevelopmentProps = {
+  isLoading?: boolean;
+};
+
+export default function UnderDevelopment({ isLoading = false }: UnderDevelopmentProps) {
   return (
     <Box
       sx={{
+        minHeight: "60vh",
         display: "flex",
-        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        minHeight: "80vh",
-        textAlign: "center",
+        bgcolor: "background.default",
       }}
     >
-      <Wrench size={64} style={{ marginBottom: 16, opacity: 0.6 }} />
-      <Typography variant="h4" gutterBottom fontWeight="bold">
-        Under Maintenance
-      </Typography>
-      <Typography variant="body1" color="text.secondary">
-        We are currently performing maintenance. Please check back later.
-      </Typography>
+      <Box sx={{ width: "100%", maxWidth: 520 }}>
+        {isLoading ? (
+          <Skeleton height={48} />
+        ) : (
+          <Alert severity="warning" sx={{ width: "100%", textAlign: "center" }}>
+            <Typography sx={{ fontSize: 14 }}>
+              This page is currently under development. Please check back soon!
+            </Typography>
+          </Alert>
+        )}
+      </Box>
     </Box>
   );
 }
-
-export default Maintenance;
