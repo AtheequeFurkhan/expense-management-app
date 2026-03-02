@@ -16,8 +16,6 @@
 import TabsPage from "@layout/pages/TabsPage";
 import UnderDevelopment from "@src/layout/pages/Maintenance";
 
-// import Reports from "./panel/reportDetails";
-
 export default function Report() {
   return (
     <TabsPage

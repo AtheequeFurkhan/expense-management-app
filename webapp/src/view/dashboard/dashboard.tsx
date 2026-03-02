@@ -16,8 +16,6 @@
 import TabsPage from "@layout/pages/TabsPage";
 import UnderDevelopment from "@src/layout/pages/Maintenance";
 
-// import FinanceDashboard from "./panel/financeDashboard";
-
 export default function Dashboard() {
   return (
     <TabsPage
