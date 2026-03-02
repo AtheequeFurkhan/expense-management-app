@@ -13,26 +13,14 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  MenuItem,
-  Select,
-  Skeleton,
-  Stack,
-  Typography,
-} from "@wso2/oxygen-ui";
+import { Alert, Box, MenuItem, Select, Stack, Typography } from "@wso2/oxygen-ui";
 import { LucideIcon } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
-import SkeletonCard from "@component/ui/common-card/SkeletonCard";
 import { OPD_CHART_CONFIG, OPD_SIDE_CARDS_CONFIG, OPD_SUMMARY_CARDS_CONFIG } from "@config/config";
-import { OPD_LOADING_MESSAGES, SnackMessage } from "@root/src/config/constant";
-
-// import { apiService } from "@utils/apiService";
+import { OPD_LOADING_MESSAGES } from "@root/src/config/constant";
+import { apiService } from "@utils/apiService";
 
 type TrendVariant = "positive" | "negative";
 
@@ -62,6 +50,19 @@ interface OpdClaimsData {
   trendCurrentMonth: number;
   trendPreviousYear: number;
 }
+//Tempreory 
+const DEFAULT_OPD_DATA: OpdClaimsData = {
+  claimAmountLastYear: 8124500,
+  currentMonthClaimAmount: 65210,
+  claimsCountPreviousYear: 12470,
+  gracePeriodClaims: 984,
+  activeClaimsData: [4, 5, 6, 7, 6, 7, 8, 9],
+  unclaimedCount: 22,
+  fullyClaimedCount: 9,
+  trendLastYear: -2.5,
+  trendCurrentMonth: 5.8,
+  trendPreviousYear: 2.5,
+};
 
 function SummaryCard(props: SummaryCardProps) {
   const {
@@ -278,141 +279,56 @@ function SideCountCard({ title, value, color }: { title: string; value: string; 
 
 export default function OpdClaims() {
   const [month, setMonth] = useState("current");
-  const [year, setYear] = useState("2025");
+  const [year] = useState("2025");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<OpdClaimsData>({
-    claimAmountLastYear: 8124500,
-    currentMonthClaimAmount: 65210,
-    claimsCountPreviousYear: 12470,
-    gracePeriodClaims: 984,
-    activeClaimsData: [4, 5, 6, 7, 6, 7, 8, 9],
-    unclaimedCount: 22,
-    fullyClaimedCount: 9,
-    trendLastYear: -2.5,
-    trendCurrentMonth: 5.8,
-    trendPreviousYear: 2.5,
-  });
-
-  const fetchOpdClaimsData = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      if (loading) {
-        return (
-          <Box
-            sx={{
-              p: 2,
-              bgcolor: "background.default",
-              minHeight: "100%",
-              width: "100%",
-              maxWidth: "100%",
-              boxSizing: "border-box",
-              transition: "width 0.3s ease-in-out",
-            }}
-          >
-            {/* Skeleton Summary Cards */}
-            <Box
-              sx={{
-                width: "100%",
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
-                gap: 2,
-              }}
-            >
-              {[1, 2, 3].map((i) => (
-                <SkeletonCard key={i} />
-              ))}
-            </Box>
-
-            {/* Skeleton Chart + Side Cards */}
-            <Box
-              sx={{
-                mt: 2,
-                width: "100%",
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 3fr) minmax(260px, 1fr)" },
-                gap: 2,
-                alignItems: "stretch",
-              }}
-            >
-              {/* Chart Skeleton */}
-              <Card>
-                <CardContent>
-                  <Skeleton variant="text" width="40%" height={24} sx={{ mb: 3 }} />
-                  <Skeleton variant="rectangular" width="100%" height={160} />
-                </CardContent>
-              </Card>
-              {/* Side Cards Skeleton */}
-              <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-                {[1, 2].map((i) => (
-                  <SkeletonCard key={i} />
-                ))}
-              </Box>
-            </Box>
-          </Box>
-        );
-      }
-
-      // const params: Record<string, string> = {
-      //   year,
-      // };
-
-      // if (month !== "all") {
-      //   params.month = month;
-      // }
-
-      // const response = await apiService.get("/opd-claims", { params });
-
-      // if (response?.data) {
-      //   setData({
-      //     claimAmountLastYear: response.data.claimAmountLastYear ?? 8124500,
-      //     currentMonthClaimAmount: response.data.currentMonthClaimAmount ?? 65210,
-      //     claimsCountPreviousYear: response.data.claimsCountPreviousYear ?? 12470,
-      //     gracePeriodClaims: response.data.gracePeriodClaims ?? 984,
-      //     activeClaimsData: response.data.activeClaimsData ?? [4, 5, 6, 7, 6, 7, 8, 9],
-      //     unclaimedCount: response.data.unclaimedCount ?? 22,
-      //     fullyClaimedCount: response.data.fullyClaimedCount ?? 9,
-      //     trendLastYear: response.data.trendLastYear ?? -2.5,
-      //     trendCurrentMonth: response.data.trendCurrentMonth ?? 5.8,
-      //     trendPreviousYear: response.data.trendPreviousYear ?? 2.5,
-      //   });
-      // }
-
-      //TODO : Remove dummy data
-      const dummyData = {
-        claimAmountLastYear: 8124500,
-        currentMonthClaimAmount: 65210,
-        claimsCountPreviousYear: 12470,
-        gracePeriodClaims: 984,
-        activeClaimsData: [4, 5, 6, 7, 6, 7, 8, 9],
-        unclaimedCount: 22,
-        fullyClaimedCount: 9,
-        trendLastYear: -2.5,
-        trendCurrentMonth: 5.8,
-        trendPreviousYear: 2.5,
-      };
-      setData(dummyData);
-    } catch (err) {
-      console.error("Error fetching OPD claims:", err);
-      if (err instanceof TypeError) {
-        setError(SnackMessage.error.fetchOpdStatus);
-      } else if ((err as any)?.code === "ECONNABORTED") {
-        setError(SnackMessage.error.fetchOpdTimeout);
-      } else if ((err as any)?.response?.status >= 500) {
-        setError(SnackMessage.error.fetchOpdServerError);
-      } else {
-        setError(SnackMessage.error.fetchOpdDataStatus);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [data, setData] = useState<OpdClaimsData>(DEFAULT_OPD_DATA);
 
   useEffect(() => {
+    const fetchOpdClaimsData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const params: Record<string, string> = { year };
+        if (month !== "all") params.month = month;
+
+        const response = await apiService.get<OpdClaimsData>("/opd-claims", { params });
+
+        if (response?.data) {
+          setData({
+            claimAmountLastYear:
+              response.data.claimAmountLastYear ?? DEFAULT_OPD_DATA.claimAmountLastYear,
+            currentMonthClaimAmount:
+              response.data.currentMonthClaimAmount ?? DEFAULT_OPD_DATA.currentMonthClaimAmount,
+            claimsCountPreviousYear:
+              response.data.claimsCountPreviousYear ?? DEFAULT_OPD_DATA.claimsCountPreviousYear,
+            gracePeriodClaims:
+              response.data.gracePeriodClaims ?? DEFAULT_OPD_DATA.gracePeriodClaims,
+            activeClaimsData: response.data.activeClaimsData ?? DEFAULT_OPD_DATA.activeClaimsData,
+            unclaimedCount: response.data.unclaimedCount ?? DEFAULT_OPD_DATA.unclaimedCount,
+            fullyClaimedCount:
+              response.data.fullyClaimedCount ?? DEFAULT_OPD_DATA.fullyClaimedCount,
+            trendLastYear: response.data.trendLastYear ?? DEFAULT_OPD_DATA.trendLastYear,
+            trendCurrentMonth:
+              response.data.trendCurrentMonth ?? DEFAULT_OPD_DATA.trendCurrentMonth,
+            trendPreviousYear:
+              response.data.trendPreviousYear ?? DEFAULT_OPD_DATA.trendPreviousYear,
+          });
+        } else {
+          setData(DEFAULT_OPD_DATA);
+        }
+      } catch (err) {
+        console.error("Error fetching OPD claims, using dummy data:", err);
+        setData(DEFAULT_OPD_DATA);
+        setError(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchOpdClaimsData();
-  }, [month]);
+  }, [year, month]);
 
   if (loading) {
     return (

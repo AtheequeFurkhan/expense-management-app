@@ -33,7 +33,6 @@ import LogoLight from "@assets/images/wso2-logo-dark.png";
 import LogoDark from "@assets/images/wso2-logo-white.png";
 import BreadCrumbs from "@layout/BreadCrumbs/BreadCrumbs";
 import { Role } from "@slices/authSlice/auth";
-import { useAppSelector } from "@slices/store";
 import { getActiveRouteDetails } from "@src/route";
 
 function Layout() {
@@ -45,8 +44,6 @@ function Layout() {
   const logoSrc = colorScheme === "dark" ? LogoDark : LogoLight;
 
   const allRoutes = useMemo(() => getActiveRouteDetails([Role.ADMIN, Role.EMPLOYEE]), []);
-  const user = useAppSelector((state) => state.user.userInfo);
-
   const activeItem = useMemo(() => {
     const currentRoute = allRoutes.find((r) => r.path === location.pathname);
     return currentRoute?.path ?? "/";
