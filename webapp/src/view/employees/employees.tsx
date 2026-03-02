@@ -16,8 +16,6 @@
 import TabsPage from "@layout/pages/TabsPage";
 import UnderDevelopment from "@src/layout/pages/Maintenance";
 
-// import EmployeeDetails from "@view/employees/panel/employeeDetails";
-
 export default function Employees() {
   return (
     <TabsPage
