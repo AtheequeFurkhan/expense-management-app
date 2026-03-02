@@ -152,11 +152,6 @@ export const getActiveParentRoutes = ({ routes, roles }: getActiveParentRoutesPr
   return activeParentPaths;
 };
 
-/**
- * Create the router instance.
- * Layout wraps all routes — providing AppShell (header, sidebar, footer).
- * Child routes render inside Layout's <Outlet />.
- */
 const router = createBrowserRouter([
   {
     path: "/",
