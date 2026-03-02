@@ -50,7 +50,7 @@ interface OpdClaimsData {
   trendCurrentMonth: number;
   trendPreviousYear: number;
 }
-//Tempreory 
+//Dummy Data : TODO
 const DEFAULT_OPD_DATA: OpdClaimsData = {
   claimAmountLastYear: 8124500,
   currentMonthClaimAmount: 65210,
