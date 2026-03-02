@@ -43,6 +43,16 @@ function Layout() {
   const { colorScheme } = useColorScheme();
   const logoSrc = colorScheme === "dark" ? LogoDark : LogoLight;
 
+  const { signOut, state: authState } = useAuthContext();
+  const userName = authState?.displayName || authState?.username || "User";
+  const userEmail = authState?.email || "";
+  const userInitials = userName
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
   const allRoutes = useMemo(() => getActiveRouteDetails([Role.ADMIN, Role.EMPLOYEE]), []);
   const activeItem = useMemo(() => {
     const currentRoute = allRoutes.find((r) => r.path === location.pathname);
@@ -52,8 +62,6 @@ function Layout() {
   const handleSelect = (id: string) => {
     navigate(id);
   };
-
-  const { signOut } = useAuthContext();
 
   const handleLogout = () => {
     signOut();
@@ -84,27 +92,27 @@ function Layout() {
           <Header.Actions>
             <ColorSchemeToggle />
             <UserMenu>
-              <UserMenu.Trigger name="Admin User" avatar="AU" />
+              <UserMenu.Trigger name={userName} avatar={userInitials} />
               <UserMenu.Header
-                name="Admin User"
-                email="admin@company.com"
-                avatar="AU"
+                name={userName}
+                email={userEmail}
+                avatar={userInitials}
                 role="Admin"
               />
               <UserMenu.Item
                 icon={<UserRound size={18} />}
                 label="Profile"
-                onClick={() => console.log("Profile clicked")}
+                onClick={() => navigate("/profile")}
               />
               <UserMenu.Item
                 icon={<Settings size={18} />}
                 label="Settings"
-                onClick={() => console.log("Settings clicked")}
+                onClick={() => navigate("/settings")}
               />
               <UserMenu.Item
                 icon={<ShieldUser size={18} />}
                 label="Admin Panel"
-                onClick={() => console.log("Admin panel clicked")}
+                onClick={() => navigate("/admin")}
               />
               <UserMenu.Divider />
               <UserMenu.Item icon={<LogOut size={18} />} label="Logout" onClick={handleLogout} />
@@ -205,8 +213,8 @@ function Layout() {
         <Footer>
           <Footer.Copyright>© 2026 WSO2 LLC. All rights reserved.</Footer.Copyright>
           <Footer.Divider />
-          <Footer.Link href="#terms">Terms & Conditions</Footer.Link>
-          <Footer.Link href="#privacy">Privacy Policy</Footer.Link>
+          <Footer.Link href="/terms">Terms & Conditions</Footer.Link>
+          <Footer.Link href="/privacy">Privacy Policy</Footer.Link>
         </Footer>
       </AppShell.Footer>
     </AppShell>

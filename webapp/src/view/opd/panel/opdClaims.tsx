@@ -361,7 +361,7 @@ export default function OpdClaims() {
           overflow: "hidden",
         }}
       >
-        <Stack sx={{ width: "fit-content", minWidth: "400", maxWidth: "90%" }} spacing={2}>
+        <Stack sx={{ width: "fit-content", minWidth: 400, maxWidth: "90%" }} spacing={2}>
           <Alert
             severity="error"
             sx={{
@@ -417,7 +417,7 @@ export default function OpdClaims() {
           value={data.currentMonthClaimAmount.toLocaleString()}
           suffix={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.suffix}
           trend={`${data.trendCurrentMonth > 0 ? "+" : ""}${data.trendCurrentMonth}%`}
-          trendVariant="positive"
+          trendVariant={data.trendCurrentMonth < 0 ? "negative" : "positive"}
           footerDotColor="info.main"
           footerLeft={`${new Date().toLocaleString("default", { month: "long" })} ${new Date().getFullYear()}`}
         />
@@ -472,9 +472,9 @@ export default function OpdClaims() {
                 sx={{ borderRadius: 2, fontSize: 14, minWidth: 130 }}
               >
                 <MenuItem value="current">Current Month</MenuItem>
-                <MenuItem value="pastThree">Past 12 Months</MenuItem>{" "}
+                <MenuItem value="pastThree">Past 3 Months</MenuItem>
                 <MenuItem value="pastSix">Past 6 Months</MenuItem>
-                <MenuItem value="pastTwelve">Past 12 Months</MenuItem>{" "}
+                <MenuItem value="pastTwelve">Past 12 Months</MenuItem>
               </Select>
             </Box>
           </Box>
