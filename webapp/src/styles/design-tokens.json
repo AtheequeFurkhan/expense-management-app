@@ -128,6 +128,22 @@
         "textCase": "none"
       }
     },
+    "p-m-500": {
+      "type": "custom-fontStyle",
+      "value": {
+        "fontSize": 14,
+        "textDecoration": "none",
+        "fontFamily": "Geist",
+        "fontWeight": 500,
+        "fontStyle": "normal",
+        "fontStretch": "normal",
+        "letterSpacing": 0,
+        "lineHeight": 21,
+        "paragraphIndent": 0,
+        "paragraphSpacing": 0,
+        "textCase": "none"
+      }
+    },
     "p-r": {
       "type": "custom-fontStyle",
       "value": {
@@ -145,6 +161,22 @@
       }
     },
     "p_r_500": {
+      "type": "custom-fontStyle",
+      "value": {
+        "fontSize": 16,
+        "textDecoration": "none",
+        "fontFamily": "Geist",
+        "fontWeight": 500,
+        "fontStyle": "normal",
+        "fontStretch": "normal",
+        "letterSpacing": -0.48,
+        "lineHeight": 24,
+        "paragraphIndent": 0,
+        "paragraphSpacing": 0,
+        "textCase": "none"
+      }
+    },
+    "p-r-500": {
       "type": "custom-fontStyle",
       "value": {
         "fontSize": 16,
@@ -932,7 +964,7 @@
           "active": {
             "description": "",
             "type": "color",
-            "value": "{variables.colors.primary.brand}"
+            "value": "{variables.colors.primary.main}"
           },
           "hover": {
             "type": "color",
