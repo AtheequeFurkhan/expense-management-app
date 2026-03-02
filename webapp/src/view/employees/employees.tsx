@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 import TabsPage from "@layout/pages/TabsPage";
-import UnderDevelopment from "@root/src/component/common/Maintenence";
+import UnderDevelopment from "@src/layout/pages/Maintenance";
 
 // import EmployeeDetails from "@view/employees/panel/employeeDetails";
 
