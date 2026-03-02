@@ -16,7 +16,7 @@
 import TabsPage from "@layout/pages/TabsPage";
 import UnderDevelopment from "@root/src/component/common/Maintenence";
 
-// import Reports from "./panel/reports";
+// import Reports from "./panel/reportDetails";
 
 export default function Report() {
   return (

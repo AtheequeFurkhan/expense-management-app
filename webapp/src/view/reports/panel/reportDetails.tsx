@@ -15,7 +15,7 @@
 // under the License.
 import { Box, Typography } from "@wso2/oxygen-ui";
 
-export default function Reports() {
+export default function ReportDetails() {
   return (
     <Box sx={{ p: 2 }}>
       <Typography variant="h5" gutterBottom>
