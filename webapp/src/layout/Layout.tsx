@@ -64,10 +64,6 @@ function Layout() {
     navigate(id);
   };
 
-  const handleLogout = () => {
-    signOut();
-  };
-
   return (
     <AppShell>
       {/* Header */}
@@ -116,7 +112,7 @@ function Layout() {
                 onClick={() => navigate("/admin")}
               />
               <UserMenu.Divider />
-              <UserMenu.Item icon={<LogOut size={18} />} label="Logout" onClick={handleLogout} />
+              <UserMenu.Item icon={<LogOut size={18} />} label="Logout" onClick={signOut} />
             </UserMenu>
           </Header.Actions>
         </Header>
@@ -128,11 +124,8 @@ function Layout() {
           collapsed={collapsed}
           activeItem={activeItem}
           onSelect={(id) => {
-            if (id === "/logout") {
-              handleLogout();
-            } else {
-              handleSelect(id);
-            }
+            if (id === "/logout") signOut();
+            else handleSelect(id);
           }}
         >
           <Sidebar.Nav>
