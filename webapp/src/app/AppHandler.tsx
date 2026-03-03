@@ -39,7 +39,7 @@ const AppHandler = () => {
   const signInTriggeredRef = useRef(false);
 
   const auth = useAppSelector((state: RootState) => state.auth);
-  const isGlobalLoading = useAppSelector((state: RootState) => state.common.isGlobalLoading);
+  const isGlobalLoading = useAppSelector((state: RootState) => (state.common as { isGlobalLoading: boolean }).isGlobalLoading);
 
   const router = useMemo(
     () =>
