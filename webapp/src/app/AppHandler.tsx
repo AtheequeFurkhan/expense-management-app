@@ -17,7 +17,7 @@
 import { useAuthContext } from "@asgardeo/auth-react";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import AppSkeleton from "@component/common/AppSkeleton";
 import ErrorHandler from "@component/common/ErrorHandler";
@@ -36,6 +36,7 @@ const AppHandler = () => {
   );
 
   const { state: authState, signIn } = useAuthContext();
+  const signInTriggeredRef = useRef(false);
 
   const auth = useAppSelector((state: RootState) => state.auth);
   const isGlobalLoading = useAppSelector((state: RootState) => state.common.isGlobalLoading);
@@ -54,8 +55,16 @@ const AppHandler = () => {
   );
 
   useEffect(() => {
-    if (authState?.isAuthenticated === false) {
-      void signIn();
+    if (authState?.isAuthenticated === true) {
+      signInTriggeredRef.current = false;
+      return;
+    }
+
+    if (authState?.isAuthenticated === false && !signInTriggeredRef.current) {
+      signInTriggeredRef.current = true;
+      void signIn().catch(() => {
+        setAppState("failed");
+      });
     }
   }, [authState?.isAuthenticated, signIn]);
 
