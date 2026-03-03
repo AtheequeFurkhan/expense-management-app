@@ -14,6 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+
 export const isIncludedRole = (a: string[], b: string[]): boolean => {
   return [...getCrossItems(a, b), ...getCrossItems(b, a)].length > 0;
 };

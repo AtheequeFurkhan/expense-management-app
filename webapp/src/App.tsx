@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 import { AuthProvider } from "@asgardeo/auth-react";
 import { AcrylicOrangeTheme, OxygenUIThemeProvider } from "@wso2/oxygen-ui";
 import { Provider } from "react-redux";

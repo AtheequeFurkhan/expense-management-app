@@ -14,6 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+
 export const SnackMessage = {
   success: {
     addCollections: "Successfully added the Collection",
