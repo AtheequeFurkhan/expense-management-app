@@ -14,7 +14,13 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelTokenSource } from "axios";
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosRequestHeaders,
+  AxiosResponse,
+  CancelTokenSource,
+} from "axios";
 import * as rax from "retry-axios";
 
 import { startLoading, stopLoading } from "@slices/commonSlice/common";
@@ -127,10 +133,9 @@ export class APIService {
         store.dispatch(startLoading());
 
         if (!config.headers) {
-          config.headers = {};
+          config.headers = {} as AxiosRequestHeaders;
         }
 
-        // Supports both AxiosHeaders and plain object headers.
         if (
           typeof (config.headers as { set?: (k: string, v: string) => void }).set === "function"
         ) {
@@ -168,7 +173,9 @@ export class APIService {
         return response;
       },
       (error) => {
-        store.dispatch(stopLoading());
+        if (!axios.isCancel(error)) {
+          store.dispatch(stopLoading());
+        }
         return Promise.reject(error);
       },
     );
