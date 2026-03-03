@@ -14,7 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-
 import TabsPage from "@layout/pages/TabsPage";
 import UnderDevelopment from "@src/layout/pages/Maintenance";
 
