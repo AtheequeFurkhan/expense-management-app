@@ -11,12 +11,11 @@
   font-style: normal;
 }
 body,
-#root {
+* {
   scrollbar-width: none;
   -ms-overflow-style: none;
 }
-
 body::-webkit-scrollbar,
-#root::-webkit-scrollbar {
+*::-webkit-scrollbar {
   display: none;
 }
