@@ -429,8 +429,8 @@ export default function OpdClaims() {
           iconColor={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.iconColor}
           title={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.title}
           value={data.claimsCountPreviousYear.toLocaleString()}
-          trend={`+${data.trendPreviousYear}`}
-          trendVariant="positive"
+          trend={`${data.trendPreviousYear > 0 ? "+" : ""}${data.trendPreviousYear}%`}
+          trendVariant={data.trendPreviousYear < 0 ? "negative" : "positive"}
           footerDotColor="warning.main"
           footerLeft={`Year ${year}`}
           footerRight={data.gracePeriodClaims.toString()}
