@@ -40,6 +40,21 @@ export const AsgardeoConfig: BaseURLAuthClientConfig = {
   signOutRedirectURL: window.config?.AUTH_SIGN_OUT_REDIRECT_URL ?? "",
 };
 
+const requiredAsgardeoKeys: (keyof typeof AsgardeoConfig)[] = [
+  "baseUrl",
+  "clientID",
+  "signInRedirectURL",
+  "signOutRedirectURL",
+];
+
+const missingKeys = requiredAsgardeoKeys.filter((key) => !AsgardeoConfig[key]);
+
+if (missingKeys.length > 0) {
+  throw new Error(
+    `Missing required Asgardeo configuration: ${missingKeys.join(", ")}. Ensure window.config is populated before the app boots.`
+  );
+}
+
 export const OPD_CHART_CONFIG = {
   xAxisLabels: ["0-5K", "5K-10K", "10K-15K", "15K-20K", "20K-25K", "25K-30K", "30K-35K", "35K-40K"],
   yAxisLabels: [12, 9, 6, 3, 0],
