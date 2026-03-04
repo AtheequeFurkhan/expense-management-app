@@ -14,53 +14,75 @@
 // specific language governing permissions and limitations
 // under the License.
 
-# [Configurable] OAuth2 entity application configuration.
-type Oauth2Config record {|
-    # OAuth2 token endpoint
+import ballerina/http;
+
+# GraphQL retry configuration
+public type GraphQlRetryConfig record {|
+    # Retry count
+    int count = 3;
+    # Retry interval in seconds
+    decimal interval = 1.0;
+|};
+
+# OAuth2 client credentials configuration
+public type Oauth2Config record {|
+    # Token URL
     string tokenUrl;
-    # OAuth2 client ID
+    # Client ID
     string clientId;
-    # OAuth2 client secret
+    # Client secret
     string clientSecret;
 |};
 
-# Retry config for the graphql client.
-public type GraphQlRetryConfig record {|
-    # Retry count
-    int count = RETRY_COUNT;
-    # Retry interval
-    decimal interval = RETRY_INTERVAL;
-    # Retry backOff factor
-    float backOffFactor = RETRY_BACKOFF_FACTOR;
-    # Retry max interval
-    decimal maxWaitInterval = RETRY_MAX_INTERVAL;
+# Entity service configuration
+public type EntityConfig record {|
+    # HRIS entity service endpoint
+    string hrisEntityServiceEndpoint;
+    # OPD claims service endpoint
+    string opdClaimsServiceEndpoint;
+    # Client auth configuration
+    Oauth2Config clientAuthConfig;
 |};
 
-// Get employee graphQL service Responses.
-# Employee.
+# Employee record from HRIS
 public type Employee record {|
-    # Id of the employee
-    string employeeId;
-    # Email of the employee
-    string workEmail;
-    # First name of the employee
+    # Employee ID
+    string id;
+    # Email
+    string email;
+    # First name
     string firstName;
-    # Last name of the employee
+    # Last name
     string lastName;
-    # Job role
-    string jobRole;
-    # Thumbnail of the employee
-    string? employeeThumbnail;
+    # Department
+    string? department;
+    # Designation
+    string? designation;
+    # Employee level
+    string? employeeLevel;
+    # Manager email
+    string? managerEmail;
+    # Is active
+    boolean isActive;
 |};
 
-# Employee data.
-type EmployeeData record {
-    # Employee
-    Employee employee;
-};
+# Employee response from GraphQL
+public type EmployeeResponse record {|
+    # Employees list
+    Employee[] employees;
+|};
 
-# Employee response.
-type EmployeeResponse record {
-    # Employee data
-    EmployeeData data;
-};
+# GraphQL response wrapper
+public type GraphQlResponse record {|
+    # Response data
+    json? data;
+    # Response errors
+    json[]? errors;
+|};
+
+# HTTP client configuration
+public type HttpClientConfig record {|
+    # HTTP client config
+    http:ClientConfiguration config;
+|};
+

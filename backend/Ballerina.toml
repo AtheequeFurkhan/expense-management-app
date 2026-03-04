@@ -20,5 +20,11 @@ name = "expense_management"
 version = "1.0.0"
 distribution = "2201.13.1"
 
+[[platform.java21.dependency]]
+groupId = "com.mysql"
+artifactId = "mysql-connector-j"
+version = "9.1.0"
+
 [build-options]
 observabilityIncluded = true
+

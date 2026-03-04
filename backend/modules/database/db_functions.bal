@@ -13,47 +13,28 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import ballerina/sql;
 
-# Fetch sample collections.
-#
-# + name - Name to filter
-# + 'limit - Limit of the response
-# + offset - Offset of the number of sample collection to retrieve
-# + return - List of sample collections|Error
-public isolated function fetchSampleCollections(string? name, int? 'limit, int? offset) returns SampleCollection[]|error {
-    stream<SampleCollection, error?> resultStream = databaseClient->
-            query(getSampleCollectionsQuery(name, 'limit, offset));
+import ballerina/log;
 
-    return from SampleCollection sampleCollection in resultStream
-        select {
-            ...sampleCollection
-        };
+# Get employee details by email
+# + email - Employee email
+# + return - Employee record or error
+public function getEmployee(string email) returns EmployeeRecord|error {
+    EmployeeRecord|error result = getEmployeeByEmail(email);
+    if result is error {
+        log:printError("Error fetching employee", 'error = result, email = email);
+        return result;
+    }
+    return result;
 }
 
-# Fetch specific sample collection.
-#
-# + id - Identification of the sample collection
-# + return - Sample collections|Error, if so
-public isolated function fetchSampleCollection(int id) returns SampleCollection|error? {
-    SampleCollection|sql:Error sampleCollection = databaseClient->queryRow(getSampleCollectionQuery(id));
-
-    if sampleCollection is sql:Error && sampleCollection is sql:NoRowsError {
-        return;
+# Get all categories
+# + return - Array of expense categories or error
+public function getCategories() returns ExpenseCategoryRecord[]|error {
+    ExpenseCategoryRecord[]|error result = getAllExpenseCategories();
+    if result is error {
+        log:printError("Error fetching categories", 'error = result);
+        return result;
     }
-    return sampleCollection;
-}
-
-# Insert sample collection.
-#
-# + sampleCollection - Sample collection payload
-# + createdBy - Person who created the sample collection
-# + return - Id of the sample collection|Error
-public isolated function addSampleCollection(AddSampleCollection sampleCollection, string createdBy) returns int|error {
-    sql:ExecutionResult|error executionResults = databaseClient->execute(addSampleCollectionQuery(sampleCollection, createdBy));
-    if executionResults is error {
-        return executionResults;
-    }
-
-    return <int>executionResults.lastInsertId;
+    return result;
 }

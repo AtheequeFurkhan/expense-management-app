@@ -14,27 +14,96 @@
 // specific language governing permissions and limitations
 // under the License.
 
-# Fetch Employee Data.
-#
-# + workEmail - WSO2 email address
-# + return - Employee | Error
-public isolated function fetchEmployeesBasicInfo(string workEmail) returns Employee|error {
-    string document = string `
-        query employeeQuery ($workEmail: String!) {
-            employee(email: $workEmail) {
-                employeeId,
-                workEmail,
-                firstName,
-                lastName,
-                jobRole,
-                employeeThumbnail,
+import ballerina/log;
+
+# Fetch employees basic info from HRIS
+# + return - Array of Employee or error
+public function fetchEmployeesBasicInfo() returns Employee[]|error {
+    string query = string `
+        query {
+            employees {
+                id
+                email
+                firstName
+                lastName
+                department
+                designation
+                employeeLevel
+                managerEmail
+                isActive
             }
         }
     `;
 
-    EmployeeResponse|error response = hrClient->execute(document, {workEmail});
+    GraphQlResponse|error response = hrisClient->execute(query);
+
     if response is error {
+        log:printError("Failed to fetch employees from HRIS", response);
         return response;
     }
-    return response.data.employee;
+
+    if response.errors is json[] {
+        log:printError("GraphQL errors", errors = response.errors);
+        return error("GraphQL query failed");
+    }
+
+    json? data = response.data;
+    if data is () {
+        return [];
+    }
+
+    EmployeeResponse|error employeeResponse = data.cloneWithType();
+    if employeeResponse is error {
+        log:printError("Failed to parse employee response", employeeResponse);
+        return employeeResponse;
+    }
+
+    return employeeResponse.employees;
 }
+
+# Fetch single employee by email
+# + email - Employee email
+# + return - Employee or error
+public function fetchEmployeeByEmail(string email) returns Employee|error {
+    string query = string `
+        query {
+            employee(email: "${email}") {
+                id
+                email
+                firstName
+                lastName
+                department
+                designation
+                employeeLevel
+                managerEmail
+                isActive
+            }
+        }
+    `;
+
+    GraphQlResponse|error response = hrisClient->execute(query);
+
+    if response is error {
+        log:printError("Failed to fetch employee from HRIS", response);
+        return response;
+    }
+
+    if response.errors is json[] {
+        log:printError("GraphQL errors", errors = response.errors);
+        return error("GraphQL query failed");
+    }
+
+    json? data = response.data;
+    if data is () {
+        return error("Employee not found");
+    }
+
+    Employee|error employee = (check data.employee).cloneWithType();
+    if employee is error {
+        log:printError("Failed to parse employee", employee);
+        return employee;
+    }
+
+    return employee;
+}
+

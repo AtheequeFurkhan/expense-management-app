@@ -14,6 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
+
 # Response type of post collection.
 type PostCollectionResponseData record {|
     # Id of the collection

@@ -13,6 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
+
 import ballerina/http;
 import ballerina/test;
 
@@ -32,9 +34,9 @@ public function getCollectionsTest() returns error? {
     // Happy path.
     http:Response successResponse = check testClient->/collections.get(headers = {"x-jwt-assertion": jwtKey});
     test:assertEquals(
-        successResponse.statusCode,
-        http:STATUS_OK,
-        string `Assertion Failed! : ${(check successResponse.getJsonPayload()).toString()}`
+            successResponse.statusCode,
+            http:STATUS_OK,
+            string `Assertion Failed! : ${(check successResponse.getJsonPayload()).toString()}`
     );
 
     // Invalid media type.
@@ -56,9 +58,9 @@ public function postCollectionsTest() returns error? {
         }
     );
     test:assertEquals(
-        errorResponse.statusCode,
-        http:STATUS_INTERNAL_SERVER_ERROR,
-        "Assertion Failed! : get collections HeaderTest"
+            errorResponse.statusCode,
+            http:STATUS_INTERNAL_SERVER_ERROR,
+            "Assertion Failed! : get collections HeaderTest"
     );
 
     // Happy path.
@@ -69,9 +71,9 @@ public function postCollectionsTest() returns error? {
         headers = {"x-jwt-assertion": jwtKey}
     );
     test:assertEquals(
-        successResponse.statusCode,
-        http:STATUS_CREATED,
-        string `Assertion Failed! : ${(check successResponse.getJsonPayload()).toString()}`
+            successResponse.statusCode,
+            http:STATUS_CREATED,
+            string `Assertion Failed! : ${(check successResponse.getJsonPayload()).toString()}`
     );
 
     // Invalid media type.
@@ -86,3 +88,4 @@ public function postCollectionsTest() returns error? {
         test:assertFail("Assertion Failed! : Malformed response");
     }
 }
+

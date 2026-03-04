@@ -13,86 +13,48 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 import ballerina/sql;
 
-# Build query to add a sample collection.
-#
-# + sampleCollection - sample collection to be added
-# + createdBy - The user who is adding the sample collection
-# + return - sql:ParameterizedQuery - Insert query for the sample collection table
-isolated function addSampleCollectionQuery(AddSampleCollection sampleCollection, string createdBy)
-    returns sql:ParameterizedQuery =>
-`
-    INSERT INTO sample_collection
-    (
-        sample_collection_name,
-        sample_collection_created_by,
-        sample_collection_updated_by
-    )
-    VALUES
-    (
-        ${sampleCollection.name},
-        ${createdBy},
-        ${createdBy}
-    )
-`;
-
-# Build query to retrieve sample collections.
-#
-# + name - Name to filter
-# + 'limit - Limit of the data
-# + offset - Offset of the query
-# + return - sql:ParameterizedQuery - Select query for the sample_collection table
-isolated function getSampleCollectionsQuery(string? name, int? 'limit, int? offset) returns sql:ParameterizedQuery {
-    sql:ParameterizedQuery mainQuery = `
-            SELECT
-                sample_collection_id AS 'id',
-                sample_collection_name AS 'name',
-                sample_collection_created_on AS 'createdOn',
-                sample_collection_created_by AS 'createdBy',
-                sample_collection_updated_on AS 'updatedOn',
-                sample_collection_updated_by AS 'updatedBy'
-            FROM
-                sample_schema.sample_collection
-    `;
-
-    // Setting the filters based on the sample collection object.
-    sql:ParameterizedQuery[] filters = [];
-
-    if name is string {
-        filters.push(sql:queryConcat(`sample_collection_name LIKE `, `${name}`));
-    }
-
-    mainQuery = buildSqlSelectQuery(mainQuery, filters);
-
-    // Setting the limit and offset.
-    if 'limit is int {
-        mainQuery = sql:queryConcat(mainQuery, ` LIMIT ${'limit}`);
-        if offset is int {
-            mainQuery = sql:queryConcat(mainQuery, ` OFFSET ${offset}`);
-        }
-    } else {
-        mainQuery = sql:queryConcat(mainQuery, ` LIMIT 1000`);
-    }
-
-    return mainQuery;
+# Get employee by email
+# + email - Employee email
+# + return - Employee record or error
+public function getEmployeeByEmail(string email) returns EmployeeRecord|error {
+    sql:ParameterizedQuery query = `SELECT id, email, employee_id, first_name, last_name,
+        department_id, designation, employee_level, manager_email, is_active
+        FROM employee WHERE email = ${email}`;
+    return dbClient->queryRow(query);
 }
 
-# Build query to retrieve sample collection.
-#
-# + id - Identification of the sample collection
-# + return - sql:ParameterizedQuery - Select query for the sample_collection table
-isolated function getSampleCollectionQuery(int id) returns sql:ParameterizedQuery =>
-`
-    SELECT
-        sample_collection_id AS 'id',
-        sample_collection_name AS 'name',
-        sample_collection_created_on AS 'createdOn',
-        sample_collection_created_by AS 'createdBy',
-        sample_collection_updated_on AS 'updatedOn',
-        sample_collection_updated_by AS 'updatedBy'
-    FROM
-        sample_schema.sample_collection
-    WHERE
-        sample_collection_id = ${id}
-`;
+# Get all expense categories
+# + return - Array of expense category records or error
+public function getAllExpenseCategories() returns ExpenseCategoryRecord[]|error {
+    sql:ParameterizedQuery query = `SELECT id, name, code, description, gl_code,
+        yearly_limit, category_type FROM expense_category`;
+    stream<ExpenseCategoryRecord, sql:Error?> resultStream = dbClient->query(query);
+    return from ExpenseCategoryRecord category in resultStream
+        select category;
+}
+
+# Get OPD category limit
+# + return - Yearly limit for OPD or error
+public function getOpdCategoryLimit() returns decimal|error {
+    sql:ParameterizedQuery query = `SELECT yearly_limit FROM expense_category WHERE code = 'OPD_MED'`;
+    record {|decimal yearly_limit;|} result = check dbClient->queryRow(query);
+    return result.yearly_limit;
+}
+
+# Get total claimed amount for employee in a year
+# + employeeEmail - Employee email
+# + year - Claim year
+# + return - Total claimed amount or error
+public function getTotalClaimedAmount(string employeeEmail, string year) returns decimal|error {
+    sql:ParameterizedQuery query = `SELECT COALESCE(SUM(amount), 0) as total_used
+        FROM expense_claim
+        WHERE submitted_by = ${employeeEmail}
+        AND YEAR(claim_date) = ${year}
+        AND status != 'REJECTED'`;
+    DbClaimUsage result = check dbClient->queryRow(query);
+    return result.total_used;
+}
+

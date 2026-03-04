@@ -29,3 +29,4 @@ public type AppRoles record {|
     # Role for the head of people operations
     string headPeopleOperationsRole;
 |};
+

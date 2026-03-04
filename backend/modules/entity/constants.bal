@@ -25,3 +25,4 @@ public const float RETRY_BACKOFF_FACTOR = 2.0;
 
 # Client retry configuration for maximum wait interval in seconds.
 public const decimal RETRY_MAX_INTERVAL = 20.0;
+

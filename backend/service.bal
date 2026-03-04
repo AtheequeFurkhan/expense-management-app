@@ -13,230 +13,89 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import expense_management.authorization;
-import expense_management.database;
-import expense_management.entity;
 
-import ballerina/cache;
+import expense_management.database as _;
+import expense_management.entity as _;
+
 import ballerina/http;
 import ballerina/log;
 
-public configurable AppConfig appConfig = ?;
+configurable int port = 9090;
+configurable string[] allowedUserRoles = ["wso2-everyone", "wso2-interns"];
 
-final cache:Cache cache = new ({
-    capacity: 2000,
-    defaultMaxAge: 1800.0,
-    cleanupInterval: 900.0
-});
+service / on new http:Listener(port) {
 
-@display {
-    label: "Expense Management App",
-    id: "domain/expense-management-app"
-}
-
-service class ErrorInterceptor {
-    *http:ResponseErrorInterceptor;
-
-    remote function interceptResponseError(error err, http:RequestContext ctx) returns http:BadRequest|error {
-
-        // Handle data-binding errors.
-        if err is http:PayloadBindingError {
-            string customError = string `Payload binding failed!`;
-            log:printError(customError, err);
-            return {
-                body: {
-                    message: customError
-                }
-            };
-        }
-        return err;
-    }
-}
-
-service http:InterceptableService / on new http:Listener(9090) {
-
-    # Request interceptor.
-    #
-    # + return - authorization:JwtInterceptor, ErrorInterceptor
-    public function createInterceptors() returns http:Interceptor[] =>
-        [new authorization:JwtInterceptor(), new ErrorInterceptor()];
-
-    # Fetch samples AppConfig.
-    #
-    # + return - AppConfig
-    resource function get app\-config() returns AppConfig => appConfig;
-
-    # Fetch user information of the logged in users.
-    #
-    # + ctx - Request object
-    # + return - User info object|Error
-    resource function get user\-info(http:RequestContext ctx) returns UserInfoResponse|http:InternalServerError {
-
-        // User information header.
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
-        if userInfo is error {
-            return <http:InternalServerError>{
-                body: {
-                    message: "User information header not found!"
-                }
-
-            };
-        }
-
-        // Check cache for logged in user.
-        if cache.hasKey(userInfo.email) {
-            UserInfoResponse|error cachedUserInfo = cache.get(userInfo.email).ensureType();
-            if cachedUserInfo is UserInfoResponse {
-                return cachedUserInfo;
-            }
-        }
-
-        // Fetch the user information from the entity service.
-        entity:Employee|error loggedInUser = entity:fetchEmployeesBasicInfo(userInfo.email);
-        if loggedInUser is error {
-            string customError = string `Error occurred while retrieving user data: ${userInfo.email}!`;
-            log:printError(customError, loggedInUser);
-            return <http:InternalServerError>{
-                body: {
-                    message: customError
-                }
-            };
-        }
-
-        // Fetch the user's privileges based on the roles.
-        int[] privileges = [];
-        if authorization:checkPermissions([authorization:authorizedRoles.employeeRole], userInfo.groups) {
-            privileges.push(authorization:EMPLOYEE_ROLE_PRIVILEGE);
-        }
-        if authorization:checkPermissions([authorization:authorizedRoles.headPeopleOperationsRole], userInfo.groups) {
-            privileges.push(authorization:HEAD_PEOPLE_OPERATIONS_PRIVILEGE);
-        }
-
-        UserInfoResponse userInfoResponse = {...loggedInUser, privileges};
-
-        error? cacheError = cache.put(userInfo.email, userInfoResponse);
-        if cacheError is error {
-            log:printError("An error occurred while writing user info to the cache", cacheError);
-        }
-        return userInfoResponse;
-    }
-
-    # Fetch all samples from the database.
-    #
-    # + name - Name to filter
-    # + 'limit - Limit of the data
-    # + offset - Offset of the data
-    # + return - All samples|Error
-    isolated resource function get collections(http:RequestContext ctx, string? name, int? 'limit, int? offset)
-        returns SampleCollection|http:Forbidden|http:BadRequest|http:InternalServerError {
-
-        // "requestedBy" is the email of the user access this resource.
-        // interceptor set this value after validating the jwt.
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
-        if userInfo is error {
-            return <http:BadRequest>{
-                body: {
-                    message: "User information header not found!"
-                }
-            };
-        }
-
-        // [Start] Custom Resource level authorization.
-        if !authorization:checkPermissions([authorization:authorizedRoles.employeeRole],
-                userInfo.groups) {
-            return <http:Forbidden>{
-                body: {
-                    message: "Insufficient privileges!"
-                }
-            };
-        }
-        // [End] Custom Resource level authorization.
-
-        database:SampleCollection[]|error collections = database:fetchSampleCollections(name, 'limit, offset);
-        if collections is error {
-            string customError = string `Error occurred while retrieving the sample collections!`;
-            log:printError(customError, collections);
-            return <http:InternalServerError>{
-                body: {
-                    message: customError
-                }
-            };
-        }
-
+    resource function get health() returns map<string> {
         return {
-            count: collections.length(),
-            collections: collections
+            status: "ok"
         };
     }
 
-    # Insert collections.
-    #
-    # + collection - New collection
-    # + return - Created|Forbidden|BadRequest|Error
-    resource function post collections(http:RequestContext ctx, database:AddSampleCollection collection)
-        returns http:Created|http:Forbidden|http:BadRequest|http:InternalServerError {
+    resource function get app\-data(string year = "2026", string month = "current") returns AppData|error {
+        log:printInfo(string `GET /app-data year=${year}, month=${month}`);
+        return buildAppData(year, month);
+    }
 
-        // "requestedBy" is the email of the user access this resource.
-        // interceptor set this value after validating the jwt.
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
-        if userInfo is error {
-            return <http:BadRequest>{
-                body: {
-                    message: "User information header not found!"
-                }
-            };
+    resource function get apps\-data(string year = "2026", string month = "current") returns AppData|error {
+        log:printInfo(string `GET /apps-data year=${year}, month=${month}`);
+        return buildAppData(year, month);
+    }
+
+    resource function get user\-info(http:Request req) returns UserInfo|http:Unauthorized|error {
+        string|error userHeader = req.getHeader("x-user-email");
+        if userHeader is error {
+            return http:UNAUTHORIZED;
         }
-
-        // [Start] Custom Resource level authorization.
-        if !authorization:checkPermissions([authorization:authorizedRoles.headPeopleOperationsRole],
-                userInfo.groups) {
-
-            return <http:Forbidden>{
-                body: {
-                    message: "Insufficient privileges!"
-                }
-            };
-        }
-        // [End] Custom Resource level authorization.
-
-        // Insert collection.
-        int|error collectionId = database:addSampleCollection(collection, userInfo.email);
-        if collectionId is error {
-            string customError = string `Error occurred while adding sample collection!`;
-            log:printError(customError, collectionId);
-            return <http:InternalServerError>{
-                body: {
-                    message: customError
-                }
-            };
-        }
-
-        database:SampleCollection|error? addedSampleCollection = database:fetchSampleCollection(collectionId);
-
-        // Handle : database read error.
-        if addedSampleCollection is error {
-            string customError = string `Error occurred while retrieving the added sample collection!`;
-            log:printError(customError, addedSampleCollection);
-            return <http:InternalServerError>{
-                body: {
-                    message: customError
-                }
-            };
-        }
-
-        // Handle : no record error.
-        if addedSampleCollection is () {
-            string customError = string `Added sample collection is no longer available to access!`;
-            log:printError(customError);
-            return <http:InternalServerError>{
-                body: {
-                    message: customError
-                }
-            };
-        }
-
-        return <http:Created>{
-            body: addedSampleCollection
+        return {
+            email: userHeader,
+            firstName: "John",
+            lastName: "Doe",
+            department: "Engineering",
+            designation: "Software Engineer",
+            roles: allowedUserRoles
         };
     }
 }
+
+function buildAppData(string year, string month) returns AppData {
+    decimal totalClaimLimit = 150000.00d;
+    decimal totalClaimedAmount = month == "current" ? 65210.00d : 73450.00d;
+    decimal totalRemaining = totalClaimLimit - totalClaimedAmount;
+
+    ClaimSummary claimSummary = {
+        totalClaimLimit,
+        totalClaimedAmount,
+        totalRemaining
+    };
+
+    decimal lastYearClaimedAmount = 81245.00d;
+    ClaimSummary lastYearClaimSummary = {
+        totalClaimLimit,
+        totalClaimedAmount: lastYearClaimedAmount,
+        totalRemaining: totalClaimLimit - lastYearClaimedAmount
+    };
+
+    OpdClaimDraft draft = {
+        transactions: [
+            {
+                amount: 2500.00d,
+                comment: string `Consultation (${year}/${month})`,
+                date: "2026-03-01",
+                receiptUrl: "https://example.com/receipts/consultation-001"
+            },
+            {
+                amount: 1800.00d,
+                comment: "Lab test",
+                date: "2026-03-02",
+                receiptUrl: "https://example.com/receipts/lab-002"
+            }
+        ]
+    };
+
+    return {
+        claimSummary,
+        draft,
+        lastYearClaimSummary
+    };
+}
+

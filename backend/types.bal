@@ -13,36 +13,66 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import expense_management.database;
 
-# Collection type.
-public type SampleCollection record {
-    # Number of total records
-    int count;
-    # List of collections
-    database:SampleCollection[] collections;
-};
-
-# Represents the response structure for retrieving user information.
-public type UserInfoResponse record {|
-    # Id of the employee
-    string employeeId;
-    # Email of the employee
-    string workEmail;
-    # First name of the employee
+# User information record
+public type UserInfo record {|
+    # User email
+    string email;
+    # First name
     string firstName;
-    # Last name of the employee
+    # Last name
     string lastName;
-    # Job role
-    string jobRole;
-    # Thumbnail of the employee
-    string? employeeThumbnail;
-    # User Privileges
-    int[] privileges;
+    # Department
+    string? department;
+    # Designation
+    string? designation;
+    # User roles
+    string[] roles;
 |};
 
-# AppConfig Type
-public type AppConfig record {|
-    # Sample AppConfig
-    string sampleAppConfig;
+# Claim summary record
+public type ClaimSummary record {|
+    # Total claim limit
+    decimal totalClaimLimit;
+    # Total claimed amount
+    decimal totalClaimedAmount;
+    # Total remaining amount
+    decimal totalRemaining;
 |};
+
+# Transaction payload for OPD claim draft
+public type TransactionPayload record {|
+    # Amount of the transaction
+    decimal amount;
+    # Comment of the transaction
+    string comment;
+    # Date of the transaction
+    string date;
+    # Receipt URL of the transaction
+    string receiptUrl;
+|};
+
+# Draft for OPD claim
+public type OpdClaimDraft record {|
+    # List of transactions
+    TransactionPayload[] transactions;
+|};
+
+# AppData record
+public type AppData record {|
+    # Current year claim summary
+    ClaimSummary claimSummary;
+    # OPD claim draft
+    OpdClaimDraft draft;
+    # Last year claim summary
+    ClaimSummary lastYearClaimSummary;
+|};
+
+# Error response record
+public type ErrorResponse record {|
+    # Error message
+    string message;
+    # Error code
+    string code;
+|};
+

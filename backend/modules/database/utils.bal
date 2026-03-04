@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 import ballerina/sql;
 
 # Build the database update query with dynamic attributes.
@@ -62,3 +63,4 @@ isolated function buildSqlSelectQuery(sql:ParameterizedQuery mainQuery, sql:Para
 
     return updatedQuery;
 }
+

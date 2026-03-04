@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 import ballerina/http;
 import ballerina/jwt;
 import ballerina/log;
@@ -23,6 +24,7 @@ public configurable AppRoles authorizedRoles = ?;
 public isolated service class JwtInterceptor {
 
     *http:RequestInterceptor;
+
     isolated resource function default [string... path](http:RequestContext ctx, http:Request req)
         returns http:NextService|http:Forbidden|http:InternalServerError|error? {
 
@@ -64,3 +66,4 @@ public isolated service class JwtInterceptor {
         return <http:Forbidden>{body: {message: "Insufficient privileges!"}};
     }
 }
+

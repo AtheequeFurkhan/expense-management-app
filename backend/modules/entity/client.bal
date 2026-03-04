@@ -13,23 +13,27 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 import ballerina/graphql;
+import ballerina/http;
 
-configurable string hrEntityBaseUrl = ?;
-configurable GraphQlRetryConfig retryConfig = ?;
-configurable Oauth2Config oauthConfig = ?;
+configurable EntityConfig entityConfig = ?;
 
-# Hr Entity -> GraphQL Service Credentials.
-@display {
-    label: "HR Entity GraphQL Service",
-    id: "hris/entity-graphql-service"
-}
-
-final graphql:Client hrClient = check new (hrEntityBaseUrl, {
+# HRIS GraphQL client
+public final graphql:Client hrisClient = check new (entityConfig.hrisEntityServiceEndpoint, {
     auth: {
-        ...oauthConfig
-    },
-    retryConfig: {
-        ...retryConfig
+        tokenUrl: entityConfig.clientAuthConfig.tokenUrl,
+        clientId: entityConfig.clientAuthConfig.clientId,
+        clientSecret: entityConfig.clientAuthConfig.clientSecret
     }
 });
+
+# OPD Claims HTTP client
+public final http:Client opdClaimsClient = check new (entityConfig.opdClaimsServiceEndpoint, {
+    auth: {
+        tokenUrl: entityConfig.clientAuthConfig.tokenUrl,
+        clientId: entityConfig.clientAuthConfig.clientId,
+        clientSecret: entityConfig.clientAuthConfig.clientSecret
+    }
+});
+
