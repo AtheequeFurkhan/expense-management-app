@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { useAuthContext } from "@asgardeo/auth-react";
 import {
   AppShell,
@@ -30,9 +29,8 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useMemo, useState } from "react";
 
-import LogoLight from "@assets/images/wso2-logo-dark.png";
-import LogoDark from "@assets/images/wso2-logo-white.png";
-import BreadCrumbs from "@layout/BreadCrumbs/BreadCrumbs";
+import LogoLight from "@assets/images/WSO2-Logo-Black.png";
+import LogoDark from "@assets/images/WSO2-Logo-White.png";
 import { Role } from "@slices/authSlice/auth";
 import { getActiveRouteDetails } from "@src/route";
 
@@ -76,14 +74,14 @@ function Layout() {
                 src={logoSrc}
                 alt="App Logo"
                 style={{
-                  height: 30,
-                  width: 120,
+                  height: 20,
+                  width: 80,
                   objectFit: "contain",
                   display: "block",
                 }}
               />
             </Header.BrandLogo>
-            <Header.BrandTitle>Expense Management App</Header.BrandTitle>
+            <Header.BrandTitle>Expense Management Dashboard</Header.BrandTitle>
           </Header.Brand>
           <Header.Spacer />
           <Header.Actions>
@@ -197,7 +195,6 @@ function Layout() {
             transition: "width 0.3s ease-in-out",
           }}
         >
-          <BreadCrumbs />
           <Outlet />
         </Box>
       </AppShell.Main>
