@@ -23,13 +23,12 @@ export interface SummaryCardProps {
   iconBg: string;
   iconColor: string;
   title: string;
+  chipLabel?: string;
   value: string;
   suffix?: string;
   trend: string;
   trendVariant: TrendVariant;
   trendLabel?: string;
-  footerDotColor?: string;
-  footerLeft?: string;
   footerRight?: string;
   footerRightLabel?: string;
 }
@@ -39,13 +38,12 @@ export default function SummaryCard({
   iconBg,
   iconColor,
   title,
+  chipLabel,
   value,
   suffix,
   trend,
   trendVariant,
-  trendLabel = "VS PREV PERIOD",
-  footerDotColor = "info.main",
-  footerLeft,
+  trendLabel = `VS ${new Date().getFullYear() - 1}`,
   footerRight,
   footerRightLabel = "Grace Period Claims",
 }: SummaryCardProps) {
@@ -55,34 +53,32 @@ export default function SummaryCard({
   return (
     <Box
       sx={{
-        p: 2.5,
+        p: 2,
         borderRadius: 1,
         border: "1px solid",
         borderColor: "divider",
         bgcolor: "background.paper",
-        minHeight: 168,
+        minHeight: 110,
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
+        gap: 1,
       }}
     >
-      <Box
-        sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", mb: 1 }}
-      >
+      {/* Top row — icon + trend */}
+      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <Box
           sx={{
-            width: 42,
-            height: 42,
+            width: 38,
+            height: 38,
             borderRadius: "20%",
             bgcolor: iconBg,
             color: iconColor,
             display: "grid",
             placeItems: "center",
-            fontSize: 20,
-            lineHeight: 1,
           }}
         >
-          <Icon size={20} />
+          <Icon size={18} />
         </Box>
 
         <Box sx={{ textAlign: "right" }}>
@@ -95,7 +91,7 @@ export default function SummaryCard({
               bgcolor: trendBg,
               color: trendColor,
               fontWeight: 700,
-              fontSize: 14,
+              fontSize: 13,
             }}
           >
             {trend}
@@ -104,10 +100,10 @@ export default function SummaryCard({
             variant="caption"
             sx={{
               display: "block",
-              mt: 0.4,
+              mt: 0.3,
               letterSpacing: 0.5,
               color: "text.secondary",
-              fontSize: 11,
+              fontSize: 10,
             }}
           >
             {trendLabel}
@@ -115,87 +111,73 @@ export default function SummaryCard({
         </Box>
       </Box>
 
-      <Box sx={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" }}>
-        <Typography variant="body2" sx={{ color: "text.secondary", fontSize: 14, fontWeight: 400 }}>
+      {/* Title*/}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, flexWrap: "wrap" }}>
+        <Typography variant="body2" sx={{ color: "text.secondary", fontSize: 13, fontWeight: 400 }}>
           {title}
         </Typography>
-        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.8, mt: 0.5 }}>
+        {chipLabel && (
+          <Box
+            sx={{
+              px: 0.8,
+              py: 0.2,
+              borderRadius: 1,
+              bgcolor: "action.hover",
+              border: "1px solid",
+              borderColor: "divider",
+              fontSize: 11,
+              fontWeight: 600,
+              color: "text.secondary",
+            }}
+          >
+            {chipLabel}
+          </Box>
+        )}
+      </Box>
+
+      {/* Value + suffix + Grace Period */}
+      <Box
+        sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 1 }}
+      >
+        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.8 }}>
           <Typography
-            sx={{ fontWeight: 700, fontSize: 30, lineHeight: 1.2, color: "text.primary" }}
+            sx={{ fontWeight: 700, fontSize: 26, lineHeight: 1.2, color: "text.primary" }}
           >
             {value}
           </Typography>
           {suffix && (
-            <Typography sx={{ color: "text.secondary", fontWeight: 500, fontSize: 16 }}>
+            <Typography sx={{ color: "text.secondary", fontWeight: 500, fontSize: 14 }}>
               {suffix}
             </Typography>
           )}
         </Box>
-      </Box>
 
-      <Box
-        sx={{
-          mt: 2,
-          minHeight: 32,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 1,
-        }}
-      >
-        {footerLeft ? (
-          <Typography
-            variant="body2"
-            sx={{
-              color: "text.secondary",
-              display: "flex",
-              alignItems: "center",
-              gap: 0.8,
-              fontSize: 13,
-            }}
-          >
-            <Box
-              component="span"
-              sx={{
-                width: 8,
-                height: 8,
-                borderRadius: "50%",
-                bgcolor: footerDotColor,
-                flexShrink: 0,
-              }}
-            />
-            {footerLeft}
-          </Typography>
-        ) : (
-          <Box sx={{ width: 80 }} />
-        )}
-
-        {footerRight ? (
+        {footerRight && (
           <Box
             sx={{
               border: "1px solid",
               borderColor: "divider",
               borderRadius: 0.8,
-              px: 1.2,
-              py: 0.4,
+              px: 1,
+              py: 0.3,
               display: "inline-flex",
-              gap: 0.8,
+              gap: 0.6,
               alignItems: "center",
             }}
           >
             <Typography
               variant="caption"
-              sx={{ color: "text.secondary", fontWeight: 600, fontSize: 11 }}
+              sx={{ color: "text.secondary", fontWeight: 600, fontSize: 10 }}
             >
               {footerRightLabel}
             </Typography>
             <Typography
               variant="caption"
               sx={{
-                color: "#cff9ff",
+                color: "#ffffff",
                 fontWeight: 700,
-                fontSize: 12,
-                bgcolor: "#13b8cd",
+                fontSize: 11,
+                bgcolor: "#7E4FCA",
                 borderRadius: 0.5,
                 px: 0.6,
                 py: 0.1,
@@ -204,8 +186,6 @@ export default function SummaryCard({
               {footerRight}
             </Typography>
           </Box>
-        ) : (
-          <Box sx={{ width: 120 }} />
         )}
       </Box>
     </Box>
