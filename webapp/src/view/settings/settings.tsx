@@ -13,15 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
-import { Box } from "@wso2/oxygen-ui";
-
 import UnderDevelopment from "@src/layout/pages/Maintenance";
 
-export default function Settings() {
-  return (
-    <Box>
-      <UnderDevelopment />
-    </Box>
-  );
+export default function Opd() {
+  return <UnderDevelopment />;
 }
