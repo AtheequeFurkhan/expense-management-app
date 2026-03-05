@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { BaseURLAuthClientConfig } from "@asgardeo/auth-react";
 import { DollarSign, Hash, TrendingUp } from "lucide-react";
 
@@ -51,7 +50,7 @@ const missingKeys = requiredAsgardeoKeys.filter((key) => !AsgardeoConfig[key]);
 
 if (missingKeys.length > 0) {
   throw new Error(
-    `Missing required Asgardeo configuration: ${missingKeys.join(", ")}. Ensure window.config is populated before the app boots.`
+    `Missing required Asgardeo configuration: ${missingKeys.join(", ")}. Ensure window.config is populated before the app boots.`,
   );
 }
 
@@ -63,26 +62,32 @@ export const OPD_CHART_CONFIG = {
   barGap: "2px",
 };
 
+const currentYear = new Date().getFullYear();
+const currentMonth = new Date().toLocaleString("default", { month: "long" });
+
 export const OPD_SUMMARY_CARDS_CONFIG = {
   lastYearCard: {
     icon: DollarSign,
-    iconBg: "#fdcda0",
-    iconColor: "#fb7900",
+    iconBg: "#fff3e0",
+    iconColor: "#f57c00",
     title: "Last Year Claim Amount",
+    chipLabel: `${currentYear}`,
     suffix: "LKR",
   },
   currentMonthCard: {
     icon: TrendingUp,
-    iconBg: "#a0d0fd",
-    iconColor: "#005baf",
+    iconBg: "#e3f2fd",
+    iconColor: "#1976d2",
     title: "Current Month Claim Amount",
+    chipLabel: `${currentMonth}`,
     suffix: "LKR",
   },
   previousYearCard: {
     icon: Hash,
-    iconBg: "#dec3f9",
-    iconColor: "#7013cd",
+    iconBg: "#f3e5f5",
+    iconColor: "#7b1fa2",
     title: "Previous Year Claim Count",
+    chipLabel: `${currentYear - 1}`,
   },
 };
 
