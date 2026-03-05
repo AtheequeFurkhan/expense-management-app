@@ -15,6 +15,6 @@
 // under the License.
 import UnderDevelopment from "@src/layout/pages/Maintenance";
 
-export default function Opd() {
+export default function Settings() {
   return <UnderDevelopment />;
 }
