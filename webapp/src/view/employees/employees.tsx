@@ -13,19 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
-import TabsPage from "@layout/pages/TabsPage";
 import UnderDevelopment from "@src/layout/pages/Maintenance";
 
-export default function Employees() {
-  return (
-    <TabsPage
-      tabs={[
-        {
-          label: "Tab 1",
-          content: <UnderDevelopment />,
-        },
-      ]}
-    />
-  );
+export default function Opd() {
+  return <UnderDevelopment />;
 }
