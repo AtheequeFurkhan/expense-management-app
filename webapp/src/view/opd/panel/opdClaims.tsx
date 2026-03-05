@@ -40,7 +40,7 @@ const prevMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLoc
 
 export default function OpdClaims() {
   const dispatch = useAppDispatch();
-  const { data, month, year, loading, error, handleMonthChange } = useOpdClaims();
+  const { data, month, loading, error, handleMonthChange } = useOpdClaims();
 
   useEffect(() => {
     return () => {

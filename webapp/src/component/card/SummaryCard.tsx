@@ -47,87 +47,100 @@ export default function SummaryCard({
   footerRight,
   footerRightLabel = "Grace Period Claims",
 }: SummaryCardProps) {
-  const trendColor = trendVariant === "negative" ? "#fcdfdf" : "#dcffe6";
-  const trendBg = trendVariant === "negative" ? "#f83e3e" : "#13cd4b";
+  const isNegative = trendVariant === "negative";
+  const trendTextColor = isNegative ? "#f83e3e" : "#13cd4b";
+  const trendBgColor = isNegative ? "#fff0f0" : "#f0fff4";
 
   return (
     <Box
       sx={{
-        p: 2,
+        p: 2.5,
         borderRadius: 1,
         border: "1px solid",
         borderColor: "divider",
         bgcolor: "background.paper",
-        minHeight: 110,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "space-between",
-        gap: 1,
+        gap: 1.5,
+        minHeight: 130,
+        position: "relative",
+        overflow: "hidden",
+        "&::before": {
+          content: '""',
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "3px",
+          bgcolor: iconColor,
+          borderRadius: "1px 1px 0 0",
+        },
       }}
     >
-      {/* Top row — icon + trend */}
-      <Box sx={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+      <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <Box
           sx={{
-            width: 38,
-            height: 38,
-            borderRadius: "20%",
+            width: 40,
+            height: 40,
+            borderRadius: 1,
             bgcolor: iconBg,
             color: iconColor,
             display: "grid",
             placeItems: "center",
+            flexShrink: 0,
           }}
         >
-          <Icon size={18} />
+          <Icon size={20} />
         </Box>
 
-        <Box sx={{ textAlign: "right" }}>
+        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 0.3 }}>
           <Box
             sx={{
               display: "inline-flex",
+              alignItems: "center",
               px: 1,
-              py: 0.2,
+              py: 0.3,
               borderRadius: 0.5,
-              bgcolor: trendBg,
-              color: trendColor,
+              bgcolor: trendBgColor,
+              color: trendTextColor,
               fontWeight: 700,
-              fontSize: 13,
+              fontSize: 12,
+              letterSpacing: 0.3,
             }}
           >
             {trend}
           </Box>
-          <Typography
-            variant="caption"
-            sx={{
-              display: "block",
-              mt: 0.3,
-              letterSpacing: 0.5,
-              color: "text.secondary",
-              fontSize: 10,
-            }}
-          >
+          <Typography sx={{ fontSize: 10, color: "text.disabled", letterSpacing: 0.4 }}>
             {trendLabel}
           </Typography>
         </Box>
       </Box>
 
-      {/* Title*/}
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.8, flexWrap: "wrap" }}>
-        <Typography variant="body2" sx={{ color: "text.secondary", fontSize: 13, fontWeight: 400 }}>
+      {/* Title and chip side by side */}
+      <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+        <Typography
+          sx={{
+            fontSize: 12,
+            color: "text.secondary",
+            fontWeight: 500,
+            letterSpacing: 0.2,
+          }}
+        >
           {title}
         </Typography>
+
         {chipLabel && (
           <Box
             sx={{
               px: 0.8,
               py: 0.2,
-              borderRadius: 1,
-              bgcolor: "action.hover",
-              border: "1px solid",
-              borderColor: "divider",
+              borderRadius: 0.5,
               fontSize: 11,
-              fontWeight: 600,
-              color: "text.secondary",
+              fontWeight: 700,
+              color: iconColor,
+              bgcolor: iconBg,
+              letterSpacing: 0.5,
+              lineHeight: 1.6,
             }}
           >
             {chipLabel}
@@ -135,18 +148,36 @@ export default function SummaryCard({
         )}
       </Box>
 
-      {/* Value + suffix + Grace Period */}
       <Box
-        sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 1 }}
+        sx={{
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "space-between",
+          gap: 1,
+          mt: "auto",
+        }}
       >
-        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.8 }}>
+        <Box sx={{ display: "flex", alignItems: "baseline", gap: 0.6 }}>
           <Typography
-            sx={{ fontWeight: 700, fontSize: 26, lineHeight: 1.2, color: "text.primary" }}
+            sx={{
+              fontWeight: 600,
+              fontSize: 28,
+              lineHeight: 1,
+              color: "text.primary",
+              letterSpacing: -0.5,
+            }}
           >
             {value}
           </Typography>
           {suffix && (
-            <Typography sx={{ color: "text.secondary", fontWeight: 500, fontSize: 14 }}>
+            <Typography
+              sx={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "text.secondary",
+                letterSpacing: 0.3,
+              }}
+            >
               {suffix}
             </Typography>
           )}
@@ -155,36 +186,31 @@ export default function SummaryCard({
         {footerRight && (
           <Box
             sx={{
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: 0.8,
-              px: 1,
-              py: 0.3,
-              display: "inline-flex",
-              gap: 0.6,
-              alignItems: "center",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-end",
+              gap: 0.3,
             }}
           >
-            <Typography
-              variant="caption"
-              sx={{ color: "text.secondary", fontWeight: 600, fontSize: 10 }}
-            >
+            <Typography sx={{ fontSize: 10, color: "text.disabled", letterSpacing: 0.3 }}>
               {footerRightLabel}
             </Typography>
-            <Typography
-              variant="caption"
+            <Box
               sx={{
-                color: "#ffffff",
-                fontWeight: 700,
-                fontSize: 11,
-                bgcolor: "#7E4FCA",
+                px: 1,
+                py: 0.2,
                 borderRadius: 0.5,
-                px: 0.6,
-                py: 0.1,
+                bgcolor: "#7E4FCA",
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: 13,
+                letterSpacing: 0.5,
+                minWidth: 32,
+                textAlign: "center",
               }}
             >
               {footerRight}
-            </Typography>
+            </Box>
           </Box>
         )}
       </Box>
