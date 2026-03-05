@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { Breadcrumbs, Link, Typography, useTheme } from "@wso2/oxygen-ui";
 import { ChevronRight, LayoutDashboard } from "@wso2/oxygen-ui-icons-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -33,7 +32,7 @@ function BreadCrumbs() {
         sx={{ display: "flex", alignItems: "center", cursor: "pointer" }}
       >
         <LayoutDashboard size={18} style={{ marginRight: theme.spacing(0.5) }} />
-        Dashboard
+        Expense Claim Summary
       </Link>
       {pathnames.map((value, index) => {
         const to = `/${pathnames.slice(0, index + 1).join("/")}`;
