@@ -13,20 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
-import TabsPage from "@layout/pages/TabsPage";
-
 import OpdClaims from "./panel/opdClaims";
 
 export default function Opd() {
-  return (
-    <TabsPage
-      tabs={[
-        {
-          label: "OPD Claims",
-          content: <OpdClaims />,
-        },
-      ]}
-    />
-  );
+  return <OpdClaims />;
 }
