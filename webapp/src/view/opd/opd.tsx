@@ -13,7 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import OpdClaims from "./panel/opdClaims";
+import OpdClaims from "./panel/OpdClaims";
 
 export default function Opd() {
   return <OpdClaims />;
