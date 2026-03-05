@@ -23,15 +23,8 @@ import { OPD_LOADING_MESSAGES } from "@root/src/config/constant";
 import SideCountCard from "../../../component/card/SideCountCard";
 import SummaryCard from "../../../component/card/SummaryCard";
 import ActiveClaimsChart from "../../../component/chart/ActiveClaimsChart";
-import {
-  MonthFilter,
-  // ✅ fix 2: import MonthFilter
-  resetOpdClaims,
-  useOpdClaims, // ✅ fix 1: import useOpdClaims
-} from "../../../slices/opdSlice/useOpdClaims";
+import { MonthFilter, resetOpdClaims, useOpdClaims } from "../../../slices/opdSlice/useOpdClaims";
 import { useAppDispatch } from "../../../slices/store";
-
-// ✅ fix 3: correct path
 
 const MONTH_OPTIONS = [
   { value: "current", label: "Current Month" },
@@ -39,6 +32,11 @@ const MONTH_OPTIONS = [
   { value: "pastSix", label: "Past 6 Months" },
   { value: "pastTwelve", label: "Past 12 Months" },
 ];
+
+const prevMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLocaleString(
+  "default",
+  { month: "long" },
+);
 
 export default function OpdClaims() {
   const dispatch = useAppDispatch();
@@ -115,12 +113,11 @@ export default function OpdClaims() {
           iconBg={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.iconBg}
           iconColor={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.iconColor}
           title={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.title}
+          chipLabel={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.chipLabel}
           value={data.claimAmountLastYear.toLocaleString()}
           suffix={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.suffix}
           trend={`${data.trendLastYear > 0 ? "+" : ""}${data.trendLastYear}%`}
           trendVariant={data.trendLastYear < 0 ? "negative" : "positive"}
-          footerDotColor="warning.main"
-          footerLeft={`Year ${year}`}
         />
 
         <SummaryCard
@@ -128,12 +125,12 @@ export default function OpdClaims() {
           iconBg={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.iconBg}
           iconColor={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.iconColor}
           title={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.title}
+          chipLabel={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.chipLabel}
           value={data.currentMonthClaimAmount.toLocaleString()}
           suffix={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.suffix}
           trend={`${data.trendCurrentMonth > 0 ? "+" : ""}${data.trendCurrentMonth}%`}
           trendVariant={data.trendCurrentMonth < 0 ? "negative" : "positive"}
-          footerDotColor="info.main"
-          footerLeft={`${new Date().toLocaleString("default", { month: "long" })} ${new Date().getFullYear()}`}
+          trendLabel={`VS ${prevMonth}`}
         />
 
         <SummaryCard
@@ -141,11 +138,10 @@ export default function OpdClaims() {
           iconBg={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.iconBg}
           iconColor={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.iconColor}
           title={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.title}
+          chipLabel={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.chipLabel}
           value={data.claimsCountPreviousYear.toLocaleString()}
           trend={`${data.trendPreviousYear > 0 ? "+" : ""}${data.trendPreviousYear}%`}
           trendVariant={data.trendPreviousYear < 0 ? "negative" : "positive"}
-          footerDotColor="warning.main"
-          footerLeft={`Year ${year}`}
           footerRight={data.gracePeriodClaims.toString()}
         />
       </Box>
