@@ -14,7 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 import { BaseURLAuthClientConfig } from "@asgardeo/auth-react";
-import { DollarSign, Hash, TrendingUp } from "lucide-react";
 
 declare global {
   interface Window {
@@ -53,54 +52,6 @@ if (missingKeys.length > 0) {
     `Missing required Asgardeo configuration: ${missingKeys.join(", ")}. Ensure window.config is populated before the app boots.`,
   );
 }
-
-export const OPD_CHART_CONFIG = {
-  xAxisLabels: ["0-5K", "5K-10K", "10K-15K", "15K-20K", "20K-25K", "25K-30K", "30K-35K", "35K-40K"],
-  yAxisLabels: [12, 9, 6, 3, 0],
-  chartHeight: 320,
-  maxBarValue: 12,
-  barGap: "2px",
-};
-
-const currentYear = new Date().getFullYear();
-const currentMonth = new Date().toLocaleString("default", { month: "long" });
-
-export const OPD_SUMMARY_CARDS_CONFIG = {
-  lastYearCard: {
-    icon: DollarSign,
-    iconBg: "#fff3e0",
-    iconColor: "#f57c00",
-    title: "Claim Amount in",
-    chipLabel: `${currentYear}`,
-    suffix: "LKR",
-  },
-  currentMonthCard: {
-    icon: TrendingUp,
-    iconBg: "#e3f2fd",
-    iconColor: "#1976d2",
-    title: "Claim Amount in",
-    chipLabel: `${currentMonth}`,
-    suffix: "LKR",
-  },
-  previousYearCard: {
-    icon: Hash,
-    iconBg: "#f3e5f5",
-    iconColor: "#7b1fa2",
-    title: "Number of Claims",
-    chipLabel: `${currentYear - 1}`,
-  },
-};
-
-export const OPD_SIDE_CARDS_CONFIG = {
-  unclaimed: {
-    title: "Unclaimed",
-    color: "#1976d2",
-  },
-  fullyClaimed: {
-    title: "Fully Claimed",
-    color: "#f57c00",
-  },
-};
 
 export const APP_NAME = window.config?.APP_NAME ?? "";
 export const APP_DOMAIN = window.config?.APP_DOMAIN ?? "";
