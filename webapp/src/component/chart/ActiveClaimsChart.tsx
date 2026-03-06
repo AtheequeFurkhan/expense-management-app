@@ -58,6 +58,9 @@ export default function ActiveClaimsChart({
 
   const selectedLabel = monthOptions.find((o) => o.value === month)?.label ?? "";
 
+  const xTickLabels = xAxisLabels.map((label) => label.split("-")[0].trim());
+  const lastTickLabel = xAxisLabels[xAxisLabels.length - 1]?.split("-")[1]?.trim() ?? "";
+
   return (
     <Box
       sx={{
@@ -71,7 +74,6 @@ export default function ActiveClaimsChart({
         gap: 2,
       }}
     >
-      {/* Header */}
       <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <Box>
           <Typography
@@ -84,7 +86,6 @@ export default function ActiveClaimsChart({
           </Typography>
         </Box>
 
-        {/* Custom dropdown trigger */}
         <Box
           onClick={(e) => setAnchorEl(e.currentTarget)}
           sx={{
@@ -110,7 +111,6 @@ export default function ActiveClaimsChart({
           <ChevronDown size={16} style={{ color: theme.palette.text.secondary }} />
         </Box>
 
-        {/* Custom dropdown menu */}
         <Popover
           open={open}
           anchorEl={anchorEl}
@@ -153,11 +153,8 @@ export default function ActiveClaimsChart({
         </Popover>
       </Box>
 
-      {/* Chart area */}
       <Box sx={{ display: "flex", gap: 0.5 }}>
-        {/* Y axis title + values */}
         <Box sx={{ display: "flex", gap: 0.5 }}>
-          {/* Y axis title */}
           <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Typography
               sx={{
@@ -174,7 +171,6 @@ export default function ActiveClaimsChart({
             </Typography>
           </Box>
 
-          {/* Y axis values — all labels */}
           <Box
             sx={{
               display: "flex",
@@ -194,106 +190,108 @@ export default function ActiveClaimsChart({
           </Box>
         </Box>
 
-        {/* Bars + X axis */}
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <Box sx={{ position: "relative", height: chartHeight }}>
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${values.length}, 1fr)`,
-                height: "100%",
-                alignItems: "flex-end",
-                gap: "2px",
-              }}
-            >
-              {values.map((value, index) => {
-                const heightPercent = (value / maxBarValue) * 100;
-                const isHovered = hoveredIndex === index;
-                // skip first x label since 0 is already shown on Y axis
-                const xLabel = index === 0 ? "" : (xAxisLabels[index]?.split("-")[0]?.trim() ?? "");
-                const isLast = index === values.length - 1;
-                const lastLabel = xAxisLabels[index]?.split("-")[1]?.trim() ?? "";
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${values.length}, 1fr)`,
+              height: chartHeight,
+              alignItems: "flex-end",
+              gap: "2px",
+            }}
+          >
+            {values.map((value, index) => {
+              const heightPercent = (value / maxBarValue) * 100;
+              const isHovered = hoveredIndex === index;
 
-                return (
-                  <Tooltip
-                    key={index}
-                    title={
-                      <Box sx={{ px: 0.5, py: 0.2 }}>
-                        <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
-                          {value} Claims
-                        </Typography>
-                        <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.2 }}>
-                          {xAxisLabels[index]}
-                        </Typography>
-                      </Box>
-                    }
-                    placement="top"
-                    arrow
-                    slotProps={{
-                      popper: {
-                        modifiers: [{ name: "offset", options: { offset: [0, -8] } }],
-                      },
+              return (
+                <Tooltip
+                  key={index}
+                  title={
+                    <Box sx={{ px: 0.5, py: 0.2 }}>
+                      <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
+                        {value} Claims
+                      </Typography>
+                      <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.2 }}>
+                        {xAxisLabels[index]}
+                      </Typography>
+                    </Box>
+                  }
+                  placement="top"
+                  arrow
+                  slotProps={{
+                    popper: {
+                      modifiers: [{ name: "offset", options: { offset: [0, 4] } }],
+                    },
+                  }}
+                >
+                  <Box
+                    onMouseEnter={() => setHoveredIndex(index)}
+                    onMouseLeave={() => setHoveredIndex(null)}
+                    sx={{
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "flex-end",
+                      cursor: "pointer",
                     }}
                   >
                     <Box
-                      onMouseEnter={() => setHoveredIndex(index)}
-                      onMouseLeave={() => setHoveredIndex(null)}
                       sx={{
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "stretch",
-                        height: "100%",
-                        cursor: "pointer",
+                        width: "100%",
+                        height: `${heightPercent}%`,
+                        backgroundColor: isHovered ? barHoverColor : barColor,
+                        transition: "background-color 0.25s ease, opacity 0.25s ease",
+                        opacity: hoveredIndex !== null && !isHovered ? 0.5 : 1,
                       }}
-                    >
-                      {/* Bar */}
-                      <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end" }}>
-                        <Box
-                          sx={{
-                            width: "100%",
-                            height: `${heightPercent}%`,
-                            backgroundColor: isHovered ? barHoverColor : barColor,
-                            transition: "background-color 0.25s ease, opacity 0.25s ease",
-                            opacity: hoveredIndex !== null && !isHovered ? 0.5 : 1,
-                          }}
-                        />
-                      </Box>
-
-                      {/* X tick label */}
-                      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 0.8 }}>
-                        <Typography
-                          sx={{
-                            fontSize: 11,
-                            color: isHovered ? "text.primary" : "text.disabled",
-                            lineHeight: 1,
-                            transform: "translateX(-50%)",
-                            transition: "color 0.25s ease",
-                            fontWeight: isHovered ? 600 : 400,
-                          }}
-                        >
-                          {xLabel}
-                        </Typography>
-                        {isLast && (
-                          <Typography
-                            sx={{
-                              fontSize: 11,
-                              color: "text.disabled",
-                              lineHeight: 1,
-                              transform: "translateX(50%)",
-                            }}
-                          >
-                            {lastLabel}
-                          </Typography>
-                        )}
-                      </Box>
-                    </Box>
-                  </Tooltip>
-                );
-              })}
-            </Box>
+                    />
+                  </Box>
+                </Tooltip>
+              );
+            })}
           </Box>
 
-          {/* X axis title */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${values.length}, 1fr)`,
+              mt: 0.8,
+              position: "relative",
+            }}
+          >
+            {xTickLabels.map((tick, index) => (
+              <Box key={index} sx={{ position: "relative", height: 16 }}>
+                <Typography
+                  sx={{
+                    fontSize: 11,
+                    color: "text.disabled",
+                    lineHeight: 1,
+                    position: "absolute",
+                    left: 0,
+                    transform: "translateX(-50%)",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {tick}
+                </Typography>
+                {index === values.length - 1 && (
+                  <Typography
+                    sx={{
+                      fontSize: 11,
+                      color: "text.disabled",
+                      lineHeight: 1,
+                      position: "absolute",
+                      right: 0,
+                      transform: "translateX(50%)",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {lastTickLabel}
+                  </Typography>
+                )}
+              </Box>
+            ))}
+          </Box>
+
           <Box sx={{ display: "flex", justifyContent: "center", mt: 1.5 }}>
             <Typography
               sx={{
