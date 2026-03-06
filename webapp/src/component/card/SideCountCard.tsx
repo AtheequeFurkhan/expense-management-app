@@ -31,7 +31,6 @@ export default function SideCountCard({
   type,
 }: SideCountCardProps) {
   const dotColor = type === "unclaimed" ? "#2e7d32" : type === "claimed" ? "#c62828" : color;
-  const dotBg = type === "unclaimed" ? "#e8f5e9" : type === "claimed" ? "#ffebee" : `${color}18`;
 
   return (
     <Box
@@ -47,50 +46,14 @@ export default function SideCountCard({
         alignItems: "center",
         textAlign: "center",
         flex: 1,
-        position: "relative",
-        overflow: "hidden",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "3px",
-          backgroundColor: dotColor,
-          borderRadius: "1px 1px 0 0",
-        },
       }}
     >
-      {/* Icon bg circle */}
-      <Box
-        sx={{
-          width: 48,
-          height: 48,
-          borderRadius: "50%",
-          backgroundColor: dotBg,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          mb: 1.5,
-        }}
-      >
-        <Box
-          sx={{
-            width: 20,
-            height: 20,
-            borderRadius: "50%",
-            backgroundColor: dotColor,
-            opacity: 0.85,
-          }}
-        />
-      </Box>
-
       <Typography
         sx={{
           letterSpacing: 1,
           color: "text.disabled",
           fontWeight: 700,
-          fontSize: 11,
+          fontSize: 14,
           textTransform: "uppercase",
           mb: 0.5,
         }}
@@ -102,7 +65,7 @@ export default function SideCountCard({
         sx={{
           color: dotColor,
           fontWeight: 700,
-          fontSize: 48,
+          fontSize: 55,
           lineHeight: 1.1,
           my: 0.5,
         }}
@@ -112,8 +75,9 @@ export default function SideCountCard({
 
       <Typography
         sx={{
-          fontSize: 12,
-          color: "text.disabled",
+          fontSize: 14,
+          fontWeight: 600,
+          color: "text.secondary",
           mt: 0.5,
         }}
       >
