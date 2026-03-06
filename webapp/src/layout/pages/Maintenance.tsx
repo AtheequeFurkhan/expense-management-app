@@ -13,8 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
-import { Alert, Box, Skeleton, Typography } from "@wso2/oxygen-ui";
+import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
+import { TriangleAlert } from "@wso2/oxygen-ui-icons-react";
 
 type UnderDevelopmentProps = {
   isLoading?: boolean;
@@ -24,22 +24,72 @@ export default function UnderDevelopment({ isLoading = false }: UnderDevelopment
   return (
     <Box
       sx={{
-        minHeight: "60vh",
+        minHeight: "calc(100vh - 150px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         bgcolor: "background.default",
       }}
     >
-      <Box sx={{ width: "100%", maxWidth: 520 }}>
+      <Box sx={{ width: "100%", maxWidth: 420 }}>
         {isLoading ? (
-          <Skeleton height={48} />
+          <>
+            <Skeleton variant="rectangular" height={120} sx={{ borderRadius: 2, mb: 1.5 }} />
+            <Skeleton width="60%" height={20} sx={{ mx: "auto" }} />
+          </>
         ) : (
-          <Alert severity="warning" sx={{ width: "100%", textAlign: "center" }}>
-            <Typography sx={{ fontSize: 14 }}>
-              This page is currently under development. Please check back soon!
+          <Box
+            sx={{
+              p: 3,
+              borderRadius: 2,
+              border: "1px solid",
+              borderColor: "divider",
+              bgcolor: "background.paper",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+              transition: "box-shadow 0.25s ease, transform 0.25s ease",
+              "&:hover": {
+                boxShadow: 4,
+                transform: "translateY(-2px)",
+              },
+            }}
+          >
+            {/* Icon */}
+            <Box
+              sx={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                bgcolor: "#fff8e1",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <TriangleAlert size={28} color="#f57c00" />
+            </Box>
+
+            {/* Title */}
+            <Typography sx={{ fontWeight: 700, fontSize: 16, color: "text.primary" }}>
+              Under Development
             </Typography>
-          </Alert>
+
+            {/* Message */}
+            <Typography
+              sx={{
+                fontSize: 13,
+                color: "text.secondary",
+                textAlign: "center",
+                lineHeight: 1.6,
+              }}
+            >
+              This page is currently under development.
+              <br />
+              Please check back soon!
+            </Typography>
+          </Box>
         )}
       </Box>
     </Box>
