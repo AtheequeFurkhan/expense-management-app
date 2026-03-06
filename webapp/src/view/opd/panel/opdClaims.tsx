@@ -17,7 +17,11 @@ import { Alert, Box, Stack } from "@wso2/oxygen-ui";
 
 import { useEffect } from "react";
 
-import { OPD_CHART_CONFIG, OPD_SIDE_CARDS_CONFIG, OPD_SUMMARY_CARDS_CONFIG } from "@config/config";
+import {
+  OPD_CHART_CONFIG,
+  OPD_SIDE_CARDS_CONFIG,
+  OPD_SUMMARY_CARDS_CONFIG,
+} from "@config/constant";
 import { OPD_LOADING_MESSAGES } from "@root/src/config/constant";
 
 import SideCountCard from "../../../component/card/SideCountCard";
@@ -173,12 +177,10 @@ export default function OpdClaims() {
           <SideCountCard
             title={OPD_SIDE_CARDS_CONFIG.unclaimed.title}
             value={data.unclaimedCount.toString()}
-            color={OPD_SIDE_CARDS_CONFIG.unclaimed.color}
           />
           <SideCountCard
             title={OPD_SIDE_CARDS_CONFIG.fullyClaimed.title}
             value={data.fullyClaimedCount.toString()}
-            color={OPD_SIDE_CARDS_CONFIG.fullyClaimed.color}
           />
         </Box>
       </Box>

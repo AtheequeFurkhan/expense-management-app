@@ -83,10 +83,40 @@ export default function ActiveClaimsChart({
           size="small"
           value={month}
           onChange={(e) => onMonthChange(e.target.value as string)}
-          sx={{ borderRadius: 1, fontSize: 13, minWidth: 140 }}
+          sx={{
+            borderRadius: 1,
+            fontSize: 13,
+            minWidth: 140,
+            color: "#1976d2",
+            fontWeight: 600,
+            "& .MuiSelect-icon": {
+              color: "#1976d2",
+            },
+            "& .MuiOutlinedInput-notchedOutline": {
+              borderColor: "#1976d2",
+            },
+            "&:hover .MuiOutlinedInput-notchedOutline": {
+              borderColor: "#1250a0",
+            },
+          }}
         >
           {monthOptions.map((option) => (
-            <MenuItem key={option.value} value={option.value}>
+            <MenuItem
+              key={option.value}
+              value={option.value}
+              sx={{
+                color: "#1976d2",
+                fontWeight: 500,
+                "&.Mui-selected": {
+                  backgroundColor: "#e3f2fd",
+                  color: "#1250a0",
+                  fontWeight: 700,
+                },
+                "&:hover": {
+                  backgroundColor: "#e3f2fd",
+                },
+              }}
+            >
               {option.label}
             </MenuItem>
           ))}
@@ -95,129 +125,171 @@ export default function ActiveClaimsChart({
 
       {/* Chart area */}
       <Box sx={{ display: "flex", gap: 1 }}>
-        {/* Y axis labels */}
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            pr: 1.5,
-            height: chartHeight + 24,
-            minWidth: 28,
-          }}
-        >
-          {yAxisLabels.map((label) => (
-            <Typography key={label} sx={{ fontSize: 11, color: "text.disabled", lineHeight: 1 }}>
-              {label}
-            </Typography>
-          ))}
-        </Box>
-
-        {/* Bars */}
-        <Box sx={{ flex: 1, position: "relative", height: chartHeight + 24 }}>
+        {/* Y axis label + values */}
+        <Box sx={{ display: "flex", gap: 0.5 }}>
+          {/* Y axis title */}
           <Box
             sx={{
-              display: "grid",
-              gridTemplateColumns: `repeat(${values.length}, 1fr)`,
-              height: "100%",
-              alignItems: "flex-end",
-              position: "relative",
-              zIndex: 1,
-              gap: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
             }}
           >
-            {values.map((value, index) => {
-              const heightPercent = (value / maxBarValue) * 100;
-              const leftLabel = xAxisLabels[index]?.split("-")[0]?.trim() ?? "";
-              const rightLabel = xAxisLabels[index]?.split("-")[1]?.trim() ?? "";
-              const isHovered = hoveredIndex === index;
+            <Typography
+              sx={{
+                fontSize: 11,
+                color: "text.disabled",
+                fontWeight: 600,
+                writingMode: "vertical-rl",
+                transform: "rotate(180deg)",
+                letterSpacing: 0.5,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Employee Count
+            </Typography>
+          </Box>
 
-              return (
-                <Tooltip
-                  key={index}
-                  title={
-                    <Box sx={{ px: 0.5, py: 0.2 }}>
-                      <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
-                        {value} Claims
-                      </Typography>
-                      <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.2 }}>
-                        {xAxisLabels[index]}
-                      </Typography>
-                    </Box>
-                  }
-                  placement="top"
-                  arrow
-                  slotProps={{
-                    popper: {
-                      modifiers: [
-                        {
-                          name: "offset",
-                          options: {
-                            offset: [0, -8],
+          {/* Y axis values */}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              justifyContent: "space-between",
+              alignItems: "flex-end",
+              pr: 1.5,
+              height: chartHeight + 24,
+              minWidth: 28,
+            }}
+          >
+            {yAxisLabels.map((label) => (
+              <Typography key={label} sx={{ fontSize: 11, color: "text.disabled", lineHeight: 1 }}>
+                {label}
+              </Typography>
+            ))}
+          </Box>
+        </Box>
+
+        {/* Bars + X axis */}
+        <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
+          <Box sx={{ flex: 1, position: "relative", height: chartHeight + 24 }}>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: `repeat(${values.length}, 1fr)`,
+                height: "100%",
+                alignItems: "flex-end",
+                position: "relative",
+                zIndex: 1,
+                gap: 0,
+              }}
+            >
+              {values.map((value, index) => {
+                const heightPercent = (value / maxBarValue) * 100;
+                const leftLabel = xAxisLabels[index]?.split("-")[0]?.trim() ?? "";
+                const rightLabel = xAxisLabels[index]?.split("-")[1]?.trim() ?? "";
+                const isHovered = hoveredIndex === index;
+
+                return (
+                  <Tooltip
+                    key={index}
+                    title={
+                      <Box sx={{ px: 0.5, py: 0.2 }}>
+                        <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
+                          {value} Claims
+                        </Typography>
+                        <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.2 }}>
+                          {xAxisLabels[index]}
+                        </Typography>
+                      </Box>
+                    }
+                    placement="top"
+                    arrow
+                    slotProps={{
+                      popper: {
+                        modifiers: [
+                          {
+                            name: "offset",
+                            options: {
+                              offset: [0, -8],
+                            },
                           },
-                        },
-                      ],
-                    },
-                  }}
-                >
-                  <Box
-                    onMouseEnter={() => setHoveredIndex(index)}
-                    onMouseLeave={() => setHoveredIndex(null)}
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "stretch",
-                      height: "100%",
-                      position: "relative",
-                      cursor: "pointer",
+                        ],
+                      },
                     }}
                   >
-                    <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end" }}>
-                      <Box
-                        sx={{
-                          width: "100%",
-                          height: `${heightPercent}%`,
-                          backgroundColor: isHovered ? barHoverColor : barColor,
-                          borderRight: index < values.length - 1 ? "1px solid" : "none",
-                          borderColor: "background.paper",
-                          transition: "background-color 0.25s ease, opacity 0.25s ease",
-                          opacity: hoveredIndex !== null && !isHovered ? 0.5 : 1,
-                        }}
-                      />
-                    </Box>
+                    <Box
+                      onMouseEnter={() => setHoveredIndex(index)}
+                      onMouseLeave={() => setHoveredIndex(null)}
+                      sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "stretch",
+                        height: "100%",
+                        position: "relative",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end" }}>
+                        <Box
+                          sx={{
+                            width: "100%",
+                            height: `${heightPercent}%`,
+                            backgroundColor: isHovered ? barHoverColor : barColor,
+                            borderRight: index < values.length - 1 ? "1px solid" : "none",
+                            borderColor: "background.paper",
+                            transition: "background-color 0.25s ease, opacity 0.25s ease",
+                            opacity: hoveredIndex !== null && !isHovered ? 0.5 : 1,
+                          }}
+                        />
+                      </Box>
 
-                    {/* X axis edge labels */}
-                    <Box sx={{ display: "flex", justifyContent: "space-between", mt: 0.8 }}>
-                      <Typography
-                        sx={{
-                          fontSize: 11,
-                          color: isHovered ? "text.primary" : "text.disabled",
-                          lineHeight: 1,
-                          transform: "translateX(-50%)",
-                          transition: "color 0.25s ease",
-                          fontWeight: isHovered ? 600 : 400,
-                        }}
-                      >
-                        {leftLabel}
-                      </Typography>
-                      {index === values.length - 1 && (
+                      {/* X axis edge labels */}
+                      <Box sx={{ display: "flex", justifyContent: "space-between", mt: 0.8 }}>
                         <Typography
                           sx={{
                             fontSize: 11,
-                            color: "text.disabled",
+                            color: isHovered ? "text.primary" : "text.disabled",
                             lineHeight: 1,
-                            transform: "translateX(50%)",
+                            transform: "translateX(-50%)",
+                            transition: "color 0.25s ease",
+                            fontWeight: isHovered ? 600 : 400,
                           }}
                         >
-                          {rightLabel}
+                          {leftLabel}
                         </Typography>
-                      )}
+                        {index === values.length - 1 && (
+                          <Typography
+                            sx={{
+                              fontSize: 11,
+                              color: "text.disabled",
+                              lineHeight: 1,
+                              transform: "translateX(50%)",
+                            }}
+                          >
+                            {rightLabel}
+                          </Typography>
+                        )}
+                      </Box>
                     </Box>
-                  </Box>
-                </Tooltip>
-              );
-            })}
+                  </Tooltip>
+                );
+              })}
+            </Box>
+          </Box>
+
+          {/* X axis title */}
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 1.5 }}>
+            <Typography
+              sx={{
+                fontSize: 11,
+                color: "text.disabled",
+                fontWeight: 600,
+                letterSpacing: 0.5,
+              }}
+            >
+              Amount Range
+            </Typography>
           </Box>
         </Box>
       </Box>
