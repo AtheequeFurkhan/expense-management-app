@@ -13,7 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, MenuItem, Select, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
+import { Box, MenuItem, Popover, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
+import { ChevronDown } from "@wso2/oxygen-ui-icons-react";
 
 import { useState } from "react";
 
@@ -47,11 +48,15 @@ export default function ActiveClaimsChart({
   chartHeight,
 }: ActiveClaimsChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
   const theme = useTheme();
   const isDark = theme.palette.mode === "dark";
 
   const barColor = isDark ? "#e3f2fd" : "#1976d2";
   const barHoverColor = isDark ? "#bbdefb" : "#1250a0";
+
+  const selectedLabel = monthOptions.find((o) => o.value === month)?.label ?? "";
 
   return (
     <Box
@@ -79,62 +84,81 @@ export default function ActiveClaimsChart({
           </Typography>
         </Box>
 
-        <Select
-          size="small"
-          value={month}
-          onChange={(e) => onMonthChange(e.target.value as string)}
+        {/* Custom dropdown trigger */}
+        <Box
+          onClick={(e) => setAnchorEl(e.currentTarget)}
           sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            px: 1.5,
+            py: 0.4,
             borderRadius: 1,
-            fontSize: 13,
+            border: "1px solid",
+            borderColor: "divider",
+            bgcolor: "background.paper",
+            cursor: "pointer",
+            userSelect: "none",
             minWidth: 140,
-            color: "#1976d2",
-            fontWeight: 600,
-            "& .MuiSelect-icon": {
-              color: "#1976d2",
-            },
-            "& .MuiOutlinedInput-notchedOutline": {
-              borderColor: "#1976d2",
-            },
-            "&:hover .MuiOutlinedInput-notchedOutline": {
-              borderColor: "#1250a0",
+            justifyContent: "space-between",
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          <Typography sx={{ fontSize: 13, fontWeight: 500, color: "text.primary" }}>
+            {selectedLabel}
+          </Typography>
+          <ChevronDown size={16} style={{ color: theme.palette.text.secondary }} />
+        </Box>
+
+        {/* Custom dropdown menu */}
+        <Popover
+          open={open}
+          anchorEl={anchorEl}
+          onClose={() => setAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+          slotProps={{
+            paper: {
+              sx: {
+                mt: 0.5,
+                minWidth: 160,
+                borderRadius: 1,
+                border: "1px solid",
+                borderColor: "divider",
+                boxShadow: 3,
+              },
             },
           }}
         >
           {monthOptions.map((option) => (
             <MenuItem
               key={option.value}
-              value={option.value}
+              onClick={() => {
+                onMonthChange(option.value);
+                setAnchorEl(null);
+              }}
               sx={{
-                color: "#1976d2",
-                fontWeight: 500,
-                "&.Mui-selected": {
-                  backgroundColor: "#e3f2fd",
-                  color: "#1250a0",
-                  fontWeight: 700,
-                },
+                fontSize: 13,
+                fontWeight: option.value === month ? 700 : 400,
+                color: option.value === month ? "primary.main" : "text.primary",
+                bgcolor: option.value === month ? "action.selected" : "transparent",
                 "&:hover": {
-                  backgroundColor: "#e3f2fd",
+                  bgcolor: "action.hover",
                 },
               }}
             >
               {option.label}
             </MenuItem>
           ))}
-        </Select>
+        </Popover>
       </Box>
 
       {/* Chart area */}
-      <Box sx={{ display: "flex", gap: 1 }}>
-        {/* Y axis label + values */}
+      <Box sx={{ display: "flex", gap: 0.5 }}>
+        {/* Y axis title + values */}
         <Box sx={{ display: "flex", gap: 0.5 }}>
           {/* Y axis title */}
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Typography
               sx={{
                 fontSize: 11,
@@ -150,15 +174,15 @@ export default function ActiveClaimsChart({
             </Typography>
           </Box>
 
-          {/* Y axis values */}
+          {/* Y axis values — all labels */}
           <Box
             sx={{
               display: "flex",
               flexDirection: "column",
               justifyContent: "space-between",
               alignItems: "flex-end",
-              pr: 1.5,
-              height: chartHeight + 24,
+              pr: 1,
+              height: chartHeight,
               minWidth: 28,
             }}
           >
@@ -172,23 +196,23 @@ export default function ActiveClaimsChart({
 
         {/* Bars + X axis */}
         <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
-          <Box sx={{ flex: 1, position: "relative", height: chartHeight + 24 }}>
+          <Box sx={{ position: "relative", height: chartHeight }}>
             <Box
               sx={{
                 display: "grid",
                 gridTemplateColumns: `repeat(${values.length}, 1fr)`,
                 height: "100%",
                 alignItems: "flex-end",
-                position: "relative",
-                zIndex: 1,
-                gap: 0,
+                gap: "2px",
               }}
             >
               {values.map((value, index) => {
                 const heightPercent = (value / maxBarValue) * 100;
-                const leftLabel = xAxisLabels[index]?.split("-")[0]?.trim() ?? "";
-                const rightLabel = xAxisLabels[index]?.split("-")[1]?.trim() ?? "";
                 const isHovered = hoveredIndex === index;
+                // skip first x label since 0 is already shown on Y axis
+                const xLabel = index === 0 ? "" : (xAxisLabels[index]?.split("-")[0]?.trim() ?? "");
+                const isLast = index === values.length - 1;
+                const lastLabel = xAxisLabels[index]?.split("-")[1]?.trim() ?? "";
 
                 return (
                   <Tooltip
@@ -207,14 +231,7 @@ export default function ActiveClaimsChart({
                     arrow
                     slotProps={{
                       popper: {
-                        modifiers: [
-                          {
-                            name: "offset",
-                            options: {
-                              offset: [0, -8],
-                            },
-                          },
-                        ],
+                        modifiers: [{ name: "offset", options: { offset: [0, -8] } }],
                       },
                     }}
                   >
@@ -226,25 +243,23 @@ export default function ActiveClaimsChart({
                         flexDirection: "column",
                         alignItems: "stretch",
                         height: "100%",
-                        position: "relative",
                         cursor: "pointer",
                       }}
                     >
+                      {/* Bar */}
                       <Box sx={{ flex: 1, display: "flex", alignItems: "flex-end" }}>
                         <Box
                           sx={{
                             width: "100%",
                             height: `${heightPercent}%`,
                             backgroundColor: isHovered ? barHoverColor : barColor,
-                            borderRight: index < values.length - 1 ? "1px solid" : "none",
-                            borderColor: "background.paper",
                             transition: "background-color 0.25s ease, opacity 0.25s ease",
                             opacity: hoveredIndex !== null && !isHovered ? 0.5 : 1,
                           }}
                         />
                       </Box>
 
-                      {/* X axis edge labels */}
+                      {/* X tick label */}
                       <Box sx={{ display: "flex", justifyContent: "space-between", mt: 0.8 }}>
                         <Typography
                           sx={{
@@ -256,9 +271,9 @@ export default function ActiveClaimsChart({
                             fontWeight: isHovered ? 600 : 400,
                           }}
                         >
-                          {leftLabel}
+                          {xLabel}
                         </Typography>
-                        {index === values.length - 1 && (
+                        {isLast && (
                           <Typography
                             sx={{
                               fontSize: 11,
@@ -267,7 +282,7 @@ export default function ActiveClaimsChart({
                               transform: "translateX(50%)",
                             }}
                           >
-                            {rightLabel}
+                            {lastLabel}
                           </Typography>
                         )}
                       </Box>

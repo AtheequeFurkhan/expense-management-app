@@ -13,17 +13,15 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import {
   BanknoteArrowDown,
   CreditCard,
   FilePlus,
   HeartPulse,
-  LayoutDashboard,
   Settings,
   Users,
 } from "@wso2/oxygen-ui-icons-react";
-import { type RouteObject, createBrowserRouter } from "react-router-dom";
+import { Navigate, type RouteObject, createBrowserRouter } from "react-router-dom";
 
 import React from "react";
 
@@ -35,13 +33,6 @@ import { View } from "@view/index";
 import type { RouteDetail, RouteObjectWithRole } from "./types/types";
 
 export const routes: RouteObjectWithRole[] = [
-  {
-    path: "/",
-    text: "Dashboard",
-    icon: React.createElement(LayoutDashboard),
-    element: React.createElement(View.dashboard),
-    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
-  },
   {
     path: "/settings",
     text: "Settings",
@@ -157,7 +148,13 @@ const router = createBrowserRouter([
   {
     path: "/",
     element: React.createElement(Layout),
-    children: routes as unknown as RouteObject[],
+    children: [
+      {
+        index: true,
+        element: React.createElement(Navigate, { to: "/opd-claim-summary", replace: true }),
+      },
+      ...(routes as unknown as RouteObject[]),
+    ],
   },
 ]);
 
