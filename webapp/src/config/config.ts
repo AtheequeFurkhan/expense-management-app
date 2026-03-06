@@ -94,11 +94,11 @@ export const OPD_SUMMARY_CARDS_CONFIG = {
 export const OPD_SIDE_CARDS_CONFIG = {
   unclaimed: {
     title: "Unclaimed",
-    color: "#2e7d32",
+    color: "#1976d2",
   },
   fullyClaimed: {
     title: "Fully Claimed",
-    color: "#c62828",
+    color: "#f57c00",
   },
 };
 

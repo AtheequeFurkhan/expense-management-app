@@ -174,13 +174,11 @@ export default function OpdClaims() {
             title={OPD_SIDE_CARDS_CONFIG.unclaimed.title}
             value={data.unclaimedCount.toString()}
             color={OPD_SIDE_CARDS_CONFIG.unclaimed.color}
-            type="unclaimed"
           />
           <SideCountCard
             title={OPD_SIDE_CARDS_CONFIG.fullyClaimed.title}
             value={data.fullyClaimedCount.toString()}
             color={OPD_SIDE_CARDS_CONFIG.fullyClaimed.color}
-            type="claimed"
           />
         </Box>
       </Box>
