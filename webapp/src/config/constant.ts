@@ -46,7 +46,7 @@ export const OPD_LOADING_MESSAGES = {
 export const OPD_CHART_CONFIG = {
   xAxisLabels: ["0-5K", "5K-10K", "10K-15K", "15K-20K", "20K-25K", "25K-30K", "30K-35K", "35K-40K"],
   yAxisLabels: [12, 9, 6, 3, 0],
-  chartHeight: 320,
+  chartHeight: 300,
   maxBarValue: 12,
   barGap: "2px",
 };
