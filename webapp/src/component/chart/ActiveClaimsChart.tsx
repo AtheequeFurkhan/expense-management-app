@@ -52,7 +52,6 @@ export default function ActiveClaimsChart({
 
   const barColor = isDark ? "#e3f2fd" : "#1976d2";
   const barHoverColor = isDark ? "#bbdefb" : "#1250a0";
-  const topAccentColor = isDark ? "#e3f2fd" : "#1976d2";
 
   return (
     <Box
@@ -65,18 +64,6 @@ export default function ActiveClaimsChart({
         display: "flex",
         flexDirection: "column",
         gap: 2,
-        position: "relative",
-        overflow: "hidden",
-        "&::before": {
-          content: '""',
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "3px",
-          bgcolor: topAccentColor,
-          borderRadius: "1px 1px 0 0",
-        },
       }}
     >
       {/* Header */}
