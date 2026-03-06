@@ -18,20 +18,14 @@ import { Box, Typography } from "@wso2/oxygen-ui";
 interface SideCountCardProps {
   title: string;
   value: string;
-  color: string;
   subtitle?: string;
-  type?: "claimed" | "unclaimed";
 }
 
 export default function SideCountCard({
   title,
   value,
-  color,
   subtitle = "Employees",
-  type,
 }: SideCountCardProps) {
-  const dotColor = type === "unclaimed" ? "#2e7d32" : type === "claimed" ? "#c62828" : color;
-
   return (
     <Box
       sx={{
@@ -53,7 +47,7 @@ export default function SideCountCard({
           letterSpacing: 1,
           color: "text.disabled",
           fontWeight: 700,
-          fontSize: 14,
+          fontSize: 11,
           textTransform: "uppercase",
           mb: 0.5,
         }}
@@ -63,7 +57,7 @@ export default function SideCountCard({
 
       <Typography
         sx={{
-          color: dotColor,
+          color: "text.primary",
           fontWeight: 700,
           fontSize: 55,
           lineHeight: 1.1,
