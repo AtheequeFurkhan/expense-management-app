@@ -15,7 +15,7 @@
 // under the License.
 
 import expense_management.database as _;
-import expense_management.entity as _;
+import expense_management.entity;
 
 import ballerina/http;
 import ballerina/log;
@@ -24,6 +24,17 @@ configurable int port = 9090;
 configurable string[] allowedUserRoles = ["wso2-everyone", "wso2-interns"];
 
 service / on new http:Listener(port) {
+    resource function get debugupstream() returns json {
+        json|error appData = entity:opdClaimsClient->get("/app-data");
+        json|error employees = entity:opdClaimsClient->get("/employees");
+
+        return {
+            appDataReachable: appData is json,
+            appDataError: appData is error ? appData.message() : null,
+            employeesReachable: employees is json,
+            employeesError: employees is error ? employees.message() : null
+        };
+    }
 
     resource function get health() returns map<string> {
         return {
@@ -31,71 +42,108 @@ service / on new http:Listener(port) {
         };
     }
 
-    resource function get app\-data(string year = "2026", string month = "current") returns AppData|error {
+    # Fetch the app data required for initialization.
+    # Proxies to the upstream OPD Claims Backend GET /app-data
+    #
+    # + year - Year filter
+    # + month - Month filter
+    # + return - JSON response from upstream or error
+    resource function get app\-data(string year = "2026", string month = "current") returns json|http:InternalServerError {
         log:printInfo(string `GET /app-data year=${year}, month=${month}`);
-        return buildAppData(year, month);
+        json|error response = entity:opdClaimsClient->get(string `/app-data?year=${year}&month=${month}`);
+        if response is error {
+            log:printError("Error fetching app-data from upstream", response);
+            return <http:InternalServerError>{
+                body: {
+                    message: "Error occurred while fetching app data",
+                    code: "APP_DATA_ERROR"
+                }
+            };
+        }
+        return response;
     }
 
-    resource function get apps\-data(string year = "2026", string month = "current") returns AppData|error {
-        log:printInfo(string `GET /apps-data year=${year}, month=${month}`);
-        return buildAppData(year, month);
-    }
-
-    resource function get user\-info(http:Request req) returns UserInfo|http:Unauthorized|error {
-        string|error userHeader = req.getHeader("x-user-email");
-        if userHeader is error {
+    # Fetch user information.
+    # Proxies to the upstream OPD Claims Backend GET /user-info
+    #
+    # + req - HTTP request (reads x-user-email header)
+    # + return - JSON response from upstream or error
+    resource function get user\-info(http:Request req) returns json|http:Unauthorized|http:InternalServerError {
+        string|error userEmail = req.getHeader("x-user-email");
+        if userEmail is error {
+            log:printError("Missing x-user-email header");
             return http:UNAUTHORIZED;
         }
-        return {
-            email: userHeader,
-            firstName: "John",
-            lastName: "Doe",
-            department: "Engineering",
-            designation: "Software Engineer",
-            roles: allowedUserRoles
+
+        log:printInfo(string `GET /user-info for ${userEmail}`);
+
+        map<string|string[]> headers = {
+            "x-user-email": userEmail
         };
+
+        json|error response = entity:opdClaimsClient->get("/user-info", headers);
+        if response is error {
+            log:printError("Error fetching user-info from upstream", response);
+            return <http:InternalServerError>{
+                body: {
+                    message: string `Error occurred while retrieving user data: ${userEmail}`,
+                    code: "USER_INFO_ERROR"
+                }
+            };
+        }
+        return response;
+    }
+
+    # Search/filter OPD claims (read-only).
+    # Proxies to the upstream OPD Claims Backend POST /search-claims
+    #
+    # + payload - Search filter parameters
+    # + return - JSON response from upstream or error
+    resource function post search\-claims(@http:Payload SearchClaimsRequest payload) returns json|http:InternalServerError {
+        log:printInfo(string `POST /search-claims`, status = payload.status ?: "ALL", offset = payload.offset);
+
+        // Remap maxResults back to "limit" for the upstream API
+        json upstreamPayload = {
+            status: payload.status,
+            employeeEmail: payload.employeeEmail,
+            fromDate: payload.fromDate,
+            toDate: payload.toDate,
+            year: payload.year,
+            month: payload.month,
+            "limit": payload.maxResults,
+            offset: payload.offset
+        };
+
+        json|error response = entity:opdClaimsClient->post("/search-claims", upstreamPayload);
+        if response is error {
+            log:printError("Error fetching claims from upstream", response);
+            return <http:InternalServerError>{
+                body: {
+                    message: "Error occurred while searching claims",
+                    code: "SEARCH_CLAIMS_ERROR"
+                }
+            };
+        }
+        return response;
+    }
+
+    # Fetch the list of employees.
+    # Proxies to the upstream OPD Claims Backend GET /employees
+    #
+    # + return - JSON response from upstream or error
+    resource function get employees() returns json|http:InternalServerError {
+        log:printInfo("GET /employees");
+
+        json|error response = entity:opdClaimsClient->get("/employees");
+        if response is error {
+            log:printError("Error fetching employees from upstream", response);
+            return <http:InternalServerError>{
+                body: {
+                    message: "Error occurred while fetching employees",
+                    code: "EMPLOYEES_ERROR"
+                }
+            };
+        }
+        return response;
     }
 }
-
-function buildAppData(string year, string month) returns AppData {
-    decimal totalClaimLimit = 150000.00d;
-    decimal totalClaimedAmount = month == "current" ? 65210.00d : 73450.00d;
-    decimal totalRemaining = totalClaimLimit - totalClaimedAmount;
-
-    ClaimSummary claimSummary = {
-        totalClaimLimit,
-        totalClaimedAmount,
-        totalRemaining
-    };
-
-    decimal lastYearClaimedAmount = 81245.00d;
-    ClaimSummary lastYearClaimSummary = {
-        totalClaimLimit,
-        totalClaimedAmount: lastYearClaimedAmount,
-        totalRemaining: totalClaimLimit - lastYearClaimedAmount
-    };
-
-    OpdClaimDraft draft = {
-        transactions: [
-            {
-                amount: 2500.00d,
-                comment: string `Consultation (${year}/${month})`,
-                date: "2026-03-01",
-                receiptUrl: "https://example.com/receipts/consultation-001"
-            },
-            {
-                amount: 1800.00d,
-                comment: "Lab test",
-                date: "2026-03-02",
-                receiptUrl: "https://example.com/receipts/lab-002"
-            }
-        ]
-    };
-
-    return {
-        claimSummary,
-        draft,
-        lastYearClaimSummary
-    };
-}
-

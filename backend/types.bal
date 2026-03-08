@@ -76,3 +76,22 @@ public type ErrorResponse record {|
     string code;
 |};
 
+# Search claims request payload
+public type SearchClaimsRequest record {|
+    # Status filter
+    string? status = ();
+    # Employee email filter
+    string? employeeEmail = ();
+    # From date filter (YYYY-MM-DD)
+    string? fromDate = ();
+    # To date filter (YYYY-MM-DD)
+    string? toDate = ();
+    # Year filter
+    string? year = ();
+    # Month filter
+    string? month = ();
+    # Max results for pagination
+    int maxResults = 20;
+    # Offset for pagination
+    int offset = 0;
+|};
