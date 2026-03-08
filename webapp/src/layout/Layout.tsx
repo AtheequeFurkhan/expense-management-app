@@ -82,7 +82,24 @@ function Layout() {
                 }}
               />
             </Header.BrandLogo>
-            <Header.BrandTitle>Expense Management Dashboard</Header.BrandTitle>
+            <span
+              style={{
+                width: 1,
+                height: 20,
+                backgroundColor: "#d0d0d0",
+                display: "inline-block",
+                margin: "0 12px",
+                verticalAlign: "middle",
+              }}
+            />
+            <span
+              style={{
+                fontSize: 15,
+                fontWeight: 600,
+              }}
+            >
+              Expense Management Dashboard
+            </span>
           </Header.Brand>
           <Header.Spacer />
           <Header.Actions>
