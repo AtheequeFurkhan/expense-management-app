@@ -13,19 +13,24 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { Box, Typography } from "@wso2/oxygen-ui";
 
 interface SideCountCardProps {
   title: string;
   value: string;
   subtitle?: string;
+  period?: string;
+  iconBg?: string;
+  iconColor?: string;
 }
 
 export default function SideCountCard({
   title,
   value,
   subtitle = "Employees",
+  period,
+  iconBg = "#FFF3E0",
+  iconColor = "#FF9800",
 }: SideCountCardProps) {
   return (
     <Box
@@ -78,6 +83,26 @@ export default function SideCountCard({
       >
         {subtitle}
       </Typography>
+
+      {period && (
+        <Box
+          sx={{
+            px: 0.8,
+            py: 0.2,
+            borderRadius: 0.5,
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#f6800b",
+            bgcolor: "#fff4e0",
+            letterSpacing: 0.5,
+            lineHeight: 1.6,
+            mt: 1,
+            display: "inline-block",
+          }}
+        >
+          {period}
+        </Box>
+      )}
     </Box>
   );
 }
