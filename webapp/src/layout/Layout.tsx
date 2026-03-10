@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { useAuthContext } from "@asgardeo/auth-react";
 import {
   AppShell,
@@ -136,14 +135,7 @@ function Layout() {
 
       {/* Sidebar */}
       <AppShell.Sidebar>
-        <Sidebar
-          collapsed={collapsed}
-          activeItem={activeItem}
-          onSelect={(id) => {
-            if (id === "/logout") signOut();
-            else handleSelect(id);
-          }}
-        >
+        <Sidebar collapsed={collapsed} activeItem={activeItem} onSelect={(id) => handleSelect(id)}>
           <Sidebar.Nav>
             <Sidebar.Category>
               <Sidebar.CategoryLabel>Menu</Sidebar.CategoryLabel>
@@ -186,13 +178,7 @@ function Layout() {
                   <Sidebar.ItemLabel>{route.text}</Sidebar.ItemLabel>
                 </Sidebar.Item>
               ))}
-
-            <Sidebar.Item id="/logout">
-              <Sidebar.ItemIcon>
-                <LogOut size={18} />
-              </Sidebar.ItemIcon>
-              <Sidebar.ItemLabel>Logout</Sidebar.ItemLabel>
-            </Sidebar.Item>
+            {/* Removed Logout item from sidebar */}
           </Sidebar.Footer>
         </Sidebar>
       </AppShell.Sidebar>
