@@ -178,7 +178,6 @@ function Layout() {
                   <Sidebar.ItemLabel>{route.text}</Sidebar.ItemLabel>
                 </Sidebar.Item>
               ))}
-            {/* Removed Logout item from sidebar */}
           </Sidebar.Footer>
         </Sidebar>
       </AppShell.Sidebar>
