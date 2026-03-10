@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { Box, MenuItem, Popover, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
 import { ChevronDown } from "@wso2/oxygen-ui-icons-react";
 
@@ -55,7 +54,7 @@ export default function ActiveClaimsChart({
   const isDark = theme.palette.mode === "dark";
 
   const barColor = isDark ? "#e3f2fd" : "#4A8EDB";
-  const barHoverColor = isDark ? "#bbdefb" : "#1250a0";
+  const barHoverColor = isDark ? "#bbdefb" : "#4A8EDB";
 
   const selectedLabel = monthOptions.find((o) => o.value === month)?.label ?? "";
 
