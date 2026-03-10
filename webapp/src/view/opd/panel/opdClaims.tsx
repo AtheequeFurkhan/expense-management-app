@@ -13,30 +13,23 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { Alert, Box, Stack } from "@wso2/oxygen-ui";
 
 import { useEffect } from "react";
 
 import {
+  MONTH_OPTIONS,
   OPD_CHART_CONFIG,
+  OPD_LOADING_MESSAGES,
   OPD_SIDE_CARDS_CONFIG,
   OPD_SUMMARY_CARDS_CONFIG,
 } from "@config/constant";
-import { OPD_LOADING_MESSAGES } from "@root/src/config/constant";
 
 import SideCountCard from "../../../component/card/SideCountCard";
 import SummaryCard from "../../../component/card/SummaryCard";
 import ActiveClaimsChart from "../../../component/chart/ActiveClaimsChart";
 import { MonthFilter, resetOpdClaims, useOpdClaims } from "../../../slices/opdSlice/useOpdClaims";
 import { useAppDispatch } from "../../../slices/store";
-
-const MONTH_OPTIONS = [
-  { value: "current", label: "Current Month" },
-  { value: "pastThree", label: "Past 3 Months" },
-  { value: "pastSix", label: "Past 6 Months" },
-  { value: "pastTwelve", label: "Past 12 Months" },
-];
 
 const prevMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLocaleString(
   "default",
@@ -46,6 +39,8 @@ const prevMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLoc
 export default function OpdClaims() {
   const dispatch = useAppDispatch();
   const { data, month, loading, error, handleMonthChange } = useOpdClaims();
+
+  const selectedPeriodLabel = MONTH_OPTIONS.find((option) => option.value === month)?.label ?? "";
 
   useEffect(() => {
     return () => {
@@ -178,10 +173,12 @@ export default function OpdClaims() {
           <SideCountCard
             title={OPD_SIDE_CARDS_CONFIG.unclaimed.title}
             value={data.unclaimedCount.toString()}
+            period={selectedPeriodLabel}
           />
           <SideCountCard
             title={OPD_SIDE_CARDS_CONFIG.fullyClaimed.title}
             value={data.fullyClaimedCount.toString()}
+            period={selectedPeriodLabel}
           />
         </Box>
       </Box>

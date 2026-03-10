@@ -89,3 +89,10 @@ export const OPD_SIDE_CARDS_CONFIG = {
     title: "Fully Claimed",
   },
 };
+
+export const MONTH_OPTIONS = [
+  { value: "current", label: "Current Month" },
+  { value: "pastThree", label: "Past 3 Months" },
+  { value: "pastSix", label: "Past 6 Months" },
+  { value: "pastTwelve", label: "Past 12 Months" },
+];
