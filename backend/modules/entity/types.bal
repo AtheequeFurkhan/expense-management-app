@@ -13,76 +13,52 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import ballerina/http;
 
-# GraphQL retry configuration
-public type GraphQlRetryConfig record {|
-    # Retry count
-    int count = 3;
-    # Retry interval in seconds
-    decimal interval = 1.0;
-|};
-
-# OAuth2 client credentials configuration
-public type Oauth2Config record {|
-    # Token URL
-    string tokenUrl;
-    # Client ID
-    string clientId;
-    # Client secret
-    string clientSecret;
-|};
-
-# Entity service configuration
-public type EntityConfig record {|
-    # HRIS entity service endpoint
-    string hrisEntityServiceEndpoint;
-    # OPD claims service endpoint
-    string opdClaimsServiceEndpoint;
-    # Client auth configuration
-    Oauth2Config clientAuthConfig;
-|};
-
-# Employee record from HRIS
-public type Employee record {|
-    # Employee ID
-    string id;
-    # Email
+public type HREmployee record {|
     string email;
-    # First name
-    string firstName;
-    # Last name
-    string lastName;
-    # Department
+    string? firstName;
+    string? lastName;
     string? department;
-    # Designation
-    string? designation;
-    # Employee level
-    string? employeeLevel;
-    # Manager email
-    string? managerEmail;
-    # Is active
-    boolean isActive;
+    string? company;
+    string? location;
+    string? status;
 |};
 
-# Employee response from GraphQL
-public type EmployeeResponse record {|
-    # Employees list
-    Employee[] employees;
+public type OpdTransaction record {|
+    decimal amount;
 |};
 
-# GraphQL response wrapper
-public type GraphQlResponse record {|
-    # Response data
-    json? data;
-    # Response errors
-    json[]? errors;
+public type OpdClaim record {|
+    string id;
+    string employeeEmail;
+    decimal amount;
+    string createdDate;
+    string? status;
+    boolean isGracePeriod;
 |};
 
-# HTTP client configuration
-public type HttpClientConfig record {|
-    # HTTP client config
-    http:ClientConfiguration config;
+public type ClaimBucket record {|
+    string range;
+    int count;
+|};
+
+public type OpdClaimSummaryResponse record {|
+    decimal lastYearClaimAmount;
+    decimal currentMonthClaimAmount;
+    int previousYearClaimCount;
+    int gracePeriodClaims;
+    int unclaimedEmployees;
+    int fullyClaimedEmployees;
+    ClaimBucket[] activeClaimsChart;
+|};
+
+public type ErrorResponse record {|
+    string message;
+|};
+
+public type HttpInternalServerError record {|
+    *http:InternalServerError;
+    ErrorResponse body;
 |};
 

@@ -13,27 +13,28 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
-import ballerina/graphql;
 import ballerina/http;
 
-configurable EntityConfig entityConfig = ?;
+configurable string hrServiceBaseUrl = "http://localhost:9094";
+configurable string opdServiceBaseUrl = "http://localhost:9090";
 
-# HRIS GraphQL client
-public final graphql:Client hrisClient = check new (entityConfig.hrisEntityServiceEndpoint, {
-    auth: {
-        tokenUrl: entityConfig.clientAuthConfig.tokenUrl,
-        clientId: entityConfig.clientAuthConfig.clientId,
-        clientSecret: entityConfig.clientAuthConfig.clientSecret
-    }
-});
+configurable string hrServiceBearerToken = "";
+configurable string opdServiceBearerToken = "";
 
-# OPD Claims HTTP client
-public final http:Client opdClaimsClient = check new (entityConfig.opdClaimsServiceEndpoint, {
-    auth: {
-        tokenUrl: entityConfig.clientAuthConfig.tokenUrl,
-        clientId: entityConfig.clientAuthConfig.clientId,
-        clientSecret: entityConfig.clientAuthConfig.clientSecret
-    }
-});
+configurable decimal annualClaimLimit = 40000.0d;
+
+public final http:Client hrClient = checkpanic new (hrServiceBaseUrl);
+public final http:Client opdClient = checkpanic new (opdServiceBaseUrl);
+
+public function getHrServiceBearerToken() returns string {
+    return hrServiceBearerToken;
+}
+
+public function getOpdServiceBearerToken() returns string {
+    return opdServiceBearerToken;
+}
+
+public function getAnnualClaimLimit() returns decimal {
+    return annualClaimLimit;
+}
 

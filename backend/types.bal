@@ -95,3 +95,39 @@ public type SearchClaimsRequest record {|
     # Offset for pagination
     int offset = 0;
 |};
+
+# Represents a single metric card (widget) on the dashboard
+public type OpdMetricCard record {|
+    # Value displayed on the metric card
+    decimal value;
+    # Percentage change compared to previous period
+    float percentageChange;
+    # Footer label for additional context
+    string footerLabel;
+    # Optional badge value (e.g., count for grace period claims)
+    int? badgeValue = ();
+    # Optional badge label (e.g., "Grace Period Claims")
+    string? badgeLabel = ();
+|};
+
+# Main dashboard container representing the whole screen
+public type OpdDashboard record {|
+    # Metric card for last year's amount
+    OpdMetricCard lastYearAmountCard;
+    # Metric card for current month's amount
+    OpdMetricCard currentMonthAmountCard;
+    # Metric card for previous year's claim count
+    OpdMetricCard previousYearCountCard;
+    # Number of employees who haven't claimed
+    int unclaimedEmployees;
+    # Number of employees who have fully claimed
+    int fullyClaimedEmployees;
+|};
+
+# Data point for the "Total Active Claims" bar chart
+public type OpdChartData record {|
+    # Label for the chart data point
+    string label;
+    # Value for the chart data point
+    int value;
+|};

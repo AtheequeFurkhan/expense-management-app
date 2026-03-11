@@ -26,3 +26,11 @@ public const float RETRY_BACKOFF_FACTOR = 2.0;
 # Client retry configuration for maximum wait interval in seconds.
 public const decimal RETRY_MAX_INTERVAL = 20.0;
 
+public const string HR_GRAPHQL_PATH = "/graphql";
+public const string OPD_SEARCH_CLAIMS_PATH = "/search-claims";
+
+public const string STATUS_APPROVED = "APPROVED";
+public const string STATUS_PENDING = "PENDING";
+public const string STATUS_REJECTED = "REJECTED";
+
+public const int DEFAULT_PAGE_SIZE = 500;

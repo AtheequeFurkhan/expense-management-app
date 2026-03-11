@@ -11,139 +11,169 @@
 // software distributed under the License is distributed on an
 // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
-
-import expense_management.database as _;
+// specific language govern
 import expense_management.entity;
 
 import ballerina/http;
+import ballerina/lang.'int as ints;
 import ballerina/log;
 
-configurable int port = 9090;
-configurable string[] allowedUserRoles = ["wso2-everyone", "wso2-interns"];
+service /api on new http:Listener(8080) {
 
-service / on new http:Listener(port) {
-    resource function get debugupstream() returns json {
-        json|error appData = entity:opdClaimsClient->get("/app-data");
-        json|error employees = entity:opdClaimsClient->get("/employees");
-
+    resource function get health() returns json {
         return {
-            appDataReachable: appData is json,
-            appDataError: appData is error ? appData.message() : null,
-            employeesReachable: employees is json,
-            employeesError: employees is error ? employees.message() : null
+            status: "ok",
+            'service: "expense-management-backend"
         };
     }
 
-    resource function get health() returns map<string> {
-        return {
-            status: "ok"
-        };
-    }
+    resource function get opdClaimSummary(int year = 2026, int month = 3)
+            returns entity:OpdClaimSummaryResponse|entity:HttpInternalServerError {
+        do {
+            entity:HREmployee[] employees = check entity:getActiveEmployees();
+            entity:OpdClaim[] claims = check entity:searchOpdClaims(year - 1, year);
 
-    # Fetch the app data required for initialization.
-    # Proxies to the upstream OPD Claims Backend GET /app-data
-    #
-    # + year - Year filter
-    # + month - Month filter
-    # + return - JSON response from upstream or error
-    resource function get app\-data(string year = "2026", string month = "current") returns json|http:InternalServerError {
-        log:printInfo(string `GET /app-data year=${year}, month=${month}`);
-        json|error response = entity:opdClaimsClient->get(string `/app-data?year=${year}&month=${month}`);
-        if response is error {
-            log:printError("Error fetching app-data from upstream", response);
-            return <http:InternalServerError>{
+            return buildOpdClaimSummary(claims, employees, year, month);
+        } on fail error err {
+            log:printError("Failed to build OPD claim summary.", err);
+            return {
                 body: {
-                    message: "Error occurred while fetching app data",
-                    code: "APP_DATA_ERROR"
+                    message: err.message()
                 }
             };
         }
-        return response;
-    }
-
-    # Fetch user information.
-    # Proxies to the upstream OPD Claims Backend GET /user-info
-    #
-    # + req - HTTP request (reads x-user-email header)
-    # + return - JSON response from upstream or error
-    resource function get user\-info(http:Request req) returns json|http:Unauthorized|http:InternalServerError {
-        string|error userEmail = req.getHeader("x-user-email");
-        if userEmail is error {
-            log:printError("Missing x-user-email header");
-            return http:UNAUTHORIZED;
-        }
-
-        log:printInfo(string `GET /user-info for ${userEmail}`);
-
-        map<string|string[]> headers = {
-            "x-user-email": userEmail
-        };
-
-        json|error response = entity:opdClaimsClient->get("/user-info", headers);
-        if response is error {
-            log:printError("Error fetching user-info from upstream", response);
-            return <http:InternalServerError>{
-                body: {
-                    message: string `Error occurred while retrieving user data: ${userEmail}`,
-                    code: "USER_INFO_ERROR"
-                }
-            };
-        }
-        return response;
-    }
-
-    # Search/filter OPD claims (read-only).
-    # Proxies to the upstream OPD Claims Backend POST /search-claims
-    #
-    # + payload - Search filter parameters
-    # + return - JSON response from upstream or error
-    resource function post search\-claims(@http:Payload SearchClaimsRequest payload) returns json|http:InternalServerError {
-        log:printInfo(string `POST /search-claims`, status = payload.status ?: "ALL", offset = payload.offset);
-
-        // Remap maxResults back to "limit" for the upstream API
-        json upstreamPayload = {
-            status: payload.status,
-            employeeEmail: payload.employeeEmail,
-            fromDate: payload.fromDate,
-            toDate: payload.toDate,
-            year: payload.year,
-            month: payload.month,
-            "limit": payload.maxResults,
-            offset: payload.offset
-        };
-
-        json|error response = entity:opdClaimsClient->post("/search-claims", upstreamPayload);
-        if response is error {
-            log:printError("Error fetching claims from upstream", response);
-            return <http:InternalServerError>{
-                body: {
-                    message: "Error occurred while searching claims",
-                    code: "SEARCH_CLAIMS_ERROR"
-                }
-            };
-        }
-        return response;
-    }
-
-    # Fetch the list of employees.
-    # Proxies to the upstream OPD Claims Backend GET /employees
-    #
-    # + return - JSON response from upstream or error
-    resource function get employees() returns json|http:InternalServerError {
-        log:printInfo("GET /employees");
-
-        json|error response = entity:opdClaimsClient->get("/employees");
-        if response is error {
-            log:printError("Error fetching employees from upstream", response);
-            return <http:InternalServerError>{
-                body: {
-                    message: "Error occurred while fetching employees",
-                    code: "EMPLOYEES_ERROR"
-                }
-            };
-        }
-        return response;
     }
 }
+
+function buildOpdClaimSummary(entity:OpdClaim[] claims, entity:HREmployee[] employees, int year, int month)
+        returns entity:OpdClaimSummaryResponse {
+    decimal lastYearClaimAmount = 0.0d;
+    decimal currentMonthClaimAmount = 0.0d;
+    int previousYearClaimCount = 0;
+    int gracePeriodClaims = 0;
+
+    map<boolean> employeeHasClaim = {};
+    map<decimal> employeeClaimTotals = {};
+
+    map<int> buckets = {
+        "0-5K": 0,
+        "5K-10K": 0,
+        "10K-15K": 0,
+        "15K-20K": 0,
+        "20K-25K": 0,
+        "25K-30K": 0,
+        "30K-35K": 0,
+        "35K-40K": 0
+    };
+
+    foreach entity:OpdClaim claim in claims {
+        if claim.employeeEmail != "" {
+            employeeHasClaim[claim.employeeEmail] = true;
+
+            decimal previousTotal = employeeClaimTotals[claim.employeeEmail] ?: 0.0d;
+            employeeClaimTotals[claim.employeeEmail] = previousTotal + claim.amount;
+        }
+
+        int? claimYear = extractYear(claim.createdDate);
+        int? claimMonth = extractMonth(claim.createdDate);
+
+        if claimYear is int && claimYear == year - 1 {
+            lastYearClaimAmount += claim.amount;
+            previousYearClaimCount += 1;
+        }
+
+        if claimYear is int && claimYear == year && claimMonth is int && claimMonth == month {
+            currentMonthClaimAmount += claim.amount;
+            incrementBucket(buckets, claim.amount);
+        }
+
+        if claim.isGracePeriod {
+            gracePeriodClaims += 1;
+        }
+    }
+
+    int unclaimedEmployees = 0;
+    foreach entity:HREmployee employee in employees {
+        if !employeeHasClaim.hasKey(employee.email) {
+            unclaimedEmployees += 1;
+        }
+    }
+
+    int fullyClaimedEmployees = 0;
+    foreach string email in employeeClaimTotals.keys() {
+        decimal total = employeeClaimTotals[email] ?: 0.0d;
+        if total >= entity:getAnnualClaimLimit() {
+            fullyClaimedEmployees += 1;
+        }
+    }
+
+    entity:ClaimBucket[] activeClaimsChart = [
+        {range: "0-5K", count: buckets["0-5K"] ?: 0},
+        {range: "5K-10K", count: buckets["5K-10K"] ?: 0},
+        {range: "10K-15K", count: buckets["10K-15K"] ?: 0},
+        {range: "15K-20K", count: buckets["15K-20K"] ?: 0},
+        {range: "20K-25K", count: buckets["20K-25K"] ?: 0},
+        {range: "25K-30K", count: buckets["25K-30K"] ?: 0},
+        {range: "30K-35K", count: buckets["30K-35K"] ?: 0},
+        {range: "35K-40K", count: buckets["35K-40K"] ?: 0}
+    ];
+
+    return {
+        lastYearClaimAmount: lastYearClaimAmount,
+        currentMonthClaimAmount: currentMonthClaimAmount,
+        previousYearClaimCount: previousYearClaimCount,
+        gracePeriodClaims: gracePeriodClaims,
+        unclaimedEmployees: unclaimedEmployees,
+        fullyClaimedEmployees: fullyClaimedEmployees,
+        activeClaimsChart: activeClaimsChart
+    };
+}
+
+function incrementBucket(map<int> buckets, decimal amount) {
+    if amount < 5000.0d {
+        buckets["0-5K"] = (buckets["0-5K"] ?: 0) + 1;
+    } else if amount < 10000.0d {
+        buckets["5K-10K"] = (buckets["5K-10K"] ?: 0) + 1;
+    } else if amount < 15000.0d {
+        buckets["10K-15K"] = (buckets["10K-15K"] ?: 0) + 1;
+    } else if amount < 20000.0d {
+        buckets["15K-20K"] = (buckets["15K-20K"] ?: 0) + 1;
+    } else if amount < 25000.0d {
+        buckets["20K-25K"] = (buckets["20K-25K"] ?: 0) + 1;
+    } else if amount < 30000.0d {
+        buckets["25K-30K"] = (buckets["25K-30K"] ?: 0) + 1;
+    } else if amount < 35000.0d {
+        buckets["30K-35K"] = (buckets["30K-35K"] ?: 0) + 1;
+    } else if amount < 40000.0d {
+        buckets["35K-40K"] = (buckets["35K-40K"] ?: 0) + 1;
+    }
+}
+
+function extractYear(string dateValue) returns int? {
+    if dateValue.length() < 4 {
+        return ();
+    }
+
+    string yearString = dateValue.substring(0, 4);
+    int|error parsed = ints:fromString(yearString);
+    if parsed is int {
+        return parsed;
+    }
+
+    return ();
+}
+
+function extractMonth(string dateValue) returns int? {
+    if dateValue.length() < 7 {
+        return ();
+    }
+
+    string monthString = dateValue.substring(5, 7);
+    int|error parsed = ints:fromString(monthString);
+    if parsed is int {
+        return parsed;
+    }
+
+    return ();
+}
+
