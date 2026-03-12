@@ -27,7 +27,7 @@ service /api on new http:Listener(8080) {
         };
     }
 
-    resource function get opdClaimSummary(int year = 2026, int month = 3)
+    resource function get opdClaimSummary(int year = 2025, int month = 3)
             returns entity:OpdClaimSummaryResponse|entity:HttpInternalServerError {
         do {
             entity:HREmployee[] employees = check entity:getActiveEmployees();
