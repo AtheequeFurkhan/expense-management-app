@@ -15,45 +15,70 @@
 // under the License.
 import ballerina/sql;
 
-# Fetch sample collections.
-#
-# + name - Name to filter
-# + 'limit - Limit of the response
-# + offset - Offset of the number of sample collection to retrieve
-# + return - List of sample collections|Error
-public isolated function fetchSampleCollections(string? name, int? 'limit, int? offset) returns SampleCollection[]|error {
-    stream<SampleCollection, error?> resultStream = databaseClient->
-            query(getSampleCollectionsQuery(name, 'limit, offset));
+public isolated function getOpdClaimSummary(int year, int month) returns OpdClaimSummaryResponse|error {
+    AmountRow lastYearAmount = check databaseClient->queryRow(getLastYearClaimAmountQuery(year), AmountRow);
+    AmountRow currentMonthAmount = check databaseClient->queryRow(getCurrentMonthClaimAmountQuery(year, month), AmountRow);
+    CountRow previousYearCount = check databaseClient->queryRow(getPreviousYearClaimCountQuery(year), CountRow);
+    CountRow totalEmployees = check databaseClient->queryRow(getTotalSriLankaEmployeesQuery(), CountRow);
+    CountRow employeesWithClaims = check databaseClient->queryRow(getSriLankaEmployeesWithClaimsForYearQuery(year), CountRow);
 
-    return from SampleCollection sampleCollection in resultStream
-        select {
-            ...sampleCollection
-        };
-}
+    stream<EmployeeTotalRow, sql:Error?> employeeTotalsStream =
+        databaseClient->query(getEmployeeTotalsForYearQuery(year), EmployeeTotalRow);
+    EmployeeTotalRow[] employeeTotals = check from EmployeeTotalRow row in employeeTotalsStream
+        select row;
 
-# Fetch specific sample collection.
-#
-# + id - Identification of the sample collection
-# + return - Sample collections|Error, if so
-public isolated function fetchSampleCollection(int id) returns SampleCollection|error? {
-    SampleCollection|sql:Error sampleCollection = databaseClient->queryRow(getSampleCollectionQuery(id));
-
-    if sampleCollection is sql:Error && sampleCollection is sql:NoRowsError {
-        return;
-    }
-    return sampleCollection;
-}
-
-# Insert sample collection.
-#
-# + sampleCollection - Sample collection payload
-# + createdBy - Person who created the sample collection
-# + return - Id of the sample collection|Error
-public isolated function addSampleCollection(AddSampleCollection sampleCollection, string createdBy) returns int|error {
-    sql:ExecutionResult|error executionResults = databaseClient->execute(addSampleCollectionQuery(sampleCollection, createdBy));
-    if executionResults is error {
-        return executionResults;
+    int fullyClaimedEmployees = 0;
+    foreach EmployeeTotalRow row in employeeTotals {
+        if row.totalAmount >= getAnnualClaimLimit() {
+            fullyClaimedEmployees += 1;
+        }
     }
 
-    return <int>executionResults.lastInsertId;
+    stream<BucketRow, sql:Error?> bucketStream =
+        databaseClient->query(getActiveClaimsBucketQuery(year, month), BucketRow);
+    BucketRow[] rawBuckets = check from BucketRow row in bucketStream
+        select row;
+
+    map<int> bucketMap = {
+        "0-5K": 0,
+        "5K-10K": 0,
+        "10K-15K": 0,
+        "15K-20K": 0,
+        "20K-25K": 0,
+        "25K-30K": 0,
+        "30K-35K": 0,
+        "35K-40K": 0
+    };
+
+    foreach BucketRow row in rawBuckets {
+        if bucketMap.hasKey(row.range) {
+            bucketMap[row.range] = row.count;
+        }
+    }
+
+    int unclaimedEmployees = totalEmployees.count - employeesWithClaims.count;
+    if unclaimedEmployees < 0 {
+        unclaimedEmployees = 0;
+    }
+
+    ClaimBucket[] activeClaimsChart = [
+        {range: "0-5K", count: bucketMap["0-5K"] ?: 0},
+        {range: "5K-10K", count: bucketMap["5K-10K"] ?: 0},
+        {range: "10K-15K", count: bucketMap["10K-15K"] ?: 0},
+        {range: "15K-20K", count: bucketMap["15K-20K"] ?: 0},
+        {range: "20K-25K", count: bucketMap["20K-25K"] ?: 0},
+        {range: "25K-30K", count: bucketMap["25K-30K"] ?: 0},
+        {range: "30K-35K", count: bucketMap["30K-35K"] ?: 0},
+        {range: "35K-40K", count: bucketMap["35K-40K"] ?: 0}
+    ];
+
+    return {
+        lastYearClaimAmount: lastYearAmount.total,
+        currentMonthClaimAmount: currentMonthAmount.total,
+        previousYearClaimCount: previousYearCount.count,
+        gracePeriodClaims: 0,
+        unclaimedEmployees: unclaimedEmployees,
+        fullyClaimedEmployees: fullyClaimedEmployees,
+        activeClaimsChart: activeClaimsChart
+    };
 }

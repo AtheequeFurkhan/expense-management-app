@@ -13,50 +13,64 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import ballerina/http;
 import ballerina/sql;
-import ballerinax/mysql;
 
-# [Configurable] database configs.
-type DatabaseConfig record {|
-    # Database User 
+# Represents the configuration required to connect to a database.
+#
+# + user - The username for the database connection.
+# + password - The password for the database user.
+# + database - The name of the database to connect to.
+# + host - The hostname or IP address of the database server.
+# + port - The port number on which the database server is listening (default is 3306).
+# + connectionPool - The SQL connection pool configuration.
+public type DatabaseConfig record {|
     string user;
-    # Database Password
     string password;
-    # Database Name
     string database;
-    # Database Host
     string host;
-    # Database port
-    int port;
-    # Database connection pool
-    sql:ConnectionPool connectionPool;
+    int port = 3306;
+    sql:ConnectionPool connectionPool = {};
 |};
 
-# Database config record.
-type DatabaseClientConfig record {|
-    *DatabaseConfig;
-    # Additional configurations related to the MySQL database connection
-    mysql:Options? options;
+public type AmountRow record {|
+    decimal total;
 |};
 
-# [Database]SampleCollection type.
-public type SampleCollection record {|
-    # Id of the collection
-    int id;
-    # Name
-    string name;
-    # Timestamp, when created
-    string createdOn;
-    # Person, who created
-    string createdBy;
-    # Timestamp, when updated
-    string updatedOn;
-    # Person, who updates
-    string updatedBy;
+public type CountRow record {|
+    int count;
 |};
 
-# [Database]Collection insert type.
-public type AddSampleCollection record {|
-    # Name of the collection
-    string name;
+public type EmployeeTotalRow record {|
+    string employeeEmail;
+    decimal totalAmount;
+|};
+
+public type BucketRow record {|
+    string range;
+    int count;
+|};
+
+public type ClaimBucket record {|
+    string range;
+    int count;
+|};
+
+public type OpdClaimSummaryResponse record {|
+    decimal lastYearClaimAmount;
+    decimal currentMonthClaimAmount;
+    int previousYearClaimCount;
+    int gracePeriodClaims;
+    int unclaimedEmployees;
+    int fullyClaimedEmployees;
+    ClaimBucket[] activeClaimsChart;
+|};
+
+public type ErrorResponse record {|
+    string message;
+|};
+
+public type HttpInternalServerError record {|
+    *http:InternalServerError;
+    ErrorResponse body;
 |};

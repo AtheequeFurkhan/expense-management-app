@@ -13,27 +13,32 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import ballerinax/java.jdbc;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 
-# Database Client Configuration.
 configurable DatabaseConfig databaseConfig = ?;
+configurable decimal connectTimeout = 10.0;
+configurable decimal annualClaimLimit = 40000.0;
 
-configurable decimal connectTimeout = ?;
-
-DatabaseClientConfig databaseClientConfig = {
-    ...databaseConfig,
-    options: {
-        ssl: {
-            mode: mysql:SSL_REQUIRED
-        },
-        connectTimeout: connectTimeout
-    }
+mysql:Options databaseClientOptions = {
+    ssl: {
+        mode: mysql:SSL_REQUIRED
+    },
+    connectTimeout: connectTimeout
 };
 
-function initSampleDbClient() returns mysql:Client|error
-=> new (...databaseClientConfig);
+function initSampleDbClient() returns mysql:Client|error => new (
+    host = databaseConfig.host,
+    port = databaseConfig.port,
+    user = databaseConfig.user,
+    password = databaseConfig.password,
+    database = databaseConfig.database,
+    connectionPool = databaseConfig.connectionPool,
+    options = databaseClientOptions
+);
 
-# Database Client.
-final jdbc:Client databaseClient = check initSampleDbClient();
+public final mysql:Client databaseClient = checkpanic initSampleDbClient();
+
+public isolated function getAnnualClaimLimit() returns decimal {
+    return annualClaimLimit;
+}
