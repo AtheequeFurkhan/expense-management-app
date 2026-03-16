@@ -102,7 +102,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         return userInfoResponse;
     }
 
-    resource function get opdClaimSummary(http:RequestContext ctx, int year = 2026, int month = 3)
+    resource function get opd\-claims (http:RequestContext ctx, int year = 2026, int month = 3)
         returns database:OpdClaimSummaryResponse|http:Forbidden|http:BadRequest|database:HttpInternalServerError {
 
         authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
