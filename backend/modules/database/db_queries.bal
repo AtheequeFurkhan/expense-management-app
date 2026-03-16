@@ -41,24 +41,22 @@ isolated function getPreviousYearClaimCountQuery(int year) returns sql:Parameter
       AND c.status IN ('0', '2', '3')
 `;
 
-isolated function getTotalSriLankaEmployeesQuery() returns sql:ParameterizedQuery => `
-    SELECT COUNT(*) AS count
-    FROM hris_company
+isolated function getActiveSriLankaEmployeeEmailsQuery() returns sql:ParameterizedQuery => `
+    SELECT employee_work_email AS employeeEmail
+    FROM hris_employee
     WHERE employee_location = 'Sri Lanka'
       AND employee_status = 'Active'
       AND employee_work_email IS NOT NULL
       AND employee_work_email <> ''
 `;
 
-isolated function getSriLankaEmployeesWithClaimsForYearQuery(int year) returns sql:ParameterizedQuery => `
-    SELECT COUNT(DISTINCT h.employee_work_email) AS count
-    FROM hris_company h
-    INNER JOIN opd_claim c
-        ON h.employee_work_email = c.employee_email
-    WHERE h.employee_location = 'Sri Lanka'
-      AND h.employee_status = 'Active'
-      AND YEAR(c.added_date) = ${year}
-      AND c.status IN ('0', '2', '3')
+isolated function getClaimEmployeeEmailsForYearQuery(int year) returns sql:ParameterizedQuery => `
+    SELECT DISTINCT employee_email AS employeeEmail
+    FROM opd_claim
+    WHERE YEAR(added_date) = ${year}
+      AND status IN ('0', '2', '3')
+      AND employee_email IS NOT NULL
+      AND employee_email <> ''
 `;
 
 isolated function getEmployeeTotalsForYearQuery(int year) returns sql:ParameterizedQuery => `
@@ -67,37 +65,22 @@ isolated function getEmployeeTotalsForYearQuery(int year) returns sql:Parameteri
     FROM opd_claim_transaction t
     INNER JOIN opd_claim c
         ON c.id = t.claim_id
-    INNER JOIN hris_company h
-        ON h.employee_work_email = c.employee_email
-    WHERE h.employee_location = 'Sri Lanka'
-      AND h.employee_status = 'Active'
-      AND YEAR(c.added_date) = ${year}
+    WHERE YEAR(c.added_date) = ${year}
       AND c.status IN ('0', '2', '3')
+      AND c.employee_email IS NOT NULL
+      AND c.employee_email <> ''
     GROUP BY c.employee_email
 `;
 
-isolated function getActiveClaimsBucketQuery(int year, int month) returns sql:ParameterizedQuery => `
-    SELECT
-        CASE
-            WHEN t.txn_amount < 5000 THEN '0-5K'
-            WHEN t.txn_amount < 10000 THEN '5K-10K'
-            WHEN t.txn_amount < 15000 THEN '10K-15K'
-            WHEN t.txn_amount < 20000 THEN '15K-20K'
-            WHEN t.txn_amount < 25000 THEN '20K-25K'
-            WHEN t.txn_amount < 30000 THEN '25K-30K'
-            WHEN t.txn_amount < 35000 THEN '30K-35K'
-            ELSE '35K-40K'
-        END AS range,
-        COUNT(*) AS count
+isolated function getMonthlyClaimTransactionsQuery(int year, int month) returns sql:ParameterizedQuery => `
+    SELECT c.employee_email AS employeeEmail,
+           CAST(t.txn_amount AS DECIMAL(10,2)) AS amount
     FROM opd_claim_transaction t
     INNER JOIN opd_claim c
         ON c.id = t.claim_id
-    INNER JOIN hris_company h
-        ON h.employee_work_email = c.employee_email
-    WHERE h.employee_location = 'Sri Lanka'
-      AND h.employee_status = 'Active'
-      AND YEAR(c.added_date) = ${year}
+    WHERE YEAR(c.added_date) = ${year}
       AND MONTH(c.added_date) = ${month}
       AND c.status IN ('0', '2', '3')
-    GROUP BY range
+      AND c.employee_email IS NOT NULL
+      AND c.employee_email <> ''
 `;
