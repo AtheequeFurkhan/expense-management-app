@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import ballerina/http;
 
 # Fetch Employee Data.
 #
@@ -27,14 +28,35 @@ public isolated function fetchEmployeesBasicInfo(string workEmail) returns Emplo
                 firstName,
                 lastName,
                 jobRole,
-                employeeThumbnail,
+                employeeThumbnail
             }
         }
     `;
 
-    EmployeeResponse|error response = hrClient->execute(document, {workEmail});
-    if response is error {
-        return response;
+    json requestPayload = {
+        query: document,
+        variables: {
+            workEmail: workEmail
+        }
+    };
+
+    http:Request request = new;
+    request.setJsonPayload(requestPayload);
+
+    http:Response response = check hrClient->post("", request);
+    json payload = check response.getJsonPayload();
+
+    if payload is map<json> {
+        json? errorsNode = payload["errors"];
+        if errorsNode is json[] && errorsNode.length() > 0 {
+            return error(errorsNode.toJsonString());
+        }
     }
-    return response.data.employee;
+
+    EmployeeResponse|error parsed = payload.cloneWithType(EmployeeResponse);
+    if parsed is error {
+        return parsed;
+    }
+
+    return parsed.data.employee;
 }

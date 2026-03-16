@@ -13,15 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import expense_management.database;
-
-# Collection type.
-public type SampleCollection record {
-    # Number of total records
-    int count;
-    # List of collections
-    database:SampleCollection[] collections;
-};
 
 # Represents the response structure for retrieving user information.
 public type UserInfoResponse record {|
@@ -37,12 +28,18 @@ public type UserInfoResponse record {|
     string jobRole;
     # Thumbnail of the employee
     string? employeeThumbnail;
-    # User Privileges
+    # User privileges
     int[] privileges;
 |};
 
-# AppConfig Type
+# Application configuration returned to the frontend
 public type AppConfig record {|
-    # Sample AppConfig
-    string sampleAppConfig;
+    # Annual OPD claim limit per employee
+    decimal claimLimit;
+
+    # Allowed employee locations for claim submissions
+    string[] submissionsAllowedLocations;
+
+    # Number of grace days allowed for previous year claims
+    int lastYearClaimGracePeriodInDays;
 |};

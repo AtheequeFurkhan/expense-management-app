@@ -15,84 +15,89 @@
 // under the License.
 import ballerina/sql;
 
-# Build query to add a sample collection.
-#
-# + sampleCollection - sample collection to be added
-# + createdBy - The user who is adding the sample collection
-# + return - sql:ParameterizedQuery - Insert query for the sample collection table
-isolated function addSampleCollectionQuery(AddSampleCollection sampleCollection, string createdBy)
-    returns sql:ParameterizedQuery =>
-`
-    INSERT INTO sample_collection
-    (
-        sample_collection_name,
-        sample_collection_created_by,
-        sample_collection_updated_by
-    )
-    VALUES
-    (
-        ${sampleCollection.name},
-        ${createdBy},
-        ${createdBy}
-    )
+isolated function getLastYearClaimAmountQuery(int year) returns sql:ParameterizedQuery => `
+    SELECT COALESCE(SUM(CAST(t.txn_amount AS DECIMAL(10,2))), 0) AS total
+    FROM opd_claim_transaction t
+    INNER JOIN opd_claim c
+        ON c.id = t.claim_id
+    WHERE YEAR(c.added_date) = ${year - 1}
+      AND c.status IN ('0', '2', '3')
 `;
 
-# Build query to retrieve sample collections.
-#
-# + name - Name to filter
-# + 'limit - Limit of the data
-# + offset - Offset of the query
-# + return - sql:ParameterizedQuery - Select query for the sample_collection table
-isolated function getSampleCollectionsQuery(string? name, int? 'limit, int? offset) returns sql:ParameterizedQuery {
-    sql:ParameterizedQuery mainQuery = `
-            SELECT
-                sample_collection_id AS 'id',
-                sample_collection_name AS 'name',
-                sample_collection_created_on AS 'createdOn',
-                sample_collection_created_by AS 'createdBy',
-                sample_collection_updated_on AS 'updatedOn',
-                sample_collection_updated_by AS 'updatedBy'
-            FROM
-                sample_schema.sample_collection
-    `;
+isolated function getCurrentMonthClaimAmountQuery(int year, int month) returns sql:ParameterizedQuery => `
+    SELECT COALESCE(SUM(CAST(t.txn_amount AS DECIMAL(10,2))), 0) AS total
+    FROM opd_claim_transaction t
+    INNER JOIN opd_claim c
+        ON c.id = t.claim_id
+    WHERE YEAR(c.added_date) = ${year}
+      AND MONTH(c.added_date) = ${month}
+      AND c.status IN ('0', '2', '3')
+`;
 
-    // Setting the filters based on the sample collection object.
-    sql:ParameterizedQuery[] filters = [];
+isolated function getPreviousYearClaimCountQuery(int year) returns sql:ParameterizedQuery => `
+    SELECT COUNT(DISTINCT c.id) AS count
+    FROM opd_claim c
+    WHERE YEAR(c.added_date) = ${year - 1}
+      AND c.status IN ('0', '2', '3')
+`;
 
-    if name is string {
-        filters.push(sql:queryConcat(`sample_collection_name LIKE `, `${name}`));
-    }
+isolated function getTotalSriLankaEmployeesQuery() returns sql:ParameterizedQuery => `
+    SELECT COUNT(*) AS count
+    FROM hris_company
+    WHERE employee_location = 'Sri Lanka'
+      AND employee_status = 'Active'
+      AND employee_work_email IS NOT NULL
+      AND employee_work_email <> ''
+`;
 
-    mainQuery = buildSqlSelectQuery(mainQuery, filters);
+isolated function getSriLankaEmployeesWithClaimsForYearQuery(int year) returns sql:ParameterizedQuery => `
+    SELECT COUNT(DISTINCT h.employee_work_email) AS count
+    FROM hris_company h
+    INNER JOIN opd_claim c
+        ON h.employee_work_email = c.employee_email
+    WHERE h.employee_location = 'Sri Lanka'
+      AND h.employee_status = 'Active'
+      AND YEAR(c.added_date) = ${year}
+      AND c.status IN ('0', '2', '3')
+`;
 
-    // Setting the limit and offset.
-    if 'limit is int {
-        mainQuery = sql:queryConcat(mainQuery, ` LIMIT ${'limit}`);
-        if offset is int {
-            mainQuery = sql:queryConcat(mainQuery, ` OFFSET ${offset}`);
-        }
-    } else {
-        mainQuery = sql:queryConcat(mainQuery, ` LIMIT 1000`);
-    }
+isolated function getEmployeeTotalsForYearQuery(int year) returns sql:ParameterizedQuery => `
+    SELECT c.employee_email AS employeeEmail,
+           COALESCE(SUM(CAST(t.txn_amount AS DECIMAL(10,2))), 0) AS totalAmount
+    FROM opd_claim_transaction t
+    INNER JOIN opd_claim c
+        ON c.id = t.claim_id
+    INNER JOIN hris_company h
+        ON h.employee_work_email = c.employee_email
+    WHERE h.employee_location = 'Sri Lanka'
+      AND h.employee_status = 'Active'
+      AND YEAR(c.added_date) = ${year}
+      AND c.status IN ('0', '2', '3')
+    GROUP BY c.employee_email
+`;
 
-    return mainQuery;
-}
-
-# Build query to retrieve sample collection.
-#
-# + id - Identification of the sample collection
-# + return - sql:ParameterizedQuery - Select query for the sample_collection table
-isolated function getSampleCollectionQuery(int id) returns sql:ParameterizedQuery =>
-`
+isolated function getActiveClaimsBucketQuery(int year, int month) returns sql:ParameterizedQuery => `
     SELECT
-        sample_collection_id AS 'id',
-        sample_collection_name AS 'name',
-        sample_collection_created_on AS 'createdOn',
-        sample_collection_created_by AS 'createdBy',
-        sample_collection_updated_on AS 'updatedOn',
-        sample_collection_updated_by AS 'updatedBy'
-    FROM
-        sample_schema.sample_collection
-    WHERE
-        sample_collection_id = ${id}
+        CASE
+            WHEN t.txn_amount < 5000 THEN '0-5K'
+            WHEN t.txn_amount < 10000 THEN '5K-10K'
+            WHEN t.txn_amount < 15000 THEN '10K-15K'
+            WHEN t.txn_amount < 20000 THEN '15K-20K'
+            WHEN t.txn_amount < 25000 THEN '20K-25K'
+            WHEN t.txn_amount < 30000 THEN '25K-30K'
+            WHEN t.txn_amount < 35000 THEN '30K-35K'
+            ELSE '35K-40K'
+        END AS range,
+        COUNT(*) AS count
+    FROM opd_claim_transaction t
+    INNER JOIN opd_claim c
+        ON c.id = t.claim_id
+    INNER JOIN hris_company h
+        ON h.employee_work_email = c.employee_email
+    WHERE h.employee_location = 'Sri Lanka'
+      AND h.employee_status = 'Active'
+      AND YEAR(c.added_date) = ${year}
+      AND MONTH(c.added_date) = ${month}
+      AND c.status IN ('0', '2', '3')
+    GROUP BY range
 `;

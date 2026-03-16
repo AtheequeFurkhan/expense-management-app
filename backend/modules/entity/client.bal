@@ -13,23 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import ballerina/graphql;
+import ballerina/http;
 
 configurable string hrEntityBaseUrl = ?;
-configurable GraphQlRetryConfig retryConfig = ?;
-configurable Oauth2Config oauthConfig = ?;
 
-# Hr Entity -> GraphQL Service Credentials.
-@display {
-    label: "HR Entity GraphQL Service",
-    id: "hris/entity-graphql-service"
-}
-
-final graphql:Client hrClient = check new (hrEntityBaseUrl, {
-    auth: {
-        ...oauthConfig
-    },
-    retryConfig: {
-        ...retryConfig
-    }
-});
+public final http:Client hrClient = checkpanic new (hrEntityBaseUrl);

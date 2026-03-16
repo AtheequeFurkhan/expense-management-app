@@ -33,15 +33,12 @@ final cache:Cache cache = new ({
     label: "Expense Management App",
     id: "domain/expense-management-app"
 }
-
 service class ErrorInterceptor {
     *http:ResponseErrorInterceptor;
 
     remote function interceptResponseError(error err, http:RequestContext ctx) returns http:BadRequest|error {
-
-        // Handle data-binding errors.
         if err is http:PayloadBindingError {
-            string customError = string `Payload binding failed!`;
+            string customError = "Payload binding failed!";
             log:printError(customError, err);
             return {
                 body: {
@@ -55,35 +52,21 @@ service class ErrorInterceptor {
 
 service http:InterceptableService / on new http:Listener(9090) {
 
-    # Request interceptor.
-    #
-    # + return - authorization:JwtInterceptor, ErrorInterceptor
     public function createInterceptors() returns http:Interceptor[] =>
         [new authorization:JwtInterceptor(), new ErrorInterceptor()];
 
-    # Fetch samples AppConfig.
-    #
-    # + return - AppConfig
     resource function get app\-config() returns AppConfig => appConfig;
 
-    # Fetch user information of the logged in users.
-    #
-    # + ctx - Request object
-    # + return - User info object|Error
     resource function get user\-info(http:RequestContext ctx) returns UserInfoResponse|http:InternalServerError {
-
-        // User information header.
         authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
         if userInfo is error {
             return <http:InternalServerError>{
                 body: {
                     message: "User information header not found!"
                 }
-
             };
         }
 
-        // Check cache for logged in user.
         if cache.hasKey(userInfo.email) {
             UserInfoResponse|error cachedUserInfo = cache.get(userInfo.email).ensureType();
             if cachedUserInfo is UserInfoResponse {
@@ -91,7 +74,6 @@ service http:InterceptableService / on new http:Listener(9090) {
             }
         }
 
-        // Fetch the user information from the entity service.
         entity:Employee|error loggedInUser = entity:fetchEmployeesBasicInfo(userInfo.email);
         if loggedInUser is error {
             string customError = string `Error occurred while retrieving user data: ${userInfo.email}!`;
@@ -103,7 +85,6 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
-        // Fetch the user's privileges based on the roles.
         int[] privileges = [];
         if authorization:checkPermissions([authorization:authorizedRoles.employeeRole], userInfo.groups) {
             privileges.push(authorization:EMPLOYEE_ROLE_PRIVILEGE);
@@ -121,17 +102,9 @@ service http:InterceptableService / on new http:Listener(9090) {
         return userInfoResponse;
     }
 
-    # Fetch all samples from the database.
-    #
-    # + name - Name to filter
-    # + 'limit - Limit of the data
-    # + offset - Offset of the data
-    # + return - All samples|Error
-    isolated resource function get collections(http:RequestContext ctx, string? name, int? 'limit, int? offset)
-        returns SampleCollection|http:Forbidden|http:BadRequest|http:InternalServerError {
+    resource function get opdClaimSummary(http:RequestContext ctx, int year = 2026, int month = 3)
+        returns database:OpdClaimSummaryResponse|http:Forbidden|http:BadRequest|database:HttpInternalServerError {
 
-        // "requestedBy" is the email of the user access this resource.
-        // interceptor set this value after validating the jwt.
         authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
         if userInfo is error {
             return <http:BadRequest>{
@@ -141,102 +114,34 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
-        // [Start] Custom Resource level authorization.
-        if !authorization:checkPermissions([authorization:authorizedRoles.employeeRole],
-                userInfo.groups) {
+        if !authorization:checkPermissions([
+            authorization:authorizedRoles.employeeRole,
+            authorization:authorizedRoles.headPeopleOperationsRole
+        ], userInfo.groups) {
             return <http:Forbidden>{
                 body: {
                     message: "Insufficient privileges!"
                 }
             };
         }
-        // [End] Custom Resource level authorization.
 
-        database:SampleCollection[]|error collections = database:fetchSampleCollections(name, 'limit, offset);
-        if collections is error {
-            string customError = string `Error occurred while retrieving the sample collections!`;
-            log:printError(customError, collections);
-            return <http:InternalServerError>{
-                body: {
-                    message: customError
-                }
-            };
+        database:OpdClaimSummaryResponse|error summary = database:getOpdClaimSummary(year, month);
+        if summary is database:OpdClaimSummaryResponse {
+            return summary;
         }
 
-        return {
-            count: collections.length(),
-            collections: collections
+        string customError = "Failed to build OPD claim summary.";
+        log:printError(customError, summary);
+        return <database:HttpInternalServerError>{
+            body: {
+                message: summary.message()
+            }
         };
     }
 
-    # Insert collections.
-    #
-    # + collection - New collection
-    # + return - Created|Forbidden|BadRequest|Error
-    resource function post collections(http:RequestContext ctx, database:AddSampleCollection collection)
-        returns http:Created|http:Forbidden|http:BadRequest|http:InternalServerError {
-
-        // "requestedBy" is the email of the user access this resource.
-        // interceptor set this value after validating the jwt.
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
-        if userInfo is error {
-            return <http:BadRequest>{
-                body: {
-                    message: "User information header not found!"
-                }
-            };
-        }
-
-        // [Start] Custom Resource level authorization.
-        if !authorization:checkPermissions([authorization:authorizedRoles.headPeopleOperationsRole],
-                userInfo.groups) {
-
-            return <http:Forbidden>{
-                body: {
-                    message: "Insufficient privileges!"
-                }
-            };
-        }
-        // [End] Custom Resource level authorization.
-
-        // Insert collection.
-        int|error collectionId = database:addSampleCollection(collection, userInfo.email);
-        if collectionId is error {
-            string customError = string `Error occurred while adding sample collection!`;
-            log:printError(customError, collectionId);
-            return <http:InternalServerError>{
-                body: {
-                    message: customError
-                }
-            };
-        }
-
-        database:SampleCollection|error? addedSampleCollection = database:fetchSampleCollection(collectionId);
-
-        // Handle : database read error.
-        if addedSampleCollection is error {
-            string customError = string `Error occurred while retrieving the added sample collection!`;
-            log:printError(customError, addedSampleCollection);
-            return <http:InternalServerError>{
-                body: {
-                    message: customError
-                }
-            };
-        }
-
-        // Handle : no record error.
-        if addedSampleCollection is () {
-            string customError = string `Added sample collection is no longer available to access!`;
-            log:printError(customError);
-            return <http:InternalServerError>{
-                body: {
-                    message: customError
-                }
-            };
-        }
-
-        return <http:Created>{
-            body: addedSampleCollection
+    resource function get health() returns json {
+        return {
+            status: "ok"
         };
     }
 }
