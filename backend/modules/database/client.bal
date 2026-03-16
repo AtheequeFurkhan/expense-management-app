@@ -16,28 +16,47 @@
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 
-configurable DatabaseConfig databaseConfig = ?;
 configurable decimal connectTimeout = 10.0;
 configurable decimal annualClaimLimit = 40000.0;
+configurable DatabaseConfig expenseDatabaseConfig = ?;
+configurable DatabaseConfig hrisDatabaseConfig = ?;
 
-mysql:Options databaseClientOptions = {
+mysql:Options expenseDatabaseClientOptions = {
     ssl: {
         mode: mysql:SSL_REQUIRED
     },
     connectTimeout: connectTimeout
 };
 
-function initSampleDbClient() returns mysql:Client|error => new (
-    host = databaseConfig.host,
-    port = databaseConfig.port,
-    user = databaseConfig.user,
-    password = databaseConfig.password,
-    database = databaseConfig.database,
-    connectionPool = databaseConfig.connectionPool,
-    options = databaseClientOptions
+mysql:Options hrisDatabaseClientOptions = {
+    ssl: {
+        mode: mysql:SSL_REQUIRED
+    },
+    connectTimeout: connectTimeout
+};
+
+function initExpenseDbClient() returns mysql:Client|error => new (
+    host = expenseDatabaseConfig.host,
+    port = expenseDatabaseConfig.port,
+    user = expenseDatabaseConfig.user,
+    password = expenseDatabaseConfig.password,
+    database = expenseDatabaseConfig.database,
+    connectionPool = expenseDatabaseConfig.connectionPool,
+    options = expenseDatabaseClientOptions
 );
 
-public final mysql:Client databaseClient = checkpanic initSampleDbClient();
+function initHrisDbClient() returns mysql:Client|error => new (
+    host = hrisDatabaseConfig.host,
+    port = hrisDatabaseConfig.port,
+    user = hrisDatabaseConfig.user,
+    password = hrisDatabaseConfig.password,
+    database = hrisDatabaseConfig.database,
+    connectionPool = hrisDatabaseConfig.connectionPool,
+    options = hrisDatabaseClientOptions
+);
+
+public final mysql:Client expenseDbClient = checkpanic initExpenseDbClient();
+public final mysql:Client hrisDbClient = checkpanic initHrisDbClient();
 
 public isolated function getAnnualClaimLimit() returns decimal {
     return annualClaimLimit;

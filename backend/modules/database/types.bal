@@ -16,20 +16,19 @@
 import ballerina/http;
 import ballerina/sql;
 
-# Represents the configuration required to connect to a database.
-#
-# + user - The username for the database connection.
-# + password - The password for the database user.
-# + database - The name of the database to connect to.
-# + host - The hostname or IP address of the database server.
-# + port - The port number on which the database server is listening (default is 3306).
-# + connectionPool - The SQL connection pool configuration.
+# [Configurable] database configs.
 public type DatabaseConfig record {|
-    string user;
-    string password;
-    string database;
+    # Database host
     string host;
+    # Database user
+    string user;
+    # Database password
+    string password;
+    # Database name
+    string database;
+    # Database port
     int port = 3306;
+    # Database connection pool
     sql:ConnectionPool connectionPool = {};
 |};
 
@@ -41,14 +40,18 @@ public type CountRow record {|
     int count;
 |};
 
+public type EmployeeEmailRow record {|
+    string employeeEmail;
+|};
+
 public type EmployeeTotalRow record {|
     string employeeEmail;
     decimal totalAmount;
 |};
 
-public type BucketRow record {|
-    string range;
-    int count;
+public type ClaimTransactionRow record {|
+    string employeeEmail;
+    decimal amount;
 |};
 
 public type ClaimBucket record {|
