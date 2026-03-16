@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { SecureApp, useAuthContext } from "@asgardeo/auth-react";
 import { useIdleTimer } from "react-idle-timer";
 
@@ -24,6 +23,7 @@ import SessionWarningDialog from "@component/common/SessionWarningDialog";
 import LoginScreen from "@component/ui/LoginScreen";
 import { redirectUrl } from "@config/constant";
 import { loadPrivileges, setAuthError, setUserAuthData } from "@slices/authSlice/auth";
+import { fetchAppConfig } from "@slices/configSlice/config";
 import { useAppDispatch } from "@slices/store";
 import { getUserInfo } from "@slices/userSlice/user";
 import { APIService } from "@utils/apiService";
@@ -123,6 +123,7 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
 
     await dispatch(getUserInfo());
     await dispatch(loadPrivileges());
+    await dispatch(fetchAppConfig());
   }, [getBasicUserInfo, getIDToken, getDecodedIDToken, dispatch, refreshToken]);
 
   const appSignIn = useCallback(async () => {
