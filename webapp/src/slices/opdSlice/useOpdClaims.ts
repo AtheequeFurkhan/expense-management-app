@@ -15,6 +15,7 @@
 // under the License.
 
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 
 import { useEffect } from "react";
@@ -81,6 +82,22 @@ const normalizeOpdClaimsData = (data?: Partial<OpdClaimsData> | null): OpdClaims
   trendPreviousYear: data?.trendPreviousYear ?? DEFAULT_OPD_DATA.trendPreviousYear,
 });
 
+const resolveMonthParam = (month: MonthFilter): string | undefined => {
+  const currentMonth = String(new Date().getMonth() + 1);
+
+  switch (month) {
+    case "all":
+      return undefined;
+    case "current":
+    case "pastThree":
+    case "pastSix":
+    case "pastTwelve":
+      return currentMonth;
+    default:
+      return currentMonth;
+  }
+};
+
 export const fetchOpdClaims = createAsyncThunk<
   OpdClaimsData,
   { year: string; month: MonthFilter },
@@ -88,13 +105,17 @@ export const fetchOpdClaims = createAsyncThunk<
 >("opdClaims/fetchOpdClaims", async ({ year, month }) => {
   try {
     const params: Record<string, string> = { year };
-    if (month !== "all") {
-      params.month = month;
+    const resolvedMonth = resolveMonthParam(month);
+    if (resolvedMonth) {
+      params.month = resolvedMonth;
     }
 
     const response = await apiService.get<Partial<OpdClaimsData> | null>("/opd-claims", { params });
     return normalizeOpdClaimsData(response?.data);
   } catch (err) {
+    if (axios.isCancel(err)) {
+      return DEFAULT_OPD_DATA;
+    }
     console.warn("Error fetching OPD claims, falling back to dummy data:", err);
     return DEFAULT_OPD_DATA;
   }

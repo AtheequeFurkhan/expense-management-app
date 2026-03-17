@@ -13,10 +13,11 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { SecureApp, useAuthContext } from "@asgardeo/auth-react";
+import axios from "axios";
+import { useAuthContext } from "@asgardeo/auth-react";
 import { useIdleTimer } from "react-idle-timer";
 
-import React, { useCallback, useContext, useEffect, useState } from "react";
+import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 
 import PreLoader from "@component/common/PreLoader";
 import SessionWarningDialog from "@component/common/SessionWarningDialog";
@@ -36,7 +37,6 @@ type AuthContextType = {
 enum AppState {
   Loading = "loading",
   Unauthenticated = "unauthenticated",
-  Authenticating = "authenticating",
   Authenticated = "authenticated",
 }
 
@@ -48,6 +48,8 @@ const promptBeforeIdle = 4_000;
 const AppAuthProvider = (props: { children: React.ReactNode }) => {
   const [sessionWarningOpen, setSessionWarningOpen] = useState<boolean>(false);
   const [appState, setAppState] = useState<AppState>(AppState.Loading);
+  const [isBootstrapping, setIsBootstrapping] = useState(false);
+  const initializedUserRef = useRef<string | null>(null);
 
   const dispatch = useAppDispatch();
 
@@ -71,7 +73,6 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
     getBasicUserInfo,
     refreshAccessToken,
     getIDToken,
-    trySignInSilently,
     getAccessToken,
     state,
   } = useAuthContext();
@@ -83,7 +84,8 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
   }, []);
 
   const appSignOut = useCallback(async () => {
-    setAppState(AppState.Loading);
+    initializedUserRef.current = null;
+    setIsBootstrapping(false);
     await signOut();
     setAppState(AppState.Unauthenticated);
   }, [signOut]);
@@ -121,14 +123,14 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
 
     new APIService(idToken, refreshToken);
 
-    await dispatch(getUserInfo());
-    await dispatch(loadPrivileges());
-    await dispatch(fetchAppConfig());
+    await dispatch(getUserInfo()).unwrap();
+    await dispatch(loadPrivileges()).unwrap();
+    await dispatch(fetchAppConfig()).unwrap();
   }, [getBasicUserInfo, getIDToken, getDecodedIDToken, dispatch, refreshToken]);
 
   const appSignIn = useCallback(async () => {
-    await signIn();
     setAppState(AppState.Loading);
+    await signIn();
   }, [signIn]);
 
   const handleContinue = useCallback(() => {
@@ -136,39 +138,78 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
     activate();
   }, [activate]);
 
+  const handleLogout = useCallback(() => {
+    void appSignOut();
+  }, [appSignOut]);
+
   useEffect(() => {
-    let mounted = true;
+    if (state.isLoading) {
+      setAppState(AppState.Loading);
+      return;
+    }
 
-    const initializeAuth = async () => {
+    if (!state.isAuthenticated) {
+      initializedUserRef.current = null;
+      setIsBootstrapping(false);
+      setAppState(AppState.Unauthenticated);
+      return;
+    }
+
+    const userKey = state.username || state.email || state.sub || "authenticated-user";
+    if (initializedUserRef.current === userKey) {
+      setIsBootstrapping(false);
+      setAppState(AppState.Authenticated);
+      return;
+    }
+
+    let cancelled = false;
+
+    const bootstrapAuthenticatedUser = async () => {
       try {
+        setIsBootstrapping(true);
         setAppState(AppState.Loading);
+        await setupAuthenticatedUser();
 
-        if (state.isLoading) return;
-
-        if (state.isAuthenticated) {
-          setAppState(AppState.Authenticating);
-          await setupAuthenticatedUser();
-
-          if (mounted) setAppState(AppState.Authenticated);
-        } else {
-          const silentSignInSuccess = await trySignInSilently();
-
-          if (mounted)
-            setAppState(silentSignInSuccess ? AppState.Authenticating : AppState.Unauthenticated);
+        if (!cancelled) {
+          initializedUserRef.current = userKey;
+          setAppState(AppState.Authenticated);
         }
-      } catch {
-        if (mounted) {
+      } catch (error) {
+        if (
+          axios.isCancel(error) ||
+          (error instanceof Error && error.name === "CanceledError") ||
+          (typeof error === "object" &&
+            error !== null &&
+            "code" in error &&
+            (error as { code?: string }).code === "ERR_CANCELED")
+        ) {
+          return;
+        }
+        console.error("Auth bootstrap failed:", error);
+        if (!cancelled) {
           dispatch(setAuthError());
+        }
+      } finally {
+        if (!cancelled) {
+          setIsBootstrapping(false);
         }
       }
     };
 
-    initializeAuth();
+    void bootstrapAuthenticatedUser();
 
     return () => {
-      mounted = false;
+      cancelled = true;
     };
-  }, [state.isAuthenticated, state.isLoading, dispatch, setupAuthenticatedUser, trySignInSilently]);
+  }, [
+    dispatch,
+    setupAuthenticatedUser,
+    state.email,
+    state.isAuthenticated,
+    state.isLoading,
+    state.sub,
+    state.username,
+  ]);
 
   const authContext: AuthContextType = {
     appSignIn: appSignIn,
@@ -178,10 +219,12 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
   const renderContent = () => {
     switch (appState) {
       case AppState.Loading:
-        return <PreLoader isLoading message="Loading ..." />;
-
-      case AppState.Authenticating:
-        return <PreLoader isLoading message="Loading User Info ..." />;
+        return (
+          <PreLoader
+            isLoading
+            message={isBootstrapping ? "Loading User Info ..." : "Loading ..."}
+          />
+        );
 
       case AppState.Authenticated:
         return <AuthContext.Provider value={authContext}>{props.children}</AuthContext.Provider>;
@@ -202,13 +245,10 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
     <>
       <SessionWarningDialog
         open={sessionWarningOpen}
-        onContinue={handleContinue}
-        onSignOut={appSignOut}
+        onExtend={handleContinue}
+        onLogout={handleLogout}
       />
-
-      <SecureApp fallback={<PreLoader isLoading message="We are getting things ready ..." />}>
-        {renderContent()}
-      </SecureApp>
+      {renderContent()}
     </>
   );
 };

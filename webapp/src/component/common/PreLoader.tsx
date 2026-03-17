@@ -15,7 +15,6 @@
 // under the License.
 
 import { Box, Container, LinearProgress, Typography } from "@mui/material";
-import Grid from "@mui/material/Grid";
 
 import type { PreLoaderProps } from "@utils/types";
 
@@ -31,39 +30,35 @@ const PreLoader = (props: PreLoaderProps) => {
       }}
     >
       <Container maxWidth="md">
-        <Box>
-          <Grid
-            container
-            direction="column"
-            justifyContent="center"
-            alignItems="center"
-            spacing={2}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 2,
+          }}
+        >
+          {props.isLoading && (
+            <LinearProgress
+              sx={{
+                width: "150px",
+              }}
+            />
+          )}
+          <Typography
+            variant="inherit"
+            sx={{
+              fontSize: "14px",
+              fontWeight: 500,
+              color: (theme) =>
+                theme.palette.mode === "light"
+                  ? theme.palette.common.black
+                  : theme.palette.common.white,
+            }}
           >
-            <Grid item xs={12}>
-              {props.isLoading && (
-                <LinearProgress
-                  sx={{
-                    width: "150px",
-                  }}
-                />
-              )}
-            </Grid>
-            <Grid item xs={12}>
-              <Typography
-                variant="inherit"
-                sx={{
-                  fontSize: "14px",
-                  fontWeight: 500,
-                  color: (theme) =>
-                    theme.palette.mode === "light"
-                      ? theme.palette.common.black
-                      : theme.palette.common.white,
-                }}
-              >
-                {props.message}
-              </Typography>
-            </Grid>
-          </Grid>
+            {props.message}
+          </Typography>
         </Box>
       </Container>
     </Box>
