@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import axios, {
   AxiosInstance,
   AxiosRequestConfig,
@@ -23,8 +22,14 @@ import axios, {
 } from "axios";
 import * as rax from "retry-axios";
 
+import { ServiceBaseUrl } from "@config/config";
 import { startLoading, stopLoading } from "@slices/commonSlice/common";
 import { store } from "@slices/store";
+
+interface RequestConfigWithLoader extends AxiosRequestConfig {
+  showGlobalLoading?: boolean;
+  _cancelKey?: string;
+}
 
 export class APIService {
   private static _instance: AxiosInstance;
@@ -37,7 +42,9 @@ export class APIService {
   private static _refreshPromise: Promise<{ accessToken: string }> | null = null;
 
   constructor(idToken: string, callback: () => Promise<{ accessToken: string }>) {
-    APIService._instance = axios.create();
+    APIService._instance = axios.create({
+      baseURL: ServiceBaseUrl, 
+    });
     rax.attach(APIService._instance);
 
     APIService._idToken = idToken;
@@ -130,7 +137,10 @@ export class APIService {
   private static updateRequestInterceptor() {
     APIService._instance.interceptors.request.use(
       (config) => {
-        store.dispatch(startLoading());
+        const requestConfig = config as RequestConfigWithLoader;
+        if (requestConfig.showGlobalLoading) {
+          store.dispatch(startLoading());
+        }
 
         if (!config.headers) {
           config.headers = {} as AxiosRequestHeaders;
@@ -147,20 +157,28 @@ export class APIService {
           (config.headers as Record<string, string>)["x-jwt-assertion"] = APIService._idToken;
         }
 
-        const endpoint = config.url || "";
-        const existingToken = APIService._cancelTokenMap.get(endpoint);
+        const endpointKey = [
+          String(config.method || "get").toUpperCase(),
+          config.baseURL || "",
+          config.url || "",
+          JSON.stringify(config.params || {}),
+        ].join(":");
+        const existingToken = APIService._cancelTokenMap.get(endpointKey);
         if (existingToken) {
-          existingToken.cancel(`Request cancelled for endpoint: ${endpoint}`);
+          existingToken.cancel(`Request cancelled for endpoint: ${config.url || ""}`);
         }
 
         const newTokenSource = axios.CancelToken.source();
-        APIService._cancelTokenMap.set(endpoint, newTokenSource);
+        APIService._cancelTokenMap.set(endpointKey, newTokenSource);
         config.cancelToken = newTokenSource.token;
+        requestConfig._cancelKey = endpointKey;
 
         return config;
       },
       (error) => {
-        store.dispatch(stopLoading());
+        if ((error.config as RequestConfigWithLoader | undefined)?.showGlobalLoading) {
+          store.dispatch(stopLoading());
+        }
         return Promise.reject(error);
       },
     );
@@ -169,11 +187,23 @@ export class APIService {
   private static updateResponseInterceptor() {
     APIService._instance.interceptors.response.use(
       (response) => {
-        store.dispatch(stopLoading());
+        const responseConfig = response.config as RequestConfigWithLoader;
+        const cancelKey = responseConfig._cancelKey;
+        if (cancelKey) {
+          APIService._cancelTokenMap.delete(cancelKey);
+        }
+        if (responseConfig.showGlobalLoading) {
+          store.dispatch(stopLoading());
+        }
         return response;
       },
       (error) => {
-        if (!axios.isCancel(error)) {
+        const errorConfig = error.config as RequestConfigWithLoader | undefined;
+        const cancelKey = errorConfig?._cancelKey;
+        if (cancelKey) {
+          APIService._cancelTokenMap.delete(cancelKey);
+        }
+        if (!axios.isCancel(error) && errorConfig?.showGlobalLoading) {
           store.dispatch(stopLoading());
         }
         return Promise.reject(error);

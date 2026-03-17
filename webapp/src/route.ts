@@ -22,11 +22,10 @@ import {
   Settings,
   Users,
 } from "@wso2/oxygen-ui-icons-react";
-import { Navigate, type RouteObject, createBrowserRouter } from "react-router-dom";
+import { type RouteObject } from "react-router-dom";
 
 import React from "react";
 
-import Layout from "@layout/Layout";
 import { Role } from "@slices/authSlice/auth";
 import { isIncludedRole } from "@utils/utils";
 import { View } from "@view/index";
@@ -144,19 +143,3 @@ export const getActiveParentRoutes = ({ routes, roles }: getActiveParentRoutesPr
 
   return activeParentPaths;
 };
-
-const router = createBrowserRouter([
-  {
-    path: "/",
-    element: React.createElement(Layout),
-    children: [
-      {
-        index: true,
-        element: React.createElement(Navigate, { to: "/opd-claim-summary", replace: true }),
-      },
-      ...(routes as unknown as RouteObject[]),
-    ],
-  },
-]);
-
-export default router;

@@ -13,15 +13,12 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import { Navigate, RouterProvider, createBrowserRouter } from "react-router-dom";
 
-import { useAuthContext } from "@asgardeo/auth-react";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
-
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import AppSkeleton from "@component/common/AppSkeleton";
 import ErrorHandler from "@component/common/ErrorHandler";
-import PreLoader from "@component/common/PreLoader";
 import BackdropProgress from "@component/ui/BackdropProgress";
 import Layout from "@layout/Layout";
 import NotFoundPage from "@layout/pages/404";
@@ -35,11 +32,12 @@ const AppHandler = () => {
     "loading",
   );
 
-  const { state: authState, signIn } = useAuthContext();
-  const signInTriggeredRef = useRef(false);
-
   const auth = useAppSelector((state: RootState) => state.auth);
-  const isGlobalLoading = useAppSelector((state: RootState) => (state.common as { isGlobalLoading: boolean }).isGlobalLoading);
+  const isGlobalLoading = useAppSelector(
+    (state: RootState) => (state.common as { isGlobalLoading: boolean }).isGlobalLoading,
+  );
+  const activeRoutes = useMemo(() => getActiveRoutesV2(routes, auth.roles), [auth.roles]);
+  const defaultRoute = activeRoutes[0]?.path ?? "/";
 
   const router = useMemo(
     () =>
@@ -48,28 +46,20 @@ const AppHandler = () => {
           path: "/",
           element: <Layout />,
           errorElement: <NotFoundPage />,
-          children: getActiveRoutesV2(routes, auth.roles),
+          children: [
+            {
+              index: true,
+              element: <Navigate to={defaultRoute} replace />,
+            },
+            ...activeRoutes,
+          ],
         },
       ]),
-    [auth.roles],
+    [activeRoutes, defaultRoute],
   );
 
   useEffect(() => {
-    if (authState?.isAuthenticated === true) {
-      signInTriggeredRef.current = false;
-      return;
-    }
-
-    if (authState?.isAuthenticated === false && !signInTriggeredRef.current) {
-      signInTriggeredRef.current = true;
-      void signIn().catch(() => {
-        setAppState("failed");
-      });
-    }
-  }, [authState?.isAuthenticated, signIn]);
-
-  useEffect(() => {
-    if (auth.status === "loading") {
+    if (auth.status === "idle" || auth.status === "loading") {
       setAppState("loading");
     } else if (auth.mode === "maintenance") {
       setAppState("maintenance");
@@ -79,10 +69,6 @@ const AppHandler = () => {
       setAppState("success");
     }
   }, [auth.status, auth.mode]);
-
-  if (authState?.isAuthenticated === false) {
-    return <PreLoader isLoading={true} message={"Redirecting to login..."} />;
-  }
 
   const renderApp = () => {
     switch (appState) {

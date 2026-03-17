@@ -17,11 +17,11 @@
 import { AuthProvider } from "@asgardeo/auth-react";
 import { AcrylicOrangeTheme, OxygenUIThemeProvider } from "@wso2/oxygen-ui";
 import { Provider } from "react-redux";
-import { RouterProvider } from "react-router-dom";
 
+import AppHandler from "@app/AppHandler";
 import { AsgardeoConfig } from "@config/config";
+import AppAuthProvider from "@context/AuthContext";
 import { store } from "@slices/store";
-import router from "@src/route";
 
 import "./styles/fonts.css";
 
@@ -30,7 +30,9 @@ export default function App() {
     <Provider store={store}>
       <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
         <AuthProvider config={AsgardeoConfig}>
-          <RouterProvider router={router} />
+          <AppAuthProvider>
+            <AppHandler />
+          </AppAuthProvider>
         </AuthProvider>
       </OxygenUIThemeProvider>
     </Provider>
