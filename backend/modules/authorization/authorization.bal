@@ -51,8 +51,6 @@ public isolated service class JwtInterceptor {
             return <http:InternalServerError>{body: {message: errorMsg}};
         }
 
-        log:printInfo(string `JWT email: ${userInfo.email}, groups: ${userInfo.groups.toBalString()}`);
-
         foreach anydata role in authorizedRoles.toArray() {
             if userInfo.groups.some(r => r === role) {
                 ctx.set(HEADER_USER_INFO, userInfo);
