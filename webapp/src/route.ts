@@ -78,6 +78,13 @@ export const routes: RouteObjectWithRole[] = [
   },
 ];
 
+const hiddenNavigationPaths = new Set([
+  "/expense-claim-summary",
+  "/employee-summary",
+  "/credit-card-summary",
+  "/report-summary",
+]);
+
 export const getActiveRoutesV2 = (
   routes: RouteObjectWithRole[] | undefined,
   roles: string[],
@@ -111,7 +118,10 @@ export const getActiveRoutes = (roles: string[]): RouteObject[] => {
 export const getActiveRouteDetails = (roles: string[]): RouteDetail[] => {
   const routesObj: RouteDetail[] = [];
   routes.forEach((routeObj) => {
-    if (isIncludedRole(roles, routeObj.allowRoles)) {
+    if (
+      isIncludedRole(roles, routeObj.allowRoles) &&
+      !hiddenNavigationPaths.has(routeObj.path ?? "")
+    ) {
       routesObj.push({
         ...routeObj,
         path: routeObj.path ?? "",
