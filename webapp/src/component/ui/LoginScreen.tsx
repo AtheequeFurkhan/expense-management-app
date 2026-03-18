@@ -29,15 +29,13 @@ import { CopyPlus, Landmark, Scale, ShieldPlus } from "lucide-react";
 
 import { type JSX } from "react";
 
-import LogoLight from "@assets/images/WSO2-Logo-Black.png";
-import LogoDark from "@assets/images/WSO2-Logo-White.png";
+import Logo from "@assets/images/pulse-orange.svg";
 
 import LoginBox from "../common/LoginBox";
 
 export default function LoginPage(): JSX.Element {
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === "dark";
-  const logoSrc = colorScheme === "dark" ? LogoDark : LogoLight;
   const brandDividerColor = isDark ? "rgba(255,255,255,0.16)" : "#d0d0d0";
   const leftPanelBackground = isDark
     ? "radial-gradient(circle at 20% 30%, rgba(96, 120, 255, 0.18), transparent 28%), radial-gradient(circle at 68% 24%, rgba(255, 148, 54, 0.18), transparent 24%), linear-gradient(180deg, rgba(21,24,31,0.98) 0%, rgba(15,18,24,0.98) 100%)"
@@ -86,12 +84,12 @@ export default function LoginPage(): JSX.Element {
         }}
       >
         <Header.Brand>
-          <Header.BrandLogo>
+          <Header.BrandLogo sx={{ ml: -7 }}>
             <img
-              src={logoSrc}
+              src={Logo}
               alt="App Logo"
               style={{
-                height: 20,
+                height: 40,
                 width: 80,
                 objectFit: "contain",
                 display: "block",
@@ -104,13 +102,13 @@ export default function LoginPage(): JSX.Element {
               height: 20,
               backgroundColor: brandDividerColor,
               display: "inline-block",
-              margin: "0 12px",
+              margin: "0 6px 0 -15px",
               verticalAlign: "middle",
             }}
           />
           <span
             style={{
-              fontSize: 15,
+              fontSize: 18,
               fontWeight: 600,
             }}
           >
@@ -118,7 +116,7 @@ export default function LoginPage(): JSX.Element {
           </span>
         </Header.Brand>
         <Header.Spacer />
-        <Header.Actions>
+        <Header.Actions sx={{ mr: -5 }}>
           <ColorSchemeToggle />
         </Header.Actions>
       </Header>
