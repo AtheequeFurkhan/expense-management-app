@@ -29,8 +29,6 @@ export default function SideCountCard({
   value,
   subtitle = "Employees",
   period,
-  iconBg = "#FFF3E0",
-  iconColor = "#FF9800",
 }: SideCountCardProps) {
   return (
     <Box
