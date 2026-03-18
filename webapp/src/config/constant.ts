@@ -94,5 +94,6 @@ export const MONTH_OPTIONS = [
   { value: "current", label: "Current Month" },
   { value: "pastThree", label: "Past 3 Months" },
   { value: "pastSix", label: "Past 6 Months" },
+  { value: "pastNine", label: "Past 9 Months" },
   { value: "pastTwelve", label: "Past 12 Months" },
 ];

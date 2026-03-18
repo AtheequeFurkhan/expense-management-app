@@ -50,36 +50,56 @@ isolated function getActiveSriLankaEmployeeEmailsQuery() returns sql:Parameteriz
       AND employee_work_email <> ''
 `;
 
-isolated function getClaimEmployeeEmailsForYearQuery(int year) returns sql:ParameterizedQuery => `
+isolated function getClaimEmployeeEmailsForRangeQuery(int year, int month, int months) returns sql:ParameterizedQuery => `
     SELECT DISTINCT employee_email AS employeeEmail
     FROM opd_claim
-    WHERE YEAR(added_date) = ${year}
+    WHERE added_date >= DATE_SUB(
+            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
+            INTERVAL ${months - 1} MONTH
+          )
+      AND added_date < DATE_ADD(
+            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
+            INTERVAL 1 MONTH
+          )
       AND status IN ('0', '2', '3')
       AND employee_email IS NOT NULL
       AND employee_email <> ''
 `;
 
-isolated function getEmployeeTotalsForYearQuery(int year) returns sql:ParameterizedQuery => `
+isolated function getEmployeeTotalsForRangeQuery(int year, int month, int months) returns sql:ParameterizedQuery => `
     SELECT c.employee_email AS employeeEmail,
            COALESCE(SUM(CAST(t.txn_amount AS DECIMAL(10,2))), 0) AS totalAmount
     FROM opd_claim_transaction t
     INNER JOIN opd_claim c
         ON c.id = t.claim_id
-    WHERE YEAR(c.added_date) = ${year}
+    WHERE c.added_date >= DATE_SUB(
+            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
+            INTERVAL ${months - 1} MONTH
+          )
+      AND c.added_date < DATE_ADD(
+            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
+            INTERVAL 1 MONTH
+          )
       AND c.status IN ('0', '2', '3')
       AND c.employee_email IS NOT NULL
       AND c.employee_email <> ''
     GROUP BY c.employee_email
 `;
 
-isolated function getMonthlyClaimTransactionsQuery(int year, int month) returns sql:ParameterizedQuery => `
+isolated function getMonthlyClaimTransactionsQuery(int year, int month, int months) returns sql:ParameterizedQuery => `
     SELECT c.employee_email AS employeeEmail,
            CAST(t.txn_amount AS DECIMAL(10,2)) AS amount
     FROM opd_claim_transaction t
     INNER JOIN opd_claim c
         ON c.id = t.claim_id
-    WHERE YEAR(c.added_date) = ${year}
-      AND MONTH(c.added_date) = ${month}
+    WHERE c.added_date >= DATE_SUB(
+            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
+            INTERVAL ${months - 1} MONTH
+          )
+      AND c.added_date < DATE_ADD(
+            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
+            INTERVAL 1 MONTH
+          )
       AND c.status IN ('0', '2', '3')
       AND c.employee_email IS NOT NULL
       AND c.employee_email <> ''

@@ -12,7 +12,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License
 // for the specific language governing permissions and limitations under
 // the License.
-import { Box, MenuItem, Popover, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
+import { Box, MenuItem, Popover, Skeleton, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
 import { ChevronDown } from "@wso2/oxygen-ui-icons-react";
 
 import { useState } from "react";
@@ -26,6 +26,7 @@ interface ActiveClaimsChartProps {
   title: string;
   month: string;
   onMonthChange: (value: string) => void;
+  loading?: boolean;
   monthOptions: FilterOption[];
   values: number[];
   yAxisLabels: number[];
@@ -39,6 +40,7 @@ export default function ActiveClaimsChart({
   title,
   month,
   onMonthChange,
+  loading = false,
   monthOptions,
   values,
   yAxisLabels,
@@ -62,6 +64,7 @@ export default function ActiveClaimsChart({
 
   const xTickLabels = xAxisLabels.map((label) => label.split("-")[0].trim());
   const lastTickLabel = xAxisLabels[xAxisLabels.length - 1]?.split("-")[1]?.trim() ?? "";
+  const skeletonHeights = [78, 52, 66, 44, 58, 36, 48, 72];
 
   return (
     <Box
@@ -202,9 +205,35 @@ export default function ActiveClaimsChart({
               gap: "2px",
             }}
           >
-            {values.map((value, index) => {
+            {(loading ? skeletonHeights : values).map((value, index) => {
               const heightPercent = Math.min(100, (value / normalizedMaxBarValue) * 100);
               const isHovered = hoveredIndex === index;
+
+              if (loading) {
+                return (
+                  <Box
+                    key={`loading-${index}`}
+                    sx={{
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "flex-end",
+                    }}
+                  >
+                    <Skeleton
+                      variant="rectangular"
+                      animation="wave"
+                      sx={{
+                        width: "100%",
+                        height: `${heightPercent}%`,
+                        borderRadius: "6px 6px 0 0",
+                        transform: `scaleY(${0.92 + index * 0.01})`,
+                        transformOrigin: "bottom",
+                        opacity: 0.9,
+                      }}
+                    />
+                  </Box>
+                );
+              }
 
               return (
                 <Tooltip

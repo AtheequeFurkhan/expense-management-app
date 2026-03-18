@@ -32,6 +32,7 @@ import { useMemo, useState } from "react";
 import LogoLight from "@assets/images/WSO2-Logo-Black.png";
 import LogoDark from "@assets/images/WSO2-Logo-White.png";
 import { Role } from "@slices/authSlice/auth";
+import { useAppSelector } from "@slices/store";
 import { getActiveRouteDetails } from "@src/route";
 
 function Layout() {
@@ -43,8 +44,15 @@ function Layout() {
   const logoSrc = colorScheme === "dark" ? LogoDark : LogoLight;
 
   const { signOut, state: authState } = useAuthContext();
-  const userName = authState?.displayName || authState?.username || "User";
-  const userEmail = authState?.email || "";
+  const employeeInfo = useAppSelector((state) => state.user.userInfo);
+  const firstName = employeeInfo?.firstName?.trim();
+  const lastName = employeeInfo?.lastName?.trim();
+  const userName =
+    [firstName, lastName].filter(Boolean).join(" ") ||
+    authState?.displayName ||
+    authState?.username ||
+    "User";
+  const userEmail = employeeInfo?.workEmail || authState?.email || "";
   const userInitials = userName
     .split(" ")
     .map((n) => n[0])
@@ -109,7 +117,7 @@ function Layout() {
                 name={userName}
                 email={userEmail}
                 avatar={userInitials}
-                role="Admin"
+                role="Finance Admin"
               />
               <UserMenu.Item
                 icon={<UserRound size={18} />}
