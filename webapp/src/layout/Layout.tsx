@@ -23,14 +23,12 @@ import {
   Sidebar,
   UserMenu,
 } from "@wso2/oxygen-ui";
-import { useColorScheme } from "@wso2/oxygen-ui";
 import { LogOut, Settings, ShieldUser, UserRound } from "lucide-react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useMemo, useState } from "react";
 
-import LogoDark from "@assets/images/pulse-orange.svg";
-import LogoLight from "@assets/images/pulse-orange.svg";
+import Logo from "@assets/images/pulse-orange.svg";
 import { Role } from "@slices/authSlice/auth";
 import { useAppSelector } from "@slices/store";
 import { getActiveRouteDetails } from "@src/route";
@@ -39,9 +37,6 @@ function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
-
-  const { colorScheme } = useColorScheme();
-  const logoSrc = colorScheme === "dark" ? LogoDark : LogoLight;
 
   const { signOut, state: authState } = useAuthContext();
   const employeeInfo = useAppSelector((state) => state.user.userInfo);
@@ -79,7 +74,7 @@ function Layout() {
           <Header.Brand>
             <Header.BrandLogo>
               <img
-                src={logoSrc}
+                src={Logo}
                 alt="App Logo"
                 style={{
                   height: 35,
