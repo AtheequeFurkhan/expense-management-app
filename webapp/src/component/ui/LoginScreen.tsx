@@ -19,6 +19,7 @@ import {
   Box,
   ColorSchemeToggle,
   Grid,
+  Header,
   Paper,
   Stack,
   Typography,
@@ -28,7 +29,6 @@ import { CopyPlus, Landmark, Scale, ShieldPlus } from "lucide-react";
 
 import { type JSX } from "react";
 
-import EmaIllustration from "@assets/images/EMA.png";
 import LogoLight from "@assets/images/WSO2-Logo-Black.png";
 import LogoDark from "@assets/images/WSO2-Logo-White.png";
 
@@ -36,7 +36,15 @@ import LoginBox from "../common/LoginBox";
 
 export default function LoginPage(): JSX.Element {
   const { colorScheme } = useColorScheme();
+  const isDark = colorScheme === "dark";
   const logoSrc = colorScheme === "dark" ? LogoDark : LogoLight;
+  const brandDividerColor = isDark ? "rgba(255,255,255,0.16)" : "#d0d0d0";
+  const leftPanelBackground = isDark
+    ? "radial-gradient(circle at 20% 30%, rgba(96, 120, 255, 0.18), transparent 28%), radial-gradient(circle at 68% 24%, rgba(255, 148, 54, 0.18), transparent 24%), linear-gradient(180deg, rgba(21,24,31,0.98) 0%, rgba(15,18,24,0.98) 100%)"
+    : "radial-gradient(circle at 20% 30%, rgba(96, 120, 255, 0.12), transparent 28%), radial-gradient(circle at 68% 24%, rgba(255, 148, 54, 0.16), transparent 24%), linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,249,252,0.98) 100%)";
+  const leftPanelPattern = isDark
+    ? "radial-gradient(circle at 10% 15%, rgba(255,255,255,0.18) 0 2px, transparent 3px), radial-gradient(circle at 45% 10%, rgba(255,255,255,0.16) 0 2px, transparent 3px), radial-gradient(circle at 72% 22%, rgba(255,255,255,0.14) 0 2px, transparent 3px), radial-gradient(circle at 82% 56%, rgba(255,255,255,0.16) 0 2px, transparent 3px)"
+    : "radial-gradient(circle at 10% 15%, #6a6f7d 0 2px, transparent 3px), radial-gradient(circle at 45% 10%, #6a6f7d 0 2px, transparent 3px), radial-gradient(circle at 72% 22%, #6a6f7d 0 2px, transparent 3px), radial-gradient(circle at 82% 56%, #6a6f7d 0 2px, transparent 3px)";
   const sloganListItems: {
     icon: JSX.Element;
     title: string;
@@ -68,24 +76,52 @@ export default function LoginPage(): JSX.Element {
         flexDirection: "column",
       }}
     >
-      <Box
+      <Header
+        minimal
         sx={{
-          height: 88,
           px: { xs: 3, md: 5 },
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
           borderBottom: "1px solid",
           borderColor: "divider",
           bgcolor: "background.paper",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-          <Box component="img" src={logoSrc} alt="WSO2 Logo" sx={{ height: 28, width: "auto" }} />
-          <Typography sx={{ fontSize: 18, fontWeight: 600 }}>Expense Management Portal</Typography>
-        </Box>
-        <ColorSchemeToggle />
-      </Box>
+        <Header.Brand>
+          <Header.BrandLogo>
+            <img
+              src={logoSrc}
+              alt="App Logo"
+              style={{
+                height: 20,
+                width: 80,
+                objectFit: "contain",
+                display: "block",
+              }}
+            />
+          </Header.BrandLogo>
+          <span
+            style={{
+              width: 1,
+              height: 20,
+              backgroundColor: brandDividerColor,
+              display: "inline-block",
+              margin: "0 12px",
+              verticalAlign: "middle",
+            }}
+          />
+          <span
+            style={{
+              fontSize: 15,
+              fontWeight: 600,
+            }}
+          >
+            Expense Management Dashboard
+          </span>
+        </Header.Brand>
+        <Header.Spacer />
+        <Header.Actions>
+          <ColorSchemeToggle />
+        </Header.Actions>
+      </Header>
 
       <Grid
         container
@@ -98,8 +134,8 @@ export default function LoginPage(): JSX.Element {
           size={{ xs: 12, md: 8.2 }}
           sx={{
             display: "flex",
-            alignItems: "stretch",
-            justifyContent: "flex-start",
+            alignItems: "center",
+            justifyContent: "center",
             p: { xs: 3, md: 6 },
             position: "relative",
             overflow: "hidden",
@@ -107,17 +143,15 @@ export default function LoginPage(): JSX.Element {
             borderColor: "divider",
             borderRadius: { xs: 3, md: "24px 0 0 24px" },
             bgcolor: "background.paper",
-            background:
-              "radial-gradient(circle at 20% 30%, rgba(96, 120, 255, 0.12), transparent 28%), radial-gradient(circle at 68% 24%, rgba(255, 148, 54, 0.16), transparent 24%), linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,249,252,0.98) 100%)",
+            background: leftPanelBackground,
           }}
         >
           <Box
             sx={{
               position: "absolute",
               inset: 0,
-              opacity: 0.18,
-              backgroundImage:
-                "radial-gradient(circle at 10% 15%, #6a6f7d 0 2px, transparent 3px), radial-gradient(circle at 45% 10%, #6a6f7d 0 2px, transparent 3px), radial-gradient(circle at 72% 22%, #6a6f7d 0 2px, transparent 3px), radial-gradient(circle at 82% 56%, #6a6f7d 0 2px, transparent 3px)",
+              opacity: isDark ? 0.28 : 0.18,
+              backgroundImage: leftPanelPattern,
               pointerEvents: "none",
             }}
           />
@@ -125,9 +159,11 @@ export default function LoginPage(): JSX.Element {
             <Stack
               direction="column"
               alignItems="start"
-              gap={2}
-              maxWidth={700}
+              justifyContent="center"
+              gap={1.5}
+              maxWidth={760}
               display={{ xs: "none", md: "flex" }}
+              sx={{ minHeight: 420 }}
             >
               <Typography
                 variant="h4"
@@ -150,7 +186,7 @@ export default function LoginPage(): JSX.Element {
                 Manage claims, track employee submissions, and review finance operations in one
                 place.
               </Typography>
-              <Stack sx={{ gap: 3, mt: 2 }}>
+              <Stack sx={{ gap: 2.25, mt: 1.5 }}>
                 {sloganListItems.map((item) => (
                   <Stack key={item.title} direction="row" sx={{ gap: 2.5, alignItems: "center" }}>
                     <Box sx={{ color: "text.secondary", display: "flex", alignItems: "center" }}>
@@ -164,20 +200,6 @@ export default function LoginPage(): JSX.Element {
               </Stack>
             </Stack>
           </Box>
-          <Box
-            component="img"
-            src={EmaIllustration}
-            alt="Expense Management Illustration"
-            sx={{
-              position: "absolute",
-              bottom: { md: -16, lg: -24 },
-              right: { md: -60, lg: -100 },
-              width: { md: 400, lg: 560 },
-              maxWidth: "52%",
-              display: { xs: "none", md: "block" },
-              opacity: 0.96,
-            }}
-          />
         </Grid>
 
         <Grid size={{ xs: 12, md: 3.8 }}>

@@ -15,13 +15,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-import {
-  Alert,
-  Box,
-  Button,
-  Link,
-  Typography,
-} from "@wso2/oxygen-ui";
+import { Alert, Box, Button, Link, Typography } from "@wso2/oxygen-ui";
 import { ArrowRight } from "@wso2/oxygen-ui-icons-react";
 
 import { type JSX, useState } from "react";
@@ -45,7 +39,7 @@ export default function LoginBox(): JSX.Element {
 
   return (
     <form onSubmit={handleLogin}>
-      <Box sx={{ mb: 5 }}>
+      <Box sx={{ mb: 4 }}>
         <Typography variant="h2" gutterBottom sx={{ fontWeight: 500, letterSpacing: "-0.02em" }}>
           Login to Account
         </Typography>
@@ -60,21 +54,23 @@ export default function LoginBox(): JSX.Element {
         </Alert>
       )}
 
-      <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 4 }}>
+      <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 3 }}>
         <Button
-          fullWidth
           variant="contained"
           type="submit"
           disabled={isSubmitting}
           sx={{
-            mt: 1,
-            minHeight: 56,
+            mt: 0.5,
+            minHeight: 48,
+            width: "100%",
+            maxWidth: 300,
             borderRadius: 999,
-            fontSize: 18,
-            fontWeight: 500,
+            fontSize: 16,
+            fontWeight: 600,
             textTransform: "none",
             background: "linear-gradient(90deg, #ff7a18 0%, #ff4d2d 100%)",
             boxShadow: "none",
+            alignSelf: "flex-start",
             "&:hover": {
               boxShadow: "none",
               background: "linear-gradient(90deg, #ff7a18 0%, #ff4d2d 100%)",
@@ -88,11 +84,11 @@ export default function LoginBox(): JSX.Element {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: 1.25,
+              gap: 1,
             }}
           >
             <span>{isSubmitting ? "Continuing..." : "Continue"}</span>
-            <ArrowRight size={20} />
+            <ArrowRight size={18} />
           </Box>
         </Button>
       </Box>
@@ -100,11 +96,11 @@ export default function LoginBox(): JSX.Element {
       <Box
         component="footer"
         sx={{
-          mt: { xs: 8, md: 16 },
+          mt: { xs: 7, md: 12 },
           display: "flex",
           flexDirection: "column",
           alignItems: { xs: "flex-start", md: "center" },
-          gap: 2,
+          gap: 1.5,
         }}
       >
         <Typography sx={{ color: "text.secondary", fontSize: 14 }}>
