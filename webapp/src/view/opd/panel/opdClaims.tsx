@@ -15,7 +15,7 @@
 // under the License.
 import { Alert, Box, Stack } from "@wso2/oxygen-ui";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import {
   MONTH_OPTIONS,
@@ -39,8 +39,18 @@ const prevMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLoc
 export default function OpdClaims() {
   const dispatch = useAppDispatch();
   const { data, month, loading, error, handleMonthChange } = useOpdClaims();
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [showChartLoading, setShowChartLoading] = useState(false);
 
   const selectedPeriodLabel = MONTH_OPTIONS.find((option) => option.value === month)?.label ?? "";
+  const chartMaxValue = Math.max(...data.activeClaimsData, 1);
+  const chartYAxisLabels = [
+    chartMaxValue,
+    Math.round(chartMaxValue * 0.75),
+    Math.round(chartMaxValue * 0.5),
+    Math.round(chartMaxValue * 0.25),
+    0,
+  ];
 
   useEffect(() => {
     return () => {
@@ -48,7 +58,28 @@ export default function OpdClaims() {
     };
   }, [dispatch]);
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading && !error) {
+      setHasLoadedOnce(true);
+    }
+  }, [loading, error]);
+
+  useEffect(() => {
+    if (!(loading && hasLoadedOnce)) {
+      setShowChartLoading(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowChartLoading(true);
+    }, 120);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [loading, hasLoadedOnce]);
+
+  if (loading && !hasLoadedOnce) {
     return (
       <Box
         sx={{
@@ -153,23 +184,25 @@ export default function OpdClaims() {
           display: "grid",
           gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 3fr) minmax(260px, 1fr)" },
           gap: 2,
-          alignItems: "flex-start", // <-- fixed: prevent chart from stretching vertically
+          alignItems: "stretch",
         }}
       >
         <ActiveClaimsChart
+          key={`${month}-${data.activeClaimsData.join("-")}`}
           title="Total Active Claims"
           month={month}
           onMonthChange={(value) => handleMonthChange(value as MonthFilter)}
+          loading={showChartLoading}
           monthOptions={MONTH_OPTIONS}
           values={data.activeClaimsData}
-          yAxisLabels={OPD_CHART_CONFIG.yAxisLabels}
+          yAxisLabels={chartYAxisLabels}
           xAxisLabels={OPD_CHART_CONFIG.xAxisLabels}
-          maxBarValue={OPD_CHART_CONFIG.maxBarValue}
+          maxBarValue={chartMaxValue}
           chartHeight={OPD_CHART_CONFIG.chartHeight}
           barGap={OPD_CHART_CONFIG.barGap}
         />
 
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, height: "100%" }}>
           <SideCountCard
             title={OPD_SIDE_CARDS_CONFIG.unclaimed.title}
             value={data.unclaimedCount.toString()}

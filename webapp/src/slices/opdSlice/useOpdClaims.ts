@@ -22,7 +22,7 @@ import { useEffect } from "react";
 import type { AppDispatch, RootState } from "@slices/store";
 import { apiService } from "@utils/apiService";
 
-export type MonthFilter = "current" | "pastThree" | "pastSix" | "pastTwelve" | "all";
+export type MonthFilter = "current" | "pastThree" | "pastSix" | "pastNine" | "pastTwelve" | "all";
 
 export interface OpdClaimsData {
   claimAmountLastYear: number;
@@ -115,10 +115,30 @@ const resolveMonthParam = (month: MonthFilter): string | undefined => {
     case "current":
     case "pastThree":
     case "pastSix":
+    case "pastNine":
     case "pastTwelve":
       return currentMonth;
     default:
       return currentMonth;
+  }
+};
+
+const resolveMonthsParam = (month: MonthFilter): string | undefined => {
+  switch (month) {
+    case "current":
+      return "1";
+    case "pastThree":
+      return "3";
+    case "pastSix":
+      return "6";
+    case "pastNine":
+      return "9";
+    case "pastTwelve":
+      return "12";
+    case "all":
+      return undefined;
+    default:
+      return "1";
   }
 };
 
@@ -130,8 +150,12 @@ export const fetchOpdClaims = createAsyncThunk<
   try {
     const params: Record<string, string> = { year };
     const resolvedMonth = resolveMonthParam(month);
+    const resolvedMonths = resolveMonthsParam(month);
     if (resolvedMonth) {
       params.month = resolvedMonth;
+    }
+    if (resolvedMonths) {
+      params.months = resolvedMonths;
     }
 
     const response = await apiService.get<Partial<OpdClaimsData & BackendOpdClaimsData> | null>(
