@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
@@ -36,6 +35,21 @@ export interface OpdClaimsData {
   trendLastYear: number;
   trendCurrentMonth: number;
   trendPreviousYear: number;
+}
+
+interface BackendClaimBucket {
+  range: string;
+  count: number;
+}
+
+interface BackendOpdClaimsData {
+  lastYearClaimAmount?: number;
+  currentMonthClaimAmount?: number;
+  previousYearClaimCount?: number;
+  gracePeriodClaims?: number;
+  activeClaimsChart?: BackendClaimBucket[];
+  unclaimedEmployees?: number;
+  fullyClaimedEmployees?: number;
 }
 
 export interface OpdClaimsState {
@@ -67,16 +81,26 @@ const initialState: OpdClaimsState = {
   error: null,
 };
 
-const normalizeOpdClaimsData = (data?: Partial<OpdClaimsData> | null): OpdClaimsData => ({
-  claimAmountLastYear: data?.claimAmountLastYear ?? DEFAULT_OPD_DATA.claimAmountLastYear,
+const normalizeOpdClaimsData = (
+  data?: Partial<OpdClaimsData & BackendOpdClaimsData> | null,
+): OpdClaimsData => ({
+  claimAmountLastYear:
+    data?.claimAmountLastYear ?? data?.lastYearClaimAmount ?? DEFAULT_OPD_DATA.claimAmountLastYear,
   currentMonthClaimAmount:
     data?.currentMonthClaimAmount ?? DEFAULT_OPD_DATA.currentMonthClaimAmount,
   claimsCountPreviousYear:
-    data?.claimsCountPreviousYear ?? DEFAULT_OPD_DATA.claimsCountPreviousYear,
+    data?.claimsCountPreviousYear ??
+    data?.previousYearClaimCount ??
+    DEFAULT_OPD_DATA.claimsCountPreviousYear,
   gracePeriodClaims: data?.gracePeriodClaims ?? DEFAULT_OPD_DATA.gracePeriodClaims,
-  activeClaimsData: data?.activeClaimsData ?? DEFAULT_OPD_DATA.activeClaimsData,
-  unclaimedCount: data?.unclaimedCount ?? DEFAULT_OPD_DATA.unclaimedCount,
-  fullyClaimedCount: data?.fullyClaimedCount ?? DEFAULT_OPD_DATA.fullyClaimedCount,
+  activeClaimsData:
+    data?.activeClaimsData ??
+    data?.activeClaimsChart?.map((bucket) => bucket.count) ??
+    DEFAULT_OPD_DATA.activeClaimsData,
+  unclaimedCount:
+    data?.unclaimedCount ?? data?.unclaimedEmployees ?? DEFAULT_OPD_DATA.unclaimedCount,
+  fullyClaimedCount:
+    data?.fullyClaimedCount ?? data?.fullyClaimedEmployees ?? DEFAULT_OPD_DATA.fullyClaimedCount,
   trendLastYear: data?.trendLastYear ?? DEFAULT_OPD_DATA.trendLastYear,
   trendCurrentMonth: data?.trendCurrentMonth ?? DEFAULT_OPD_DATA.trendCurrentMonth,
   trendPreviousYear: data?.trendPreviousYear ?? DEFAULT_OPD_DATA.trendPreviousYear,
@@ -110,7 +134,10 @@ export const fetchOpdClaims = createAsyncThunk<
       params.month = resolvedMonth;
     }
 
-    const response = await apiService.get<Partial<OpdClaimsData> | null>("/opd-claims", { params });
+    const response = await apiService.get<Partial<OpdClaimsData & BackendOpdClaimsData> | null>(
+      "/opd-claims",
+      { params },
+    );
     return normalizeOpdClaimsData(response?.data);
   } catch (err) {
     if (axios.isCancel(err)) {

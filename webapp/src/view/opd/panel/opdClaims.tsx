@@ -153,7 +153,7 @@ export default function OpdClaims() {
           display: "grid",
           gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 3fr) minmax(260px, 1fr)" },
           gap: 2,
-          alignItems: "stretch",
+          alignItems: "flex-start", // <-- fixed: prevent chart from stretching vertically
         }}
       >
         <ActiveClaimsChart

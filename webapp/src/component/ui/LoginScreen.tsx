@@ -13,10 +13,20 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { useAuthContext } from "@asgardeo/auth-react";
-import { Box, Button, Card, CardContent, Typography, useTheme } from "@wso2/oxygen-ui";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Container,
+  Stack,
+  Typography,
+  useTheme,
+} from "@wso2/oxygen-ui";
 import { LogIn } from "@wso2/oxygen-ui-icons-react";
+
+import logoSrc from "@src/assets/images/WSO2-Logo-White.png";
 
 export default function LoginScreen() {
   const theme = useTheme();
@@ -25,32 +35,55 @@ export default function LoginScreen() {
   return (
     <Box
       sx={{
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
         minHeight: "100vh",
-        backgroundColor: theme.palette.background.default,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
       }}
     >
-      <Card sx={{ maxWidth: 400, width: "100%", textAlign: "center" }}>
-        <CardContent sx={{ p: 4 }}>
-          <Typography variant="h4" gutterBottom fontWeight="bold">
-            Welcome
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Sign in to continue
-          </Typography>
-          <Button
-            variant="contained"
-            size="large"
-            startIcon={<LogIn size={20} />}
-            onClick={() => signIn()}
-            fullWidth
-          >
-            Sign In
-          </Button>
-        </CardContent>
-      </Card>
+      <Container maxWidth="sm">
+        <Card
+          sx={{
+            boxShadow: theme.shadows[8],
+            borderRadius: 2,
+          }}
+        >
+          <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+            <Stack spacing={3} alignItems="center">
+              {/* Logo */}
+              <img src={logoSrc} alt="WSO2 Logo" style={{ height: 32 }} />
+
+              {/* Title */}
+              <Stack spacing={1} alignItems="center" textAlign="center">
+                <Typography variant="h4" fontWeight="bold">
+                  Expense Management Dashboard
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Sign in to your account to continue
+                </Typography>
+              </Stack>
+
+              {/* Login Button */}
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<LogIn size={20} />}
+                onClick={() => signIn()}
+                fullWidth
+                sx={{ mt: 2 }}
+              >
+                Sign In with Asgardeo
+              </Button>
+
+              {/* Footer */}
+              <Typography variant="caption" color="text.secondary" sx={{ pt: 2 }}>
+                © 2026 WSO2 LLC. All rights reserved.
+              </Typography>
+            </Stack>
+          </CardContent>
+        </Card>
+      </Container>
     </Box>
   );
 }

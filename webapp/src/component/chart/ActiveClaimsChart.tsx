@@ -8,11 +8,10 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //
 // Unless required by applicable law or agreed to in writing,
-// software distributed under the License is distributed on an
-// "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-// KIND, either express or implied.  See the License for the
-// specific language governing permissions and limitations
-// under the License.
+// this file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+// CONDITIONS OF ANY KIND, either express or implied. See the License
+// for the specific language governing permissions and limitations under
+// the License.
 import { Box, MenuItem, Popover, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
 import { ChevronDown } from "@wso2/oxygen-ui-icons-react";
 
@@ -58,13 +57,16 @@ export default function ActiveClaimsChart({
 
   const selectedLabel = monthOptions.find((o) => o.value === month)?.label ?? "";
 
+  // Ensure we never divide by 0 and we never overflow the chart height.
+  const normalizedMaxBarValue = Math.max(maxBarValue, ...values, 1);
+
   const xTickLabels = xAxisLabels.map((label) => label.split("-")[0].trim());
   const lastTickLabel = xAxisLabels[xAxisLabels.length - 1]?.split("-")[1]?.trim() ?? "";
 
   return (
     <Box
       sx={{
-        p: 2.5,
+        p: 2,
         borderRadius: 1,
         border: "1px solid",
         borderColor: "divider",
@@ -201,7 +203,7 @@ export default function ActiveClaimsChart({
             }}
           >
             {values.map((value, index) => {
-              const heightPercent = (value / maxBarValue) * 100;
+              const heightPercent = Math.min(100, (value / normalizedMaxBarValue) * 100);
               const isHovered = hoveredIndex === index;
 
               return (
