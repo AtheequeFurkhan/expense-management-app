@@ -40,7 +40,7 @@ export default function LoginBox(): JSX.Element {
   return (
     <form onSubmit={handleLogin}>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h2" gutterBottom sx={{ fontWeight: 500, letterSpacing: "-0.02em" }}>
+        <Typography variant="h4" gutterBottom sx={{ fontWeight: 600, letterSpacing: "-0.02em" }}>
           Login to Account
         </Typography>
         <Typography sx={{ color: "text.secondary", maxWidth: 420, fontSize: 16, lineHeight: 1.6 }}>
