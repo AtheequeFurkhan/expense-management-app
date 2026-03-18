@@ -29,8 +29,8 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useMemo, useState } from "react";
 
-import LogoLight from "@assets/images/WSO2-Logo-Black.png";
-import LogoDark from "@assets/images/WSO2-Logo-White.png";
+import LogoDark from "@assets/images/pulse-orange.svg";
+import LogoLight from "@assets/images/pulse-orange.svg";
 import { Role } from "@slices/authSlice/auth";
 import { useAppSelector } from "@slices/store";
 import { getActiveRouteDetails } from "@src/route";
@@ -82,8 +82,8 @@ function Layout() {
                 src={logoSrc}
                 alt="App Logo"
                 style={{
-                  height: 20,
-                  width: 80,
+                  height: 35,
+                  width: 40,
                   objectFit: "contain",
                   display: "block",
                 }}
@@ -91,18 +91,8 @@ function Layout() {
             </Header.BrandLogo>
             <span
               style={{
-                width: 1,
-                height: 20,
-                backgroundColor: "#d0d0d0",
-                display: "inline-block",
-                margin: "0 12px",
-                verticalAlign: "middle",
-              }}
-            />
-            <span
-              style={{
                 fontSize: 18,
-                fontWeight: 600,
+                fontWeight: 500,
               }}
             >
               Expense Management Dashboard
