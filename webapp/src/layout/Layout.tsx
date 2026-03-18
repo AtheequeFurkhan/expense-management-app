@@ -101,7 +101,7 @@ function Layout() {
             />
             <span
               style={{
-                fontSize: 15,
+                fontSize: 18,
                 fontWeight: 600,
               }}
             >
