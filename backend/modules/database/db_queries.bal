@@ -20,7 +20,7 @@ isolated function getLastYearClaimAmountQuery(int year) returns sql:Parameterize
     FROM opd_claim_transaction t
     INNER JOIN opd_claim c
         ON c.id = t.claim_id
-    WHERE YEAR(c.added_date) = ${year - 1}
+    WHERE YEAR(c.added_date) = ${year}
       AND c.status IN ('0', '2', '3')
 `;
 
