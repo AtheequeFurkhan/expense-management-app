@@ -34,8 +34,27 @@ import type { RouteDetail, RouteObjectWithRole } from "./types/types";
 
 export const routes: RouteObjectWithRole[] = [
   {
+    path: "/profile",
+    text: "Profile",
+    label: "Profile",
+    icon: undefined,
+    element: React.createElement(View.profile),
+    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
+    bottomNav: false,
+  },
+  {
+    path: "/admin",
+    text: "Admin Panel",
+    label: "Admin Panel",
+    icon: undefined,
+    element: React.createElement(View.admin),
+    allowRoles: [Role.ADMIN, Role.EMPLOYEE],
+    bottomNav: false,
+  },
+  {
     path: "/settings",
     text: "Settings",
+    label: "Settings",
     icon: React.createElement(Settings),
     element: React.createElement(View.settings),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
@@ -44,6 +63,7 @@ export const routes: RouteObjectWithRole[] = [
   {
     path: "/opd-claim-summary",
     text: "OPD Claims",
+    label: "OPD Claims",
     icon: React.createElement(HeartPulse),
     element: React.createElement(View.opd),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
@@ -51,6 +71,7 @@ export const routes: RouteObjectWithRole[] = [
   {
     path: "/expense-claim-summary",
     text: "Expense Claims",
+    label: "Expense Claims",
     icon: React.createElement(BanknoteArrowDown),
     element: React.createElement(View.expense),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
@@ -58,6 +79,7 @@ export const routes: RouteObjectWithRole[] = [
   {
     path: "/employee-summary",
     text: "Employees",
+    label: "Employees",
     icon: React.createElement(Users),
     element: React.createElement(View.employees),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
@@ -65,6 +87,7 @@ export const routes: RouteObjectWithRole[] = [
   {
     path: "/credit-card-summary",
     text: "Card Claims",
+    label: "Card Claims",
     icon: React.createElement(CreditCard),
     element: React.createElement(View.card),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
@@ -72,6 +95,7 @@ export const routes: RouteObjectWithRole[] = [
   {
     path: "/report-summary",
     text: "Reports",
+    label: "Reports",
     icon: React.createElement(FilePlus),
     element: React.createElement(View.reports),
     allowRoles: [Role.ADMIN, Role.EMPLOYEE],
@@ -79,6 +103,8 @@ export const routes: RouteObjectWithRole[] = [
 ];
 
 const hiddenNavigationPaths = new Set([
+  "/profile",
+  "/admin",
   "/expense-claim-summary",
   "/employee-summary",
   "/credit-card-summary",
