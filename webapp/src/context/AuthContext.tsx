@@ -20,7 +20,7 @@ import { useIdleTimer } from "react-idle-timer";
 
 import React, { useCallback, useContext, useEffect, useRef, useState } from "react";
 
-import PreLoader from "@component/common/PreLoader";
+import BackgroundLoader from "@component/common/BackgroundLoader";
 import SessionWarningDialog from "@component/common/SessionWarningDialog";
 import { redirectUrl } from "@config/constant";
 import { loadPrivileges, setAuthError, setUserAuthData } from "@slices/authSlice/auth";
@@ -48,7 +48,6 @@ const promptBeforeIdle = 4_000;
 const AppAuthProvider = (props: { children: React.ReactNode }) => {
   const [sessionWarningOpen, setSessionWarningOpen] = useState<boolean>(false);
   const [appState, setAppState] = useState<AppState>(AppState.Loading);
-  const [isBootstrapping, setIsBootstrapping] = useState(false);
   const initializedUserRef = useRef<string | null>(null);
   const signInTriggeredRef = useRef(false);
 
@@ -87,7 +86,6 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
   const appSignOut = useCallback(async () => {
     initializedUserRef.current = null;
     signInTriggeredRef.current = false;
-    setIsBootstrapping(false);
     await signOut();
     setAppState(AppState.Unauthenticated);
   }, [signOut]);
@@ -166,14 +164,12 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
 
     if (!state.isAuthenticated) {
       initializedUserRef.current = null;
-      setIsBootstrapping(false);
       setAppState(AppState.Unauthenticated);
       return;
     }
 
     const userKey = state.username || state.email || state.sub || "authenticated-user";
     if (initializedUserRef.current === userKey) {
-      setIsBootstrapping(false);
       setAppState(AppState.Authenticated);
       return;
     }
@@ -182,7 +178,6 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
 
     const bootstrapAuthenticatedUser = async () => {
       try {
-        setIsBootstrapping(true);
         setAppState(AppState.Loading);
         await setupAuthenticatedUser();
 
@@ -204,10 +199,6 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
         console.error("Auth bootstrap failed:", error);
         if (!cancelled) {
           dispatch(setAuthError());
-        }
-      } finally {
-        if (!cancelled) {
-          setIsBootstrapping(false);
         }
       }
     };
@@ -235,12 +226,7 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
   const renderContent = () => {
     switch (appState) {
       case AppState.Loading:
-        return (
-          <PreLoader
-            isLoading
-            message={isBootstrapping ? "Loading User Info ..." : "Loading ..."}
-          />
-        );
+        return <BackgroundLoader loading />;
 
       case AppState.Authenticated:
         return <AuthContext.Provider value={authContext}>{props.children}</AuthContext.Provider>;
@@ -248,7 +234,7 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
       case AppState.Unauthenticated:
         return (
           <AuthContext.Provider value={authContext}>
-            <PreLoader isLoading message="Redirecting to login ..." />
+            <BackgroundLoader loading />
           </AuthContext.Provider>
         );
 
