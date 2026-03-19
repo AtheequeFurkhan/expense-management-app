@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { Box, LinearProgress } from "@wso2/oxygen-ui";
+import { Box, CircularProgress } from "@wso2/oxygen-ui";
 
 interface BackgroundLoaderProps {
   loading: boolean;
@@ -24,8 +24,20 @@ function BackgroundLoader({ loading }: BackgroundLoaderProps) {
   if (!loading) return null;
 
   return (
-    <Box sx={{ width: "100%", position: "fixed", top: 0, left: 0, zIndex: 9999 }}>
-      <LinearProgress />
+    <Box
+      sx={{
+        width: "100%",
+        height: "100vh",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <CircularProgress size={60} />
     </Box>
   );
 }
