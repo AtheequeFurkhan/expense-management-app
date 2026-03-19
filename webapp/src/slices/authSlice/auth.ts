@@ -30,7 +30,6 @@ export enum Role {
   EMPLOYEE = "EMPLOYEE",
 }
 
-// Custom extended interface
 interface ExtendedDecodedIDTokenPayload extends DecodedIDTokenPayload {
   groups?: string[];
 }
