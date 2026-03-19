@@ -12,6 +12,7 @@
 // CONDITIONS OF ANY KIND, either express or implied. See the License
 // for the specific language governing permissions and limitations under
 // the License.
+
 import { Box, MenuItem, Popover, Skeleton, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
 import { ChevronDown } from "@wso2/oxygen-ui-icons-react";
 
@@ -59,7 +60,6 @@ export default function ActiveClaimsChart({
 
   const selectedLabel = monthOptions.find((o) => o.value === month)?.label ?? "";
 
-  // Ensure we never divide by 0 and we never overflow the chart height.
   const normalizedMaxBarValue = Math.max(maxBarValue, ...values, 1);
 
   const xTickLabels = xAxisLabels.map((label) => label.split("-")[0].trim());

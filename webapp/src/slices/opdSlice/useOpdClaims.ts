@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
@@ -218,11 +219,6 @@ export const selectOpdClaimsFilters = (state: RootState) => ({
   year: selectOpdClaimsState(state).year,
 });
 
-/**
- * Encapsulates all OPD claims state access and side-effects.
- * Components only import this hook — they never touch the slice directly
- * unless they need a specific action like resetOpdClaims.
- */
 export function useOpdClaims() {
   const dispatch = useDispatch<AppDispatch>();
   const { data, month, year, loading, error } = useSelector(selectOpdClaimsState);
