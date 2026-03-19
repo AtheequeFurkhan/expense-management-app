@@ -22,7 +22,6 @@ import {
   Header,
   Sidebar,
   UserMenu,
-  useColorScheme,
 } from "@wso2/oxygen-ui";
 import { LogOut, Settings, ShieldUser, UserRound } from "lucide-react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -38,9 +37,6 @@ function Layout() {
   const location = useLocation();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
-  const { colorScheme } = useColorScheme();
-  const brandDividerColor =
-    colorScheme === "dark" ? "rgba(255,255,255,0.16)" : "#d0d0d0";
 
   const { signOut, state: authState } = useAuthContext();
   const employeeInfo = useAppSelector((state) => state.user.userInfo);
@@ -73,15 +69,7 @@ function Layout() {
     <AppShell>
       {/* Header */}
       <AppShell.Navbar>
-        <Header
-          minimal
-          sx={{
-            px: { xs: 3, md: 5 },
-            borderBottom: "1px solid",
-            borderColor: "divider",
-            bgcolor: "background.paper",
-          }}
-        >
+        <Header minimal>
           <Header.Toggle collapsed={collapsed} onToggle={() => setCollapsed((prev) => !prev)} />
           <Header.Brand>
             <Header.BrandLogo>
@@ -89,8 +77,8 @@ function Layout() {
                 src={Logo}
                 alt="App Logo"
                 style={{
-                  height: 20,
-                  width: 80,
+                  height: 35,
+                  width: 40,
                   objectFit: "contain",
                   display: "block",
                 }}
@@ -98,18 +86,8 @@ function Layout() {
             </Header.BrandLogo>
             <span
               style={{
-                width: 1,
-                height: 20,
-                backgroundColor: brandDividerColor,
-                display: "inline-block",
-                margin: "0 12px",
-                verticalAlign: "middle",
-              }}
-            />
-            <span
-              style={{
-                fontSize: 15,
-                fontWeight: 600,
+                fontSize: 18,
+                fontWeight: 500,
               }}
             >
               Expense Management Dashboard
