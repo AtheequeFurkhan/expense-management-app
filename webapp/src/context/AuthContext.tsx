@@ -21,7 +21,6 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from "rea
 
 import PreLoader from "@component/common/PreLoader";
 import SessionWarningDialog from "@component/common/SessionWarningDialog";
-import LoginScreen from "@component/ui/LoginScreen";
 import { redirectUrl } from "@config/constant";
 import { loadPrivileges, setAuthError, setUserAuthData } from "@slices/authSlice/auth";
 import { fetchAppConfig } from "@slices/configSlice/config";
@@ -50,6 +49,7 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
   const [appState, setAppState] = useState<AppState>(AppState.Loading);
   const [isBootstrapping, setIsBootstrapping] = useState(false);
   const initializedUserRef = useRef<string | null>(null);
+  const signInTriggeredRef = useRef(false);
 
   const dispatch = useAppDispatch();
 
@@ -85,6 +85,7 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
 
   const appSignOut = useCallback(async () => {
     initializedUserRef.current = null;
+    signInTriggeredRef.current = false;
     setIsBootstrapping(false);
     await signOut();
     setAppState(AppState.Unauthenticated);
@@ -132,6 +133,20 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
     setAppState(AppState.Loading);
     await signIn();
   }, [signIn]);
+
+  useEffect(() => {
+    if (state.isLoading || state.isAuthenticated || appState !== AppState.Unauthenticated) {
+      signInTriggeredRef.current = false;
+      return;
+    }
+
+    if (signInTriggeredRef.current) {
+      return;
+    }
+
+    signInTriggeredRef.current = true;
+    void appSignIn();
+  }, [appSignIn, appState, state.isAuthenticated, state.isLoading]);
 
   const handleContinue = useCallback(() => {
     setSessionWarningOpen(false);
@@ -232,7 +247,7 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
       case AppState.Unauthenticated:
         return (
           <AuthContext.Provider value={authContext}>
-            <LoginScreen />
+            <PreLoader isLoading message="Redirecting to login ..." />
           </AuthContext.Provider>
         );
 
