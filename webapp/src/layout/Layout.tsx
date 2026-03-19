@@ -31,8 +31,35 @@ import { useMemo, useState } from "react";
 
 import Logo from "@assets/images/pulse-orange.svg";
 import { Role } from "@slices/authSlice/auth";
-import { useAppSelector } from "@slices/store";
+import { RootState, useAppSelector } from "@slices/store";
 import { getActiveRouteDetails } from "@src/route";
+
+const resolveProfileImage = (...candidates: Array<string | null | undefined>): string | null => {
+  for (const candidate of candidates) {
+    const value = candidate?.trim();
+
+    if (!value) {
+      continue;
+    }
+
+    if (
+      value.startsWith("http://") ||
+      value.startsWith("https://") ||
+      value.startsWith("data:image/") ||
+      value.startsWith("/")
+    ) {
+      return value;
+    }
+
+    if (/^[A-Za-z0-9+/=]+$/.test(value)) {
+      return `data:image/jpeg;base64,${value}`;
+    }
+
+    return value;
+  }
+
+  return null;
+};
 
 function Layout() {
   const location = useLocation();
@@ -41,20 +68,35 @@ function Layout() {
 
   const { signOut, state: authState } = useAuthContext();
   const employeeInfo = useAppSelector((state) => state.user.userInfo);
+  const authUserInfo = useAppSelector((state: RootState) => state.auth.userInfo) as
+    | Record<string, unknown>
+    | null;
+  const decodedIdToken = useAppSelector((state: RootState) => state.auth.decodedIdToken) as
+    | Record<string, unknown>
+    | null;
   const firstName = employeeInfo?.firstName?.trim();
   const lastName = employeeInfo?.lastName?.trim();
   const userName =
     [firstName, lastName].filter(Boolean).join(" ") ||
+    (typeof authUserInfo?.displayName === "string" ? authUserInfo.displayName : null) ||
+    (typeof authUserInfo?.username === "string" ? authUserInfo.username : null) ||
     authState?.displayName ||
     authState?.username ||
     "User";
   const userEmail = employeeInfo?.workEmail || authState?.email || "";
-  const userInitials = userName
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+  const profileImage = resolveProfileImage(
+    employeeInfo?.employeeThumbnail,
+    employeeInfo?.avatar,
+    typeof authUserInfo?.picture === "string" ? authUserInfo.picture : null,
+    typeof authUserInfo?.profileUrl === "string" ? authUserInfo.profileUrl : null,
+    typeof authUserInfo?.profileImage === "string" ? authUserInfo.profileImage : null,
+    typeof authUserInfo?.image === "string" ? authUserInfo.image : null,
+    typeof authUserInfo?.photo === "string" ? authUserInfo.photo : null,
+    typeof authUserInfo?.avatar === "string" ? authUserInfo.avatar : null,
+    typeof decodedIdToken?.picture === "string" ? decodedIdToken.picture : null,
+    typeof decodedIdToken?.profileUrl === "string" ? decodedIdToken.profileUrl : null,
+    typeof decodedIdToken?.avatar === "string" ? decodedIdToken.avatar : null,
+  );
 
   const allRoutes = useMemo(() => getActiveRouteDetails([Role.ADMIN, Role.EMPLOYEE]), []);
   const activeItem = useMemo(() => {
@@ -98,11 +140,11 @@ function Layout() {
           <Header.Actions>
             <ColorSchemeToggle />
             <UserMenu>
-              <UserMenu.Trigger name={userName} avatar={userInitials} />
+              <UserMenu.Trigger name={userName} avatar={profileImage} />
               <UserMenu.Header
                 name={userName}
                 email={userEmail}
-                avatar={userInitials}
+                avatar={profileImage}
                 role="Finance Admin"
               />
               <UserMenu.Item
