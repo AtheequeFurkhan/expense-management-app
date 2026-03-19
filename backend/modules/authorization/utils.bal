@@ -14,7 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-#
 # + requiredRoles - Required Role list
 # + userRoles - Roles list, The user has
 # + return - Allow or not
