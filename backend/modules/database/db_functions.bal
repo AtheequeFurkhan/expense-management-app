@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 import ballerina/sql;
 
 isolated function toNormalizedEmailSet(string[] emails) returns map<boolean> {
@@ -36,7 +37,7 @@ public isolated function getOpdClaimSummary(int year, int month, int months = 1)
 
     string[] activeEmployeeEmails = from EmployeeEmailRow row in activeEmployeeRows
         select row.employeeEmail.toLowerAscii();
-    map<boolean> activeEmployeeSet = toNormalizedEmailSet(activeEmployeeEmails);
+    map<boolean> _ = toNormalizedEmailSet(activeEmployeeEmails);
     int totalEmployees = activeEmployeeEmails.length();
 
     stream<EmployeeEmailRow, sql:Error?> claimEmployeesStream =
