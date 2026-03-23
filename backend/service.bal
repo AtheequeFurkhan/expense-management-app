@@ -139,10 +139,16 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
-        if !authorization:checkPermissions([
-            authorization:authorizedRoles.employeeRole,
-            authorization:authorizedRoles.headPeopleOperationsRole
-        ], userInfo.groups) {
+        boolean hasEmployeeRole = authorization:checkPermissions(
+            [authorization:authorizedRoles.employeeRole],
+            userInfo.groups
+        );
+        boolean hasHeadPeopleOperationsRole = authorization:checkPermissions(
+            [authorization:authorizedRoles.headPeopleOperationsRole],
+            userInfo.groups
+        );
+
+        if !(hasEmployeeRole || hasHeadPeopleOperationsRole) {
             return <http:Forbidden>{
                 body: {
                     message: "Insufficient privileges!"
