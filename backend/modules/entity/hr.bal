@@ -45,6 +45,16 @@ public isolated function fetchEmployeesBasicInfo(string workEmail) returns Emplo
     request.setJsonPayload(requestPayload);
 
     http:Response response = check hrClient->post("", request);
+    int statusCode = response.statusCode;
+    if statusCode < 200 || statusCode >= 300 {
+        string responseBody = "";
+        string|error textPayload = response.getTextPayload();
+        if textPayload is string {
+            responseBody = textPayload;
+        }
+        return error(string `HR service request failed with status ${statusCode}: ${responseBody}`);
+    }
+
     json payload = check response.getJsonPayload();
 
     if payload is map<json> {
