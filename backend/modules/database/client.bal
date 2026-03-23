@@ -1,3 +1,4 @@
+import ballerina/log;
 // Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
@@ -56,8 +57,101 @@ function initHrisDbClient() returns mysql:Client|error => new (
     options = hrisDatabaseClientOptions
 );
 
-public final mysql:Client expenseDbClient = checkpanic initExpenseDbClient();
-public final mysql:Client hrisDbClient = checkpanic initHrisDbClient();
+mysql:Client? expenseDbClient = ();
+mysql:Client? hrisDbClient = ();
+boolean expenseDbHealthy = false;
+boolean hrisDbHealthy = false;
+string? expenseDbStatusMessage = ();
+string? hrisDbStatusMessage = ();
+
+function recordExpenseDbInitFailure(error err) {
+    string message = err.message();
+    if expenseDbStatusMessage is () || expenseDbStatusMessage != message {
+        log:printError("Failed to initialize expense database client.", err);
+    }
+    expenseDbClient = ();
+    expenseDbHealthy = false;
+    expenseDbStatusMessage = message;
+}
+
+function recordHrisDbInitFailure(error err) {
+    string message = err.message();
+    if hrisDbStatusMessage is () || hrisDbStatusMessage != message {
+        log:printError("Failed to initialize HRIS database client.", err);
+    }
+    hrisDbClient = ();
+    hrisDbHealthy = false;
+    hrisDbStatusMessage = message;
+}
+
+public function getExpenseDbClient() returns mysql:Client|error {
+    lock {
+        mysql:Client? currentExpenseDbClient = expenseDbClient;
+        if currentExpenseDbClient is mysql:Client {
+            return currentExpenseDbClient;
+        }
+
+        mysql:Client|error dbClientOrError = initExpenseDbClient();
+        if dbClientOrError is mysql:Client {
+            expenseDbClient = dbClientOrError;
+            expenseDbHealthy = true;
+            expenseDbStatusMessage = ();
+            return dbClientOrError;
+        }
+
+        recordExpenseDbInitFailure(dbClientOrError);
+        return dbClientOrError;
+    }
+}
+
+public function getHrisDbClient() returns mysql:Client|error {
+    lock {
+        mysql:Client? currentHrisDbClient = hrisDbClient;
+        if currentHrisDbClient is mysql:Client {
+            return currentHrisDbClient;
+        }
+
+        mysql:Client|error dbClientOrError = initHrisDbClient();
+        if dbClientOrError is mysql:Client {
+            hrisDbClient = dbClientOrError;
+            hrisDbHealthy = true;
+            hrisDbStatusMessage = ();
+            return dbClientOrError;
+        }
+
+        recordHrisDbInitFailure(dbClientOrError);
+        return dbClientOrError;
+    }
+}
+
+public function getDatabaseHealth() returns json {
+    if getExpenseDbClient() is error {
+    }
+    if getHrisDbClient() is error {
+    }
+
+    lock {
+        return {
+            healthy: expenseDbHealthy && hrisDbHealthy,
+            dependencies: {
+                expenseDb: {
+                    healthy: expenseDbHealthy,
+                    message: expenseDbStatusMessage
+                },
+                hrisDb: {
+                    healthy: hrisDbHealthy,
+                    message: hrisDbStatusMessage
+                }
+            }
+        };
+    }
+}
+
+public function isDatabaseHealthy() returns boolean {
+    lock {
+        return expenseDbHealthy && hrisDbHealthy;
+    }
+}
 
 public isolated function getAnnualClaimLimit() returns decimal {
     return annualClaimLimit;

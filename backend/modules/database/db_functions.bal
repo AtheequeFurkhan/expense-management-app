@@ -15,6 +15,7 @@
 // under the License.
 
 import ballerina/sql;
+import ballerinax/mysql;
 
 isolated function toNormalizedEmailSet(string[] emails) returns map<boolean> {
     map<boolean> emailSet = {};
@@ -24,8 +25,11 @@ isolated function toNormalizedEmailSet(string[] emails) returns map<boolean> {
     return emailSet;
 }
 
-public isolated function getOpdClaimSummary(int year, int month, int months = 1)
+public function getOpdClaimSummary(int year, int month, int months = 1)
         returns OpdClaimSummaryResponse|error {
+    mysql:Client expenseDbClient = check getExpenseDbClient();
+    mysql:Client hrisDbClient = check getHrisDbClient();
+
     AmountRow lastYearAmount = check expenseDbClient->queryRow(getLastYearClaimAmountQuery(year), AmountRow);
     AmountRow currentMonthAmount = check expenseDbClient->queryRow(getCurrentMonthClaimAmountQuery(year, month), AmountRow);
     CountRow previousYearCount = check expenseDbClient->queryRow(getPreviousYearClaimCountQuery(year), CountRow);

@@ -147,9 +147,20 @@ service http:InterceptableService / on new http:Listener(9090) {
         };
     }
 
-    resource function get health() returns json {
-        return {
-            status: "ok"
+    resource function get health() returns json|http:ServiceUnavailable {
+        json databaseHealth = database:getDatabaseHealth();
+        if database:isDatabaseHealthy() {
+            return {
+                status: "ok",
+                database: databaseHealth
+            };
+        }
+
+        return <http:ServiceUnavailable>{
+            body: {
+                status: "degraded",
+                database: databaseHealth
+            }
         };
     }
 }
