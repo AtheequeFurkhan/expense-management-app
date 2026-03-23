@@ -44,12 +44,19 @@ const AuthContext = React.createContext<AuthContextType>({} as AuthContextType);
 
 const timeout = 15 * 60 * 1000;
 const promptBeforeIdle = 4_000;
+const MAX_SIGN_IN_ATTEMPTS = 3;
 
 const AppAuthProvider = (props: { children: React.ReactNode }) => {
   const [sessionWarningOpen, setSessionWarningOpen] = useState<boolean>(false);
   const [appState, setAppState] = useState<AppState>(AppState.Loading);
   const initializedUserRef = useRef<string | null>(null);
   const signInTriggeredRef = useRef(false);
+  const signInAttemptsRef = useRef(0);
+  const signInFailedRef = useRef(false);
+  const authStatusRef = useRef({
+    isAuthenticated: false,
+    isLoading: true,
+  });
 
   const dispatch = useAppDispatch();
 
@@ -83,9 +90,24 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
     }
   }, []);
 
+  useEffect(() => {
+    authStatusRef.current = {
+      isAuthenticated: state.isAuthenticated,
+      isLoading: state.isLoading,
+    };
+
+    if (state.isAuthenticated) {
+      signInTriggeredRef.current = false;
+      signInAttemptsRef.current = 0;
+      signInFailedRef.current = false;
+    }
+  }, [state.isAuthenticated, state.isLoading]);
+
   const appSignOut = useCallback(async () => {
     initializedUserRef.current = null;
     signInTriggeredRef.current = false;
+    signInAttemptsRef.current = 0;
+    signInFailedRef.current = false;
     await signOut();
     setAppState(AppState.Unauthenticated);
   }, [signOut]);
@@ -129,13 +151,32 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
   }, [getBasicUserInfo, getIDToken, getDecodedIDToken, dispatch, refreshToken]);
 
   const appSignIn = useCallback(async () => {
+    if (signInFailedRef.current || signInAttemptsRef.current >= MAX_SIGN_IN_ATTEMPTS) {
+      return;
+    }
+
     setAppState(AppState.Loading);
+    signInAttemptsRef.current += 1;
     await signIn();
   }, [signIn]);
 
   useEffect(() => {
-    if (state.isLoading || state.isAuthenticated || appState !== AppState.Unauthenticated) {
+    if (state.isAuthenticated) {
       signInTriggeredRef.current = false;
+      return;
+    }
+
+    if (appState !== AppState.Unauthenticated) {
+      signInTriggeredRef.current = false;
+      return;
+    }
+
+    if (state.isLoading || signInFailedRef.current) {
+      return;
+    }
+
+    if (signInAttemptsRef.current >= MAX_SIGN_IN_ATTEMPTS) {
+      signInFailedRef.current = true;
       return;
     }
 
@@ -144,7 +185,23 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
     }
 
     signInTriggeredRef.current = true;
-    void appSignIn();
+    void appSignIn().finally(() => {
+      const { isAuthenticated, isLoading } = authStatusRef.current;
+
+      if (isAuthenticated) {
+        signInTriggeredRef.current = false;
+        signInAttemptsRef.current = 0;
+        signInFailedRef.current = false;
+        return;
+      }
+
+      if (!isLoading) {
+        signInTriggeredRef.current = false;
+        if (signInAttemptsRef.current >= MAX_SIGN_IN_ATTEMPTS) {
+          signInFailedRef.current = true;
+        }
+      }
+    });
   }, [appSignIn, appState, state.isAuthenticated, state.isLoading]);
 
   const handleContinue = useCallback(() => {
