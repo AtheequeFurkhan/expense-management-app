@@ -50,14 +50,6 @@ service class ErrorInterceptor {
     }
 }
 
-@http:ServiceConfig {
-    cors: {
-        allowOrigins: ["http://localhost:3000"],
-        allowMethods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allowHeaders: ["authorization", "content-type", "x-jwt-assertion"],
-        exposeHeaders: ["content-type"]
-    }
-}
 service http:InterceptableService / on new http:Listener(9090) {
 
     public function createInterceptors() returns http:Interceptor[] =>
