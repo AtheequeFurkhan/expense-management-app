@@ -61,10 +61,15 @@ export default function ActiveClaimsChart({
   const selectedLabel = monthOptions.find((o) => o.value === month)?.label ?? "";
 
   const normalizedMaxBarValue = Math.max(maxBarValue, ...values, 1);
+  const barCount = Math.max(values.length, xAxisLabels.length, 1);
+  const baseSkeletonHeights = [78, 52, 66, 44, 58, 36, 48, 72];
+  const skeletonBarHeights = Array.from({ length: barCount }, (_, index) => {
+    return baseSkeletonHeights[index % baseSkeletonHeights.length];
+  });
+  const renderedBarValues = loading ? skeletonBarHeights : values;
 
   const xTickLabels = xAxisLabels.map((label) => label.split("-")[0].trim());
   const lastTickLabel = xAxisLabels[xAxisLabels.length - 1]?.split("-")[1]?.trim() ?? "";
-  const skeletonHeights = [78, 52, 66, 44, 58, 36, 48, 72];
 
   return (
     <Box
@@ -199,13 +204,13 @@ export default function ActiveClaimsChart({
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: `repeat(${values.length}, 1fr)`,
+              gridTemplateColumns: `repeat(${barCount}, 1fr)`,
               height: chartHeight,
               alignItems: "flex-end",
               gap: "2px",
             }}
           >
-            {(loading ? skeletonHeights : values).map((value, index) => {
+            {renderedBarValues.map((value, index) => {
               const heightPercent = Math.min(100, (value / normalizedMaxBarValue) * 100);
               const isHovered = hoveredIndex === index;
 
@@ -284,7 +289,7 @@ export default function ActiveClaimsChart({
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: `repeat(${values.length}, 1fr)`,
+              gridTemplateColumns: `repeat(${barCount}, 1fr)`,
               mt: 0.8,
               position: "relative",
             }}
@@ -304,7 +309,7 @@ export default function ActiveClaimsChart({
                 >
                   {tick}
                 </Typography>
-                {index === values.length - 1 && (
+                {index === barCount - 1 && (
                   <Typography
                     sx={{
                       fontSize: 11,
