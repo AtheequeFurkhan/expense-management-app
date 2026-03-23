@@ -37,7 +37,10 @@ const AppHandler = () => {
     (state: RootState) => (state.common as { isGlobalLoading: boolean }).isGlobalLoading,
   );
   const activeRoutes = useMemo(() => getActiveRoutesV2(routes, auth.roles), [auth.roles]);
-  const defaultRoute = activeRoutes[0]?.path ?? "/";
+  const defaultRoute =
+    activeRoutes.find((route) => route.path === "/opd-claim-summary")?.path ??
+    activeRoutes[0]?.path ??
+    "/";
 
   const router = useMemo(
     () =>
