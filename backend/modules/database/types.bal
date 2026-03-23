@@ -50,11 +50,6 @@ public type EmployeeTotalRow record {|
     decimal totalAmount;
 |};
 
-public type ClaimTransactionRow record {|
-    string employeeEmail;
-    decimal amount;
-|};
-
 public type ClaimBucket record {|
     string range;
     int count;
