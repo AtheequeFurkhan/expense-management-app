@@ -115,6 +115,30 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
+        if year is int && year <= 0 {
+            return <http:BadRequest>{
+                body: {
+                    message: "Invalid year. Expected a positive value."
+                }
+            };
+        }
+
+        if month is int && (month < 1 || month > 12) {
+            return <http:BadRequest>{
+                body: {
+                    message: "Invalid month. Expected a value between 1 and 12."
+                }
+            };
+        }
+
+        if months < 1 {
+            return <http:BadRequest>{
+                body: {
+                    message: "Invalid months. Expected a value greater than or equal to 1."
+                }
+            };
+        }
+
         if !authorization:checkPermissions([
             authorization:authorizedRoles.employeeRole,
             authorization:authorizedRoles.headPeopleOperationsRole
