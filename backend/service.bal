@@ -20,6 +20,7 @@ import expense_management.entity;
 import ballerina/cache;
 import ballerina/http;
 import ballerina/log;
+import ballerina/time;
 
 public configurable AppConfig appConfig = ?;
 
@@ -102,7 +103,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         return userInfoResponse;
     }
 
-    resource function get opd\-claims(http:RequestContext ctx, int year = 2026, int month = 3, int months = 1)
+    resource function get opd\-claims(http:RequestContext ctx, int? year = (), int? month = (), int months = 1)
         returns database:OpdClaimSummaryResponse|http:Forbidden|http:BadRequest|database:HttpInternalServerError {
 
         authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
@@ -125,7 +126,26 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
-        database:OpdClaimSummaryResponse|error summary = database:getOpdClaimSummary(year, month, months);
+        time:Utc utcNow = time:utcNow();
+        time:Civil|error civilTime = time:utcToCivil(utcNow);
+        if civilTime is error {
+            string customError = "Failed to resolve the current date for OPD claim summary defaults.";
+            log:printError(customError, civilTime);
+            return <database:HttpInternalServerError>{
+                body: {
+                    message: customError
+                }
+            };
+        }
+
+        int effectiveYear = year ?: civilTime.year;
+        int effectiveMonth = month ?: civilTime.month;
+
+        database:OpdClaimSummaryResponse|error summary = database:getOpdClaimSummary(
+            effectiveYear,
+            effectiveMonth,
+            months
+        );
         if summary is database:OpdClaimSummaryResponse {
             return summary;
         }
