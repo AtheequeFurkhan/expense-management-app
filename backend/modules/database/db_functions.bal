@@ -19,6 +19,13 @@ import ballerinax/mysql;
 
 public function getOpdClaimSummary(int year, int month, int months = 1)
         returns OpdClaimSummaryResponse|error {
+    if month < 1 || month > 12 {
+        return error(string `Invalid month '${month}'. Expected a value between 1 and 12.`);
+    }
+    if months <= 0 {
+        return error(string `Invalid months '${months}'. Expected a value greater than 0.`);
+    }
+
     mysql:Client expenseDbClient = check getExpenseDbClient();
     mysql:Client hrisDbClient = check getHrisDbClient();
 
