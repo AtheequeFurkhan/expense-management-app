@@ -154,7 +154,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         log:printError(customError, summary);
         return <database:HttpInternalServerError>{
             body: {
-                message: summary.message()
+                message: customError
             }
         };
     }
