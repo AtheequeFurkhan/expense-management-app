@@ -17,14 +17,6 @@
 import ballerina/sql;
 import ballerinax/mysql;
 
-isolated function toNormalizedEmailSet(string[] emails) returns map<boolean> {
-    map<boolean> emailSet = {};
-    foreach string email in emails {
-        emailSet[email.toLowerAscii()] = true;
-    }
-    return emailSet;
-}
-
 public function getOpdClaimSummary(int year, int month, int months = 1)
         returns OpdClaimSummaryResponse|error {
     mysql:Client expenseDbClient = check getExpenseDbClient();
@@ -41,7 +33,6 @@ public function getOpdClaimSummary(int year, int month, int months = 1)
 
     string[] activeEmployeeEmails = from EmployeeEmailRow row in activeEmployeeRows
         select row.employeeEmail.toLowerAscii();
-    map<boolean> _ = toNormalizedEmailSet(activeEmployeeEmails);
     int totalEmployees = activeEmployeeEmails.length();
 
     stream<EmployeeEmailRow, sql:Error?> claimEmployeesStream =
