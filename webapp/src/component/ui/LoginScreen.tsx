@@ -174,7 +174,7 @@ export default function LoginPage(): JSX.Element {
                   lineHeight: 1.15,
                 }}
               >
-                Welcome to the WSO2 Expense Management Dashaboard
+                Welcome to the WSO2 Expense Management Dashboard
               </Typography>
               <Typography
                 variant="body2"
