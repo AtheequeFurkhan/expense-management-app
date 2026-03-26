@@ -64,3 +64,21 @@ type EmployeeResponse record {
     # Employee data
     EmployeeData data;
 };
+
+# Employee email.
+public type EmployeeEmail record {|
+    # Email of the employee
+    string workEmail;
+|};
+
+# Employees data.
+type EmployeesData record {|
+    # Employees
+    EmployeeEmail[] employees;
+|};
+
+# Employees response.
+type EmployeesResponse record {|
+    # Employees data
+    EmployeesData data;
+|};

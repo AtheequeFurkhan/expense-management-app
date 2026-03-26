@@ -14,6 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import expense_management.entity;
+
 import ballerina/sql;
 import ballerinax/mysql;
 
@@ -27,19 +29,12 @@ public function getOpdClaimSummary(int year, int month, int months = 1)
     }
 
     mysql:Client expenseDbClient = check getExpenseDbClient();
-    mysql:Client hrisDbClient = check getHrisDbClient();
 
     AmountRow lastYearAmount = check expenseDbClient->queryRow(getLastYearClaimAmountQuery(year), AmountRow);
     AmountRow currentMonthAmount = check expenseDbClient->queryRow(getCurrentMonthClaimAmountQuery(year, month), AmountRow);
     CountRow previousYearCount = check expenseDbClient->queryRow(getPreviousYearClaimCountQuery(year), CountRow);
 
-    stream<EmployeeEmailRow, sql:Error?> activeEmployeesStream =
-        hrisDbClient->query(getActiveSriLankaEmployeeEmailsQuery(), EmployeeEmailRow);
-    EmployeeEmailRow[] activeEmployeeRows = check from EmployeeEmailRow row in activeEmployeesStream
-        select row;
-
-    string[] activeEmployeeEmails = from EmployeeEmailRow row in activeEmployeeRows
-        select row.employeeEmail.toLowerAscii();
+    string[] activeEmployeeEmails = check entity:fetchActiveSriLankaEmployeeEmails();
     int totalEmployees = activeEmployeeEmails.length();
 
     stream<EmployeeEmailRow, sql:Error?> claimEmployeesStream =

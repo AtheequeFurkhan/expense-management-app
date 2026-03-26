@@ -29,3 +29,18 @@ public type AppRoles record {|
     # Role for the head of people operations
     string headPeopleOperationsRole;
 |};
+
+# Description.
+#
+# + workEmail - field description
+public type EmployeeEmail record {|
+    string workEmail;
+|};
+
+type EmployeesData record {|
+    EmployeeEmail[] employees;
+|};
+
+type EmplyeesResponse record {|
+    EmployeesData data;
+|};

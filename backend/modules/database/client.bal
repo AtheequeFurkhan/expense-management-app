@@ -21,16 +21,8 @@ import ballerinax/mysql.driver as _;
 configurable decimal connectTimeout = 10.0;
 configurable decimal annualClaimLimit = 40000.0;
 configurable DatabaseConfig expenseDatabaseConfig = ?;
-configurable DatabaseConfig hrisDatabaseConfig = ?;
 
 mysql:Options expenseDatabaseClientOptions = {
-    ssl: {
-        mode: mysql:SSL_REQUIRED
-    },
-    connectTimeout: connectTimeout
-};
-
-mysql:Options hrisDatabaseClientOptions = {
     ssl: {
         mode: mysql:SSL_REQUIRED
     },
@@ -47,22 +39,9 @@ function initExpenseDbClient() returns mysql:Client|error => new (
     options = expenseDatabaseClientOptions
 );
 
-function initHrisDbClient() returns mysql:Client|error => new (
-    host = hrisDatabaseConfig.host,
-    port = hrisDatabaseConfig.port,
-    user = hrisDatabaseConfig.user,
-    password = hrisDatabaseConfig.password,
-    database = hrisDatabaseConfig.database,
-    connectionPool = hrisDatabaseConfig.connectionPool,
-    options = hrisDatabaseClientOptions
-);
-
 mysql:Client? expenseDbClient = ();
-mysql:Client? hrisDbClient = ();
 boolean expenseDbHealthy = false;
-boolean hrisDbHealthy = false;
 string? expenseDbStatusMessage = ();
-string? hrisDbStatusMessage = ();
 
 function recordExpenseDbInitFailure(error err) {
     string message = err.message();
@@ -72,16 +51,6 @@ function recordExpenseDbInitFailure(error err) {
     expenseDbClient = ();
     expenseDbHealthy = false;
     expenseDbStatusMessage = message;
-}
-
-function recordHrisDbInitFailure(error err) {
-    string message = err.message();
-    if hrisDbStatusMessage is () || hrisDbStatusMessage != message {
-        log:printError("Failed to initialize HRIS database client.", err);
-    }
-    hrisDbClient = ();
-    hrisDbHealthy = false;
-    hrisDbStatusMessage = message;
 }
 
 public function getExpenseDbClient() returns mysql:Client|error {
@@ -104,43 +73,17 @@ public function getExpenseDbClient() returns mysql:Client|error {
     }
 }
 
-public function getHrisDbClient() returns mysql:Client|error {
-    lock {
-        mysql:Client? currentHrisDbClient = hrisDbClient;
-        if currentHrisDbClient is mysql:Client {
-            return currentHrisDbClient;
-        }
-
-        mysql:Client|error dbClientOrError = initHrisDbClient();
-        if dbClientOrError is mysql:Client {
-            hrisDbClient = dbClientOrError;
-            hrisDbHealthy = true;
-            hrisDbStatusMessage = ();
-            return dbClientOrError;
-        }
-
-        recordHrisDbInitFailure(dbClientOrError);
-        return dbClientOrError;
-    }
-}
-
 public function getDatabaseHealth() returns json {
     if getExpenseDbClient() is error {
-    }
-    if getHrisDbClient() is error {
     }
 
     lock {
         return {
-            healthy: expenseDbHealthy && hrisDbHealthy,
+            healthy: expenseDbHealthy,
             dependencies: {
                 expenseDb: {
                     healthy: expenseDbHealthy,
                     message: expenseDbStatusMessage
-                },
-                hrisDb: {
-                    healthy: hrisDbHealthy,
-                    message: hrisDbStatusMessage
                 }
             }
         };
@@ -149,7 +92,7 @@ public function getDatabaseHealth() returns json {
 
 public function isDatabaseHealthy() returns boolean {
     lock {
-        return expenseDbHealthy && hrisDbHealthy;
+        return expenseDbHealthy;
     }
 }
 
