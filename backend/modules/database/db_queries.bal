@@ -42,15 +42,6 @@ isolated function getPreviousYearClaimCountQuery(int year) returns sql:Parameter
       AND c.status IN ('0', '2', '3')
 `;
 
-isolated function getActiveSriLankaEmployeeEmailsQuery() returns sql:ParameterizedQuery => `
-    SELECT employee_work_email AS employeeEmail
-    FROM hris_employee
-    WHERE employee_location = 'Sri Lanka'
-      AND employee_status = 'Active'
-      AND employee_work_email IS NOT NULL
-      AND employee_work_email <> ''
-`;
-
 isolated function getClaimEmployeeEmailsForRangeQuery(int year, int month, int months) returns sql:ParameterizedQuery => `
     SELECT DISTINCT employee_email AS employeeEmail
     FROM opd_claim

@@ -71,3 +71,55 @@ public isolated function fetchEmployeesBasicInfo(string workEmail) returns Emplo
 
     return parsed.data.employee;
 }
+
+public isolated function fetchActiveSriLankaEmployeeEmails() returns string[]|error {
+    string document = string `
+        query activeEmployees {
+            employees(location: "Sri Lanka", status: "Active") {
+                workEmail
+            }
+        }
+    `;
+
+    json requestPayload = {
+        query: document
+    };
+
+    http:Request request = new;
+    request.setJsonPayload(requestPayload);
+
+    http:Response response = check hrClient->post("", request);
+    int statusCode = response.statusCode;
+    if statusCode < 200 || statusCode >= 300 {
+        string responseBody = "";
+        string|error textPayload = response.getTextPayload();
+        if textPayload is string {
+            responseBody = textPayload;
+        }
+        return error(string `HR service request failed with status ${statusCode}: ${responseBody}`);
+    }
+
+    json payload = check response.getJsonPayload();
+
+    if payload is map<json> {
+        json? errorsNode = payload["errors"];
+        if errorsNode is json[] && errorsNode.length() > 0 {
+            return error(errorsNode.toJsonString());
+        }
+    }
+
+    EmployeesResponse|error parsed = payload.cloneWithType(EmployeesResponse);
+    if parsed is error {
+        return parsed;
+    }
+
+    string[] employeeEmails = [];
+    foreach EmployeeEmail employee in parsed.data.employees {
+        string email = employee.workEmail.trim();
+        if email != "" {
+            employeeEmails.push(email.toLowerAscii());
+        }
+    }
+
+    return employeeEmails;
+}
