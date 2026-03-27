@@ -18,10 +18,10 @@ import ballerina/log;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 
-configurable decimal connectTimeout = 10.0;
-configurable decimal annualClaimLimit = 40000.0;
-configurable decimal claimRangeStep = 5000.0;
-configurable int lastYearClaimGracePeriodInDays = 15;
+configurable decimal connectTimeout = ?;
+configurable decimal annualClaimLimit = ?;
+configurable decimal claimRangeStep = ?;
+configurable int lastYearClaimGracePeriodInDays = ?;
 configurable DatabaseConfig expenseDatabaseConfig = ?;
 
 mysql:Client? expenseDbClient = ();
