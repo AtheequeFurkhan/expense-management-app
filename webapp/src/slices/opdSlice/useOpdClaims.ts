@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,6 +29,7 @@ export interface OpdClaimsData {
   currentMonthClaimAmount: number;
   claimsCountPreviousYear: number;
   gracePeriodClaims: number;
+  activeClaimsLabels: string[];
   activeClaimsData: number[];
   unclaimedCount: number;
   fullyClaimedCount: number;
@@ -66,6 +66,16 @@ export const DEFAULT_OPD_DATA: OpdClaimsData = {
   currentMonthClaimAmount: 65210,
   claimsCountPreviousYear: 12470,
   gracePeriodClaims: 984,
+  activeClaimsLabels: [
+    "0-5000",
+    "5000-10000",
+    "10000-15000",
+    "15000-20000",
+    "20000-25000",
+    "25000-30000",
+    "30000-35000",
+    "35000-40000",
+  ],
   activeClaimsData: [4, 5, 6, 7, 6, 7, 8, 9],
   unclaimedCount: 22,
   fullyClaimedCount: 9,
@@ -94,6 +104,8 @@ const normalizeOpdClaimsData = (
     data?.previousYearClaimCount ??
     DEFAULT_OPD_DATA.claimsCountPreviousYear,
   gracePeriodClaims: data?.gracePeriodClaims ?? DEFAULT_OPD_DATA.gracePeriodClaims,
+  activeClaimsLabels:
+    data?.activeClaimsChart?.map((bucket) => bucket.range) ?? DEFAULT_OPD_DATA.activeClaimsLabels,
   activeClaimsData:
     data?.activeClaimsData ??
     data?.activeClaimsChart?.map((bucket) => bucket.count) ??

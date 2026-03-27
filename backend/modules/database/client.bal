@@ -1,4 +1,3 @@
-import ballerina/log;
 // Copyright (c) 2026 WSO2 LLC. (https://www.wso2.com).
 //
 // WSO2 LLC. licenses this file to you under the Apache License,
@@ -15,42 +14,46 @@ import ballerina/log;
 // specific language governing permissions and limitations
 // under the License.
 
+import ballerina/log;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 
 configurable decimal connectTimeout = 10.0;
 configurable decimal annualClaimLimit = 40000.0;
+configurable decimal claimRangeStep = 5000.0;
 configurable DatabaseConfig expenseDatabaseConfig = ?;
-
-mysql:Options expenseDatabaseClientOptions = {
-    ssl: {
-        mode: mysql:SSL_REQUIRED
-    },
-    connectTimeout: connectTimeout
-};
-
-function initExpenseDbClient() returns mysql:Client|error => new (
-    host = expenseDatabaseConfig.host,
-    port = expenseDatabaseConfig.port,
-    user = expenseDatabaseConfig.user,
-    password = expenseDatabaseConfig.password,
-    database = expenseDatabaseConfig.database,
-    connectionPool = expenseDatabaseConfig.connectionPool,
-    options = expenseDatabaseClientOptions
-);
 
 mysql:Client? expenseDbClient = ();
 boolean expenseDbHealthy = false;
 string? expenseDbStatusMessage = ();
 
-function recordExpenseDbInitFailure(error err) {
-    string message = err.message();
-    if expenseDbStatusMessage is () || expenseDbStatusMessage != message {
-        log:printError("Failed to initialize expense database client.", err);
+# Function to create Expense DB connection.
+#
+# + return - If success returns MySQL DB client or error
+public isolated function initializeExpenseDbClient() returns mysql:Client|error {
+    mysql:Options expenseDbOptions = {
+        ssl: {
+            mode: mysql:SSL_REQUIRED
+        },
+        connectTimeout: connectTimeout
+    };
+
+    mysql:Client|error mysqlClient = new (
+        host = expenseDatabaseConfig.host,
+        port = expenseDatabaseConfig.port,
+        user = expenseDatabaseConfig.user,
+        password = expenseDatabaseConfig.password,
+        database = expenseDatabaseConfig.database,
+        connectionPool = expenseDatabaseConfig.connectionPool,
+        options = expenseDbOptions
+    );
+
+    if mysqlClient is error {
+        log:printError("Failed to initialize expense database client.", mysqlClient);
+        return error("Error in connecting to the expense database!");
     }
-    expenseDbClient = ();
-    expenseDbHealthy = false;
-    expenseDbStatusMessage = message;
+
+    return mysqlClient;
 }
 
 public function getExpenseDbClient() returns mysql:Client|error {
@@ -60,7 +63,7 @@ public function getExpenseDbClient() returns mysql:Client|error {
             return currentExpenseDbClient;
         }
 
-        mysql:Client|error dbClientOrError = initExpenseDbClient();
+        mysql:Client|error dbClientOrError = initializeExpenseDbClient();
         if dbClientOrError is mysql:Client {
             expenseDbClient = dbClientOrError;
             expenseDbHealthy = true;
@@ -68,7 +71,9 @@ public function getExpenseDbClient() returns mysql:Client|error {
             return dbClientOrError;
         }
 
-        recordExpenseDbInitFailure(dbClientOrError);
+        expenseDbClient = ();
+        expenseDbHealthy = false;
+        expenseDbStatusMessage = dbClientOrError.message();
         return dbClientOrError;
     }
 }
@@ -98,4 +103,8 @@ public function isDatabaseHealthy() returns boolean {
 
 public isolated function getAnnualClaimLimit() returns decimal {
     return annualClaimLimit;
+}
+
+public isolated function getClaimRangeStep() returns decimal {
+    return claimRangeStep;
 }
