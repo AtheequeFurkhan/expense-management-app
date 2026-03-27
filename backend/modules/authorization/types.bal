@@ -14,33 +14,37 @@
 // specific language governing permissions and limitations
 // under the License.
 
-# User info custom type for Asgardeo token.
+# User information extracted from the Asgardeo JWT assertion.
 public type CustomJwtPayload record {
-    # User email
+    # Work email address of the authenticated user.
     string email;
-    # User groups
+    # Group or role names assigned to the authenticated user.
     string[] groups;
 };
 
-# Application specific role mapping.
+# Application-specific role names used for authorization checks.
 public type AppRoles record {|
-    # Role for the employee
+    # Role granted to employees.
     string employeeRole;
-    # Role for the head of people operations
+    # Role granted to the head of people operations.
     string headPeopleOperationsRole;
 |};
 
-# Description.
+# Employee email details returned by the HR entity response.
 #
-# + workEmail - field description
+# + workEmail - Work email address of the employee
 public type EmployeeEmail record {|
     string workEmail;
 |};
 
+# HR entity payload section containing the employee email list.
 type EmployeesData record {|
+    # Employee records returned by the HR entity.
     EmployeeEmail[] employees;
 |};
 
+# Top-level HR entity response containing employee data.
 type EmplyeesResponse record {|
+    # Data object returned by the HR entity query.
     EmployeesData data;
 |};

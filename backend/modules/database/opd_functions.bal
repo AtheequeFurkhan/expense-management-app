@@ -17,6 +17,12 @@
 import ballerina/sql;
 import ballerinax/mysql;
 
+# Validate OPD summary request inputs before querying the database.
+#
+# + month - Requested month for the summary
+# + months - Number of months included in the summary window
+# + claimRangeStep - Configured amount step used for chart ranges
+# + return - An error if any input is invalid, otherwise `()`
 isolated function validateOpdClaimSummaryInputs(int month, int months, decimal claimRangeStep) returns error? {
     if month < 1 || month > 12 {
         return error(string `Invalid month '${month}'. Expected a value between 1 and 12.`);
@@ -29,10 +35,19 @@ isolated function validateOpdClaimSummaryInputs(int month, int months, decimal c
     }
 }
 
+# Convert a decimal claim boundary into a whole-number string label.
+#
+# + amount - Claim amount boundary to format
+# + return - String representation of the boundary without decimals
 isolated function formatClaimRangeBoundary(decimal amount) returns string {
     return (<int> amount).toString();
 }
 
+# Build claim range labels for the active claims chart.
+#
+# + upperLimit - Maximum claim amount represented by the chart
+# + rangeStep - Step size used to build each range bucket
+# + return - Ordered list of claim range labels
 isolated function buildClaimRangeLabels(decimal upperLimit, decimal rangeStep) returns string[] {
     string[] rangeLabels = [];
     decimal currentStart = 0.0d;
@@ -52,6 +67,12 @@ isolated function buildClaimRangeLabels(decimal upperLimit, decimal rangeStep) r
     return rangeLabels;
 }
 
+# Resolve the chart bucket label for a given total claim amount.
+#
+# + totalAmount - Total claim amount for an employee
+# + rangeLabels - Ordered chart range labels
+# + rangeStep - Step size used to build the range labels
+# + return - Matching range label for the total amount
 isolated function resolveClaimRangeLabel(decimal totalAmount, string[] rangeLabels, decimal rangeStep) returns string {
     decimal currentStart = 0.0d;
 
@@ -66,6 +87,13 @@ isolated function resolveClaimRangeLabel(decimal totalAmount, string[] rangeLabe
     return rangeLabels[rangeLabels.length() - 1];
 }
 
+# Query an aggregated claim amount for the given year and optional month.
+#
+# + expenseDbClient - Expense database client
+# + year - Year used to filter the claim amount query
+# + month - Optional month used to narrow the claim amount query
+# + context - Error context included in failures
+# + return - Aggregated claim amount if the query succeeds, otherwise an error
 function queryClaimAmount(mysql:Client expenseDbClient, int? year = (), int? month = (), string context = "claim amount")
         returns decimal|error {
     AmountRow|error amountResult = expenseDbClient->queryRow(getClaimAmountQuery(year, month), AmountRow);
@@ -76,6 +104,11 @@ function queryClaimAmount(mysql:Client expenseDbClient, int? year = (), int? mon
     return amountResult.total;
 }
 
+# Query the number of claims submitted during the previous year.
+#
+# + expenseDbClient - Expense database client
+# + year - Current reporting year used to derive the previous year
+# + return - Previous year claim count if the query succeeds, otherwise an error
 function queryPreviousYearClaimCount(mysql:Client expenseDbClient, int year) returns int|error {
     CountRow|error countResult = expenseDbClient->queryRow(getPreviousYearClaimCountQuery(year), CountRow);
     if countResult is error {
@@ -85,6 +118,12 @@ function queryPreviousYearClaimCount(mysql:Client expenseDbClient, int year) ret
     return countResult.count;
 }
 
+# Query the number of claims submitted during the configured grace period.
+#
+# + expenseDbClient - Expense database client
+# + year - Current reporting year used to evaluate the January grace window
+# + gracePeriodDays - Number of days included in the grace period
+# + return - Grace period claim count if the query succeeds, otherwise an error
 function queryGracePeriodClaimCount(mysql:Client expenseDbClient, int year, int gracePeriodDays) returns int|error {
     CountRow|error countResult =
         expenseDbClient->queryRow(getGracePeriodClaimCountQuery(year, gracePeriodDays), CountRow);
@@ -97,6 +136,10 @@ function queryGracePeriodClaimCount(mysql:Client expenseDbClient, int year, int 
     return countResult.count;
 }
 
+# Query all employee emails that have ever appeared in OPD claims.
+#
+# + expenseDbClient - Expense database client
+# + return - Normalized employee emails from OPD claims if the query succeeds, otherwise an error
 function queryAllClaimEmployeeEmails(mysql:Client expenseDbClient) returns string[]|error {
     stream<EmployeeEmailRow, sql:Error?> allEmployeesStream =
         expenseDbClient->query(getAllClaimEmployeeEmailsQuery(), EmployeeEmailRow);
@@ -110,6 +153,13 @@ function queryAllClaimEmployeeEmails(mysql:Client expenseDbClient) returns strin
         select row.employeeEmail.toLowerAscii();
 }
 
+# Query total claim amounts per employee for the selected reporting range.
+#
+# + expenseDbClient - Expense database client
+# + year - Year used for the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + return - Per-employee totals if the query succeeds, otherwise an error
 function queryEmployeeTotals(mysql:Client expenseDbClient, int year, int month, int months) returns EmployeeTotalRow[]|error {
     stream<EmployeeTotalRow, sql:Error?> employeeTotalsStream =
         expenseDbClient->query(getEmployeeTotalsForRangeQuery(year, month, months), EmployeeTotalRow);
@@ -124,6 +174,10 @@ function queryEmployeeTotals(mysql:Client expenseDbClient, int year, int month, 
     return employeeTotalsResult;
 }
 
+# Convert employee totals into a lookup set of employees with claims.
+#
+# + employeeTotals - Per-employee totals for the selected reporting range
+# + return - Map keyed by normalized employee email
 isolated function toEmployeesWithClaimsSet(EmployeeTotalRow[] employeeTotals) returns map<boolean> {
     map<boolean> employeesWithClaimsSet = {};
     foreach EmployeeTotalRow row in employeeTotals {
@@ -132,6 +186,11 @@ isolated function toEmployeesWithClaimsSet(EmployeeTotalRow[] employeeTotals) re
     return employeesWithClaimsSet;
 }
 
+# Count employees whose total claims reached the annual claim limit.
+#
+# + employeeTotals - Per-employee totals for the selected reporting range
+# + annualClaimLimit - Configured annual claim limit
+# + return - Number of fully claimed employees
 isolated function countFullyClaimedEmployees(EmployeeTotalRow[] employeeTotals, decimal annualClaimLimit) returns int {
     int fullyClaimedEmployees = 0;
     foreach EmployeeTotalRow row in employeeTotals {
@@ -142,6 +201,12 @@ isolated function countFullyClaimedEmployees(EmployeeTotalRow[] employeeTotals, 
     return fullyClaimedEmployees;
 }
 
+# Build chart buckets representing the active claim distribution.
+#
+# + employeeTotals - Per-employee totals for the selected reporting range
+# + annualClaimLimit - Configured upper limit for the chart
+# + claimRangeStep - Configured amount step used for chart buckets
+# + return - Ordered claim bucket data for the chart
 isolated function buildActiveClaimsChart(EmployeeTotalRow[] employeeTotals, decimal annualClaimLimit, decimal claimRangeStep)
         returns ClaimBucket[] {
     string[] rangeLabels = buildClaimRangeLabels(annualClaimLimit, claimRangeStep);
@@ -162,6 +227,12 @@ isolated function buildActiveClaimsChart(EmployeeTotalRow[] employeeTotals, deci
         };
 }
 
+# Build the OPD claim summary used by the dashboard.
+#
+# + year - Reporting year for the summary
+# + month - Reporting month for the summary
+# + months - Number of months included in the reporting window
+# + return - OPD claim summary response if all queries succeed, otherwise an error
 public function getOpdClaimSummary(int year, int month, int months = 1)
         returns OpdClaimSummaryResponse|error {
     decimal claimRangeStep = getClaimRangeStep();

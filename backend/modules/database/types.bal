@@ -17,59 +17,83 @@
 import ballerina/http;
 import ballerina/sql;
 
-# [Configurable] database configs.
+# Configurable database connection settings.
 public type DatabaseConfig record {|
-    # Database host
+    # Host name or IP address of the database server.
     string host;
-    # Database user
+    # User name used to connect to the database.
     string user;
-    # Database password
+    # Password used to connect to the database.
     string password;
-    # Database name
+    # Name of the target database schema.
     string database;
-    # Database port
+    # Port used by the database server.
     int port = 3306;
-    # Database connection pool
+    # Connection pool settings for the database client.
     sql:ConnectionPool connectionPool = {};
 |};
 
+# Query result containing a single aggregated decimal total.
 public type AmountRow record {|
+    # Aggregated total amount returned by the query.
     decimal total;
 |};
 
+# Query result containing a single aggregated count.
 public type CountRow record {|
+    # Aggregated count returned by the query.
     int count;
 |};
 
+# Query result containing an employee email.
 public type EmployeeEmailRow record {|
+    # Employee work email associated with a claim.
     string employeeEmail;
 |};
 
+# Query result containing a claim total for an employee.
 public type EmployeeTotalRow record {|
+    # Employee work email associated with the total.
     string employeeEmail;
+    # Total claim amount calculated for the employee.
     decimal totalAmount;
 |};
 
+# Claim distribution bucket used by the active claims chart.
 public type ClaimBucket record {|
+    # Amount range label represented by the bucket.
     string range;
+    # Number of employees falling within the range.
     int count;
 |};
 
+# Response returned by the OPD claim summary endpoint.
 public type OpdClaimSummaryResponse record {|
+    # Total claim amount submitted during the selected year.
     decimal lastYearClaimAmount;
+    # Total claim amount submitted during the selected month.
     decimal currentMonthClaimAmount;
+    # Number of claims submitted during the previous year.
     int previousYearClaimCount;
+    # Number of claims submitted within the configured grace period.
     int gracePeriodClaims;
+    # Number of employees without claims in the selected period.
     int unclaimedEmployees;
+    # Number of employees who reached the annual claim limit.
     int fullyClaimedEmployees;
+    # Claim distribution data for the active claims chart.
     ClaimBucket[] activeClaimsChart;
 |};
 
+# Standard error payload returned to API clients.
 public type ErrorResponse record {|
+    # Client-safe error message.
     string message;
 |};
 
+# Internal server error response shape for API resources.
 public type HttpInternalServerError record {|
     *http:InternalServerError;
+    # Error payload returned in the response body.
     ErrorResponse body;
 |};
