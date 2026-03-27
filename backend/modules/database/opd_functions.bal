@@ -103,23 +103,6 @@ public function getOpdClaimSummary(int year, int month, int months = 1)
         select row.employeeEmail.toLowerAscii();
     int totalEmployees = allEmployeeEmails.length();
 
-    stream<EmployeeEmailRow, sql:Error?> claimEmployeesStream =
-        expenseDbClient->query(getClaimEmployeeEmailsForRangeQuery(year, month, months), EmployeeEmailRow);
-    EmployeeEmailRow[]|error claimEmployeeRowsResult = from EmployeeEmailRow row in claimEmployeesStream
-        select row;
-    if claimEmployeeRowsResult is error {
-        return error(
-            string `Failed to query claim employee emails for year '${year}', month '${month}', months '${months}': ${claimEmployeeRowsResult.message()}`
-        );
-    }
-    EmployeeEmailRow[] claimEmployeeRows = claimEmployeeRowsResult;
-
-    map<boolean> employeesWithClaimsSet = {};
-    foreach EmployeeEmailRow row in claimEmployeeRows {
-        string normalizedEmail = row.employeeEmail.toLowerAscii();
-        employeesWithClaimsSet[normalizedEmail] = true;
-    }
-
     stream<EmployeeTotalRow, sql:Error?> employeeTotalsStream =
         expenseDbClient->query(getEmployeeTotalsForRangeQuery(year, month, months), EmployeeTotalRow);
     EmployeeTotalRow[]|error employeeTotalsResult = from EmployeeTotalRow row in employeeTotalsStream
@@ -130,6 +113,12 @@ public function getOpdClaimSummary(int year, int month, int months = 1)
         );
     }
     EmployeeTotalRow[] employeeTotals = employeeTotalsResult;
+
+    map<boolean> employeesWithClaimsSet = {};
+    foreach EmployeeTotalRow row in employeeTotals {
+        string normalizedEmail = row.employeeEmail.toLowerAscii();
+        employeesWithClaimsSet[normalizedEmail] = true;
+    }
 
     int fullyClaimedEmployees = 0;
     foreach EmployeeTotalRow row in employeeTotals {

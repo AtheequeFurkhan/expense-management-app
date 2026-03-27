@@ -41,22 +41,6 @@ isolated function getAllClaimEmployeeEmailsQuery() returns sql:ParameterizedQuer
       AND employee_email <> ''
 `;
 
-isolated function getClaimEmployeeEmailsForRangeQuery(int year, int month, int months) returns sql:ParameterizedQuery => `
-    SELECT DISTINCT employee_email AS employeeEmail
-    FROM opd_claim
-    WHERE added_date >= DATE_SUB(
-            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
-            INTERVAL ${months - 1} MONTH
-          )
-      AND added_date < DATE_ADD(
-            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
-            INTERVAL 1 MONTH
-          )
-      AND status IN ('0', '2', '3')
-      AND employee_email IS NOT NULL
-      AND employee_email <> ''
-`;
-
 isolated function getEmployeeTotalsForRangeQuery(int year, int month, int months) returns sql:ParameterizedQuery => `
     SELECT c.employee_email AS employeeEmail,
            COALESCE(SUM(CAST(t.txn_amount AS DECIMAL(10,2))), 0) AS totalAmount
