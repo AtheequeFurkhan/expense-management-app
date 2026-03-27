@@ -16,22 +16,13 @@
 
 import ballerina/sql;
 
-isolated function getLastYearClaimAmountQuery(int year) returns sql:ParameterizedQuery => `
+isolated function getClaimAmountQuery(int? year = (), int? month = ()) returns sql:ParameterizedQuery => `
     SELECT COALESCE(SUM(CAST(t.txn_amount AS DECIMAL(10,2))), 0) AS total
     FROM opd_claim_transaction t
     INNER JOIN opd_claim c
         ON c.id = t.claim_id
-    WHERE YEAR(c.added_date) = ${year}
-      AND c.status IN ('0', '2', '3')
-`;
-
-isolated function getCurrentMonthClaimAmountQuery(int year, int month) returns sql:ParameterizedQuery => `
-    SELECT COALESCE(SUM(CAST(t.txn_amount AS DECIMAL(10,2))), 0) AS total
-    FROM opd_claim_transaction t
-    INNER JOIN opd_claim c
-        ON c.id = t.claim_id
-    WHERE YEAR(c.added_date) = ${year}
-      AND MONTH(c.added_date) = ${month}
+    WHERE (YEAR(c.added_date) = ${year} OR ${year} IS NULL)
+      AND (MONTH(c.added_date) = ${month} OR ${month} IS NULL)
       AND c.status IN ('0', '2', '3')
 `;
 
@@ -40,6 +31,14 @@ isolated function getPreviousYearClaimCountQuery(int year) returns sql:Parameter
     FROM opd_claim c
     WHERE YEAR(c.added_date) = ${year - 1}
       AND c.status IN ('0', '2', '3')
+`;
+
+isolated function getAllClaimEmployeeEmailsQuery() returns sql:ParameterizedQuery => `
+    SELECT DISTINCT employee_email AS employeeEmail
+    FROM opd_claim
+    WHERE status IN ('0', '2', '3')
+      AND employee_email IS NOT NULL
+      AND employee_email <> ''
 `;
 
 isolated function getClaimEmployeeEmailsForRangeQuery(int year, int month, int months) returns sql:ParameterizedQuery => `

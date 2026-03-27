@@ -197,7 +197,7 @@ export default function OpdClaims() {
           monthOptions={MONTH_OPTIONS}
           values={data.activeClaimsData}
           yAxisLabels={chartYAxisLabels}
-          xAxisLabels={OPD_CHART_CONFIG.xAxisLabels}
+          xAxisLabels={data.activeClaimsLabels}
           maxBarValue={chartMaxValue}
           chartHeight={OPD_CHART_CONFIG.chartHeight}
           barGap={OPD_CHART_CONFIG.barGap}
