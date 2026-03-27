@@ -17,6 +17,18 @@
 import ballerina/sql;
 import ballerinax/mysql;
 
+isolated function validateOpdClaimSummaryInputs(int month, int months, decimal claimRangeStep) returns error? {
+    if month < 1 || month > 12 {
+        return error(string `Invalid month '${month}'. Expected a value between 1 and 12.`);
+    }
+    if months <= 0 {
+        return error(string `Invalid months '${months}'. Expected a value greater than 0.`);
+    }
+    if claimRangeStep <= 0.0d {
+        return error(string `Invalid claim range step '${claimRangeStep}'. Expected a value greater than 0.`);
+    }
+}
+
 isolated function formatClaimRangeBoundary(decimal amount) returns string {
     return (<int> amount).toString();
 }
@@ -54,43 +66,26 @@ isolated function resolveClaimRangeLabel(decimal totalAmount, string[] rangeLabe
     return rangeLabels[rangeLabels.length() - 1];
 }
 
-public function getOpdClaimSummary(int year, int month, int months = 1)
-        returns OpdClaimSummaryResponse|error {
-    if month < 1 || month > 12 {
-        return error(string `Invalid month '${month}'. Expected a value between 1 and 12.`);
-    }
-    if months <= 0 {
-        return error(string `Invalid months '${months}'. Expected a value greater than 0.`);
-    }
-    decimal claimRangeStep = getClaimRangeStep();
-    if claimRangeStep <= 0.0d {
-        return error(string `Invalid claim range step '${claimRangeStep}'. Expected a value greater than 0.`);
+function queryClaimAmount(mysql:Client expenseDbClient, int? year = (), int? month = (), string context = "claim amount")
+        returns decimal|error {
+    AmountRow|error amountResult = expenseDbClient->queryRow(getClaimAmountQuery(year, month), AmountRow);
+    if amountResult is error {
+        return error(string `Failed to query ${context}: ${amountResult.message()}`);
     }
 
-    mysql:Client expenseDbClient = check getExpenseDbClient();
+    return amountResult.total;
+}
 
-    AmountRow|error lastYearAmountResult = expenseDbClient->queryRow(getClaimAmountQuery(year), AmountRow);
-    if lastYearAmountResult is error {
-        return error(string `Failed to query last year claim amount for year '${year}': ${lastYearAmountResult.message()}`);
+function queryPreviousYearClaimCount(mysql:Client expenseDbClient, int year) returns int|error {
+    CountRow|error countResult = expenseDbClient->queryRow(getPreviousYearClaimCountQuery(year), CountRow);
+    if countResult is error {
+        return error(string `Failed to query previous year claim count for year '${year}': ${countResult.message()}`);
     }
-    AmountRow lastYearAmount = lastYearAmountResult;
 
-    AmountRow|error currentMonthAmountResult =
-        expenseDbClient->queryRow(getClaimAmountQuery(year, month), AmountRow);
-    if currentMonthAmountResult is error {
-        return error(
-            string `Failed to query current month claim amount for year '${year}' and month '${month}': ${currentMonthAmountResult.message()}`
-        );
-    }
-    AmountRow currentMonthAmount = currentMonthAmountResult;
+    return countResult.count;
+}
 
-    CountRow|error previousYearCountResult =
-        expenseDbClient->queryRow(getPreviousYearClaimCountQuery(year), CountRow);
-    if previousYearCountResult is error {
-        return error(string `Failed to query previous year claim count for year '${year}': ${previousYearCountResult.message()}`);
-    }
-    CountRow previousYearCount = previousYearCountResult;
-
+function queryAllClaimEmployeeEmails(mysql:Client expenseDbClient) returns string[]|error {
     stream<EmployeeEmailRow, sql:Error?> allEmployeesStream =
         expenseDbClient->query(getAllClaimEmployeeEmailsQuery(), EmployeeEmailRow);
     EmployeeEmailRow[]|error allEmployeeRowsResult = from EmployeeEmailRow row in allEmployeesStream
@@ -98,11 +93,12 @@ public function getOpdClaimSummary(int year, int month, int months = 1)
     if allEmployeeRowsResult is error {
         return error(string `Failed to query employee emails from OPD claims: ${allEmployeeRowsResult.message()}`);
     }
-    EmployeeEmailRow[] allEmployeeRows = allEmployeeRowsResult;
-    string[] allEmployeeEmails = from EmployeeEmailRow row in allEmployeeRows
-        select row.employeeEmail.toLowerAscii();
-    int totalEmployees = allEmployeeEmails.length();
 
+    return from EmployeeEmailRow row in allEmployeeRowsResult
+        select row.employeeEmail.toLowerAscii();
+}
+
+function queryEmployeeTotals(mysql:Client expenseDbClient, int year, int month, int months) returns EmployeeTotalRow[]|error {
     stream<EmployeeTotalRow, sql:Error?> employeeTotalsStream =
         expenseDbClient->query(getEmployeeTotalsForRangeQuery(year, month, months), EmployeeTotalRow);
     EmployeeTotalRow[]|error employeeTotalsResult = from EmployeeTotalRow row in employeeTotalsStream
@@ -112,22 +108,31 @@ public function getOpdClaimSummary(int year, int month, int months = 1)
             string `Failed to query employee totals for year '${year}', month '${month}', months '${months}': ${employeeTotalsResult.message()}`
         );
     }
-    EmployeeTotalRow[] employeeTotals = employeeTotalsResult;
 
+    return employeeTotalsResult;
+}
+
+isolated function toEmployeesWithClaimsSet(EmployeeTotalRow[] employeeTotals) returns map<boolean> {
     map<boolean> employeesWithClaimsSet = {};
     foreach EmployeeTotalRow row in employeeTotals {
-        string normalizedEmail = row.employeeEmail.toLowerAscii();
-        employeesWithClaimsSet[normalizedEmail] = true;
+        employeesWithClaimsSet[row.employeeEmail.toLowerAscii()] = true;
     }
+    return employeesWithClaimsSet;
+}
 
+isolated function countFullyClaimedEmployees(EmployeeTotalRow[] employeeTotals, decimal annualClaimLimit) returns int {
     int fullyClaimedEmployees = 0;
     foreach EmployeeTotalRow row in employeeTotals {
-        if row.totalAmount >= getAnnualClaimLimit() {
+        if row.totalAmount >= annualClaimLimit {
             fullyClaimedEmployees += 1;
         }
     }
+    return fullyClaimedEmployees;
+}
 
-    string[] rangeLabels = buildClaimRangeLabels(getAnnualClaimLimit(), claimRangeStep);
+isolated function buildActiveClaimsChart(EmployeeTotalRow[] employeeTotals, decimal annualClaimLimit, decimal claimRangeStep)
+        returns ClaimBucket[] {
+    string[] rangeLabels = buildClaimRangeLabels(annualClaimLimit, claimRangeStep);
     map<int> rangeCounts = {};
     foreach string rangeLabel in rangeLabels {
         rangeCounts[rangeLabel] = 0;
@@ -138,21 +143,54 @@ public function getOpdClaimSummary(int year, int month, int months = 1)
         rangeCounts[rangeLabel] = (rangeCounts[rangeLabel] ?: 0) + 1;
     }
 
+    return from string rangeLabel in rangeLabels
+        select {
+            range: rangeLabel,
+            count: rangeCounts[rangeLabel] ?: 0
+        };
+}
+
+public function getOpdClaimSummary(int year, int month, int months = 1)
+        returns OpdClaimSummaryResponse|error {
+    decimal claimRangeStep = getClaimRangeStep();
+    error? validationError = validateOpdClaimSummaryInputs(month, months, claimRangeStep);
+    if validationError is error {
+        return validationError;
+    }
+
+    mysql:Client expenseDbClient = check getExpenseDbClient();
+
+    decimal lastYearClaimAmount = check queryClaimAmount(
+        expenseDbClient,
+        year,
+        (),
+        string `last year claim amount for year '${year}'`
+    );
+    decimal currentMonthClaimAmount = check queryClaimAmount(
+        expenseDbClient,
+        year,
+        month,
+        string `current month claim amount for year '${year}' and month '${month}'`
+    );
+    int previousYearClaimCount = check queryPreviousYearClaimCount(expenseDbClient, year);
+    string[] allEmployeeEmails = check queryAllClaimEmployeeEmails(expenseDbClient);
+    int totalEmployees = allEmployeeEmails.length();
+    EmployeeTotalRow[] employeeTotals = check queryEmployeeTotals(expenseDbClient, year, month, months);
+
+    map<boolean> employeesWithClaimsSet = toEmployeesWithClaimsSet(employeeTotals);
+    decimal annualClaimLimit = getAnnualClaimLimit();
+    int fullyClaimedEmployees = countFullyClaimedEmployees(employeeTotals, annualClaimLimit);
+    ClaimBucket[] activeClaimsChart = buildActiveClaimsChart(employeeTotals, annualClaimLimit, claimRangeStep);
+
     int unclaimedEmployees = totalEmployees - employeesWithClaimsSet.length();
     if unclaimedEmployees < 0 {
         unclaimedEmployees = 0;
     }
 
-    ClaimBucket[] activeClaimsChart = from string rangeLabel in rangeLabels
-        select {
-            range: rangeLabel,
-            count: rangeCounts[rangeLabel] ?: 0
-        };
-
     return {
-        lastYearClaimAmount: lastYearAmount.total,
-        currentMonthClaimAmount: currentMonthAmount.total,
-        previousYearClaimCount: previousYearCount.count,
+        lastYearClaimAmount: lastYearClaimAmount,
+        currentMonthClaimAmount: currentMonthClaimAmount,
+        previousYearClaimCount: previousYearClaimCount,
         gracePeriodClaims: 0,
         unclaimedEmployees: unclaimedEmployees,
         fullyClaimedEmployees: fullyClaimedEmployees,
