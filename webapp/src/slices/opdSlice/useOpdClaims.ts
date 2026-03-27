@@ -13,6 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
@@ -62,26 +63,17 @@ export interface OpdClaimsState {
 }
 
 export const DEFAULT_OPD_DATA: OpdClaimsData = {
-  claimAmountLastYear: 8124500,
-  currentMonthClaimAmount: 65210,
-  claimsCountPreviousYear: 12470,
-  gracePeriodClaims: 984,
-  activeClaimsLabels: [
-    "0-5000",
-    "5000-10000",
-    "10000-15000",
-    "15000-20000",
-    "20000-25000",
-    "25000-30000",
-    "30000-35000",
-    "35000-40000",
-  ],
-  activeClaimsData: [4, 5, 6, 7, 6, 7, 8, 9],
-  unclaimedCount: 22,
-  fullyClaimedCount: 9,
-  trendLastYear: -2.5,
-  trendCurrentMonth: 5.8,
-  trendPreviousYear: 2.5,
+  claimAmountLastYear: 0,
+  currentMonthClaimAmount: 0,
+  claimsCountPreviousYear: 0,
+  gracePeriodClaims: 0,
+  activeClaimsLabels: [],
+  activeClaimsData: [],
+  unclaimedCount: 0,
+  fullyClaimedCount: 0,
+  trendLastYear: 0,
+  trendCurrentMonth: 0,
+  trendPreviousYear: 0,
 };
 
 const initialState: OpdClaimsState = {
@@ -180,7 +172,7 @@ export const fetchOpdClaims = createAsyncThunk<
     if (axios.isCancel(err)) {
       return DEFAULT_OPD_DATA;
     }
-    console.warn("Error fetching OPD claims, falling back to dummy data:", err);
+    console.warn("Error fetching OPD claims, falling back to empty defaults:", err);
     return DEFAULT_OPD_DATA;
   }
 });
