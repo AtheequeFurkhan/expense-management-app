@@ -70,6 +70,11 @@ export default function ActiveClaimsChart({
 
   const xTickLabels = xAxisLabels.map((label) => label.split("-")[0].trim());
   const lastTickLabel = xAxisLabels[xAxisLabels.length - 1]?.split("-")[1]?.trim() ?? "";
+  const longestXAxisLabelLength = xAxisLabels.reduce((maxLength, label) => {
+    return Math.max(maxLength, label.length);
+  }, 0);
+  const xAxisFontSize =
+    longestXAxisLabelLength > 12 ? 8.5 : longestXAxisLabelLength > 9 ? 9.5 : 10.5;
 
   return (
     <Box
@@ -208,6 +213,7 @@ export default function ActiveClaimsChart({
               height: chartHeight,
               alignItems: "flex-end",
               gap: "2px",
+              pr: 2,
             }}
           >
             {renderedBarValues.map((value, index) => {
@@ -292,14 +298,16 @@ export default function ActiveClaimsChart({
               gridTemplateColumns: `repeat(${barCount}, 1fr)`,
               mt: 0.8,
               position: "relative",
+              pr: 2,
             }}
           >
             {xTickLabels.map((tick, index) => (
               <Box key={index} sx={{ position: "relative", height: 16 }}>
                 <Typography
                   sx={{
-                    fontSize: 11,
+                    fontSize: xAxisFontSize,
                     color: "text.disabled",
+                    fontWeight: 600,
                     lineHeight: 1,
                     position: "absolute",
                     left: 0,
@@ -312,12 +320,13 @@ export default function ActiveClaimsChart({
                 {index === barCount - 1 && (
                   <Typography
                     sx={{
-                      fontSize: 11,
+                      fontSize: xAxisFontSize,
                       color: "text.disabled",
+                      fontWeight: 600,
                       lineHeight: 1,
                       position: "absolute",
                       right: 0,
-                      transform: "translateX(50%)",
+                      transform: "translateX(10%)",
                       whiteSpace: "nowrap",
                     }}
                   >
