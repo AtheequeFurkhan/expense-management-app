@@ -21,6 +21,7 @@ import ballerinax/mysql.driver as _;
 configurable decimal connectTimeout = 10.0;
 configurable decimal annualClaimLimit = 40000.0;
 configurable decimal claimRangeStep = 5000.0;
+configurable int lastYearClaimGracePeriodInDays = 15;
 configurable DatabaseConfig expenseDatabaseConfig = ?;
 
 mysql:Client? expenseDbClient = ();
@@ -107,4 +108,8 @@ public isolated function getAnnualClaimLimit() returns decimal {
 
 public isolated function getClaimRangeStep() returns decimal {
     return claimRangeStep;
+}
+
+public isolated function getLastYearClaimGracePeriodInDays() returns int {
+    return lastYearClaimGracePeriodInDays;
 }

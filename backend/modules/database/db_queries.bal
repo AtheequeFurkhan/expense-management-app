@@ -33,6 +33,17 @@ isolated function getPreviousYearClaimCountQuery(int year) returns sql:Parameter
       AND c.status IN ('0', '2', '3')
 `;
 
+isolated function getGracePeriodClaimCountQuery(int year, int gracePeriodDays) returns sql:ParameterizedQuery => `
+    SELECT COUNT(DISTINCT c.id) AS count
+    FROM opd_claim c
+    WHERE c.added_date >= STR_TO_DATE(CONCAT(${year}, '-01-01'), '%Y-%m-%d')
+      AND c.added_date < DATE_ADD(
+            STR_TO_DATE(CONCAT(${year}, '-01-01'), '%Y-%m-%d'),
+            INTERVAL ${gracePeriodDays} DAY
+          )
+      AND c.status IN ('0', '2', '3')
+`;
+
 isolated function getAllClaimEmployeeEmailsQuery() returns sql:ParameterizedQuery => `
     SELECT DISTINCT employee_email AS employeeEmail
     FROM opd_claim

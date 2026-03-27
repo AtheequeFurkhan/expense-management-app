@@ -85,6 +85,18 @@ function queryPreviousYearClaimCount(mysql:Client expenseDbClient, int year) ret
     return countResult.count;
 }
 
+function queryGracePeriodClaimCount(mysql:Client expenseDbClient, int year, int gracePeriodDays) returns int|error {
+    CountRow|error countResult =
+        expenseDbClient->queryRow(getGracePeriodClaimCountQuery(year, gracePeriodDays), CountRow);
+    if countResult is error {
+        return error(
+            string `Failed to query grace period claim count for year '${year}' and grace period '${gracePeriodDays}' days: ${countResult.message()}`
+        );
+    }
+
+    return countResult.count;
+}
+
 function queryAllClaimEmployeeEmails(mysql:Client expenseDbClient) returns string[]|error {
     stream<EmployeeEmailRow, sql:Error?> allEmployeesStream =
         expenseDbClient->query(getAllClaimEmployeeEmailsQuery(), EmployeeEmailRow);
@@ -173,6 +185,11 @@ public function getOpdClaimSummary(int year, int month, int months = 1)
         string `current month claim amount for year '${year}' and month '${month}'`
     );
     int previousYearClaimCount = check queryPreviousYearClaimCount(expenseDbClient, year);
+    int gracePeriodClaims = check queryGracePeriodClaimCount(
+        expenseDbClient,
+        year,
+        getLastYearClaimGracePeriodInDays()
+    );
     string[] allEmployeeEmails = check queryAllClaimEmployeeEmails(expenseDbClient);
     int totalEmployees = allEmployeeEmails.length();
     EmployeeTotalRow[] employeeTotals = check queryEmployeeTotals(expenseDbClient, year, month, months);
@@ -191,7 +208,7 @@ public function getOpdClaimSummary(int year, int month, int months = 1)
         lastYearClaimAmount: lastYearClaimAmount,
         currentMonthClaimAmount: currentMonthClaimAmount,
         previousYearClaimCount: previousYearClaimCount,
-        gracePeriodClaims: 0,
+        gracePeriodClaims: gracePeriodClaims,
         unclaimedEmployees: unclaimedEmployees,
         fullyClaimedEmployees: fullyClaimedEmployees,
         activeClaimsChart: activeClaimsChart
