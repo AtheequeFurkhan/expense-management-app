@@ -16,10 +16,10 @@
 
 import ballerina/http;
 
-# Fetch Employee Data.
+# Fetch basic employee details for the given work email from the HR entity service.
 #
-# + workEmail - WSO2 email address
-# + return - Employee | Error
+# + workEmail - Work email address of the employee to look up
+# + return - Employee details if the HR entity lookup succeeds, otherwise an error
 public isolated function fetchEmployeesBasicInfo(string workEmail) returns Employee|error {
     string document = string `
         query employeeQuery ($workEmail: String!) {
@@ -72,6 +72,9 @@ public isolated function fetchEmployeesBasicInfo(string workEmail) returns Emplo
     return parsed.data.employee;
 }
 
+# Fetch work email addresses of active employees in Sri Lanka from the HR entity service.
+#
+# + return - Normalized employee work email addresses if the HR entity lookup succeeds, otherwise an error
 public isolated function fetchActiveSriLankaEmployeeEmails() returns string[]|error {
     string document = string `
         query activeEmployees {
