@@ -24,6 +24,10 @@ configurable decimal claimRangeStep = ?;
 configurable int lastYearClaimGracePeriodInDays = ?;
 configurable DatabaseConfig expenseDatabaseConfig = ?;
 
+type HealthCheckRow record {|
+    int status;
+|};
+
 mysql:Client? expenseDbClient = ();
 boolean expenseDbHealthy = false;
 string? expenseDbStatusMessage = ();
@@ -79,9 +83,31 @@ public function getExpenseDbClient() returns mysql:Client|error {
     }
 }
 
-public function getDatabaseHealth() returns json {
-    if getExpenseDbClient() is error {
+function refreshExpenseDbHealth() {
+    mysql:Client|error dbClientOrError = getExpenseDbClient();
+    if dbClientOrError is error {
+        lock {
+            expenseDbHealthy = false;
+            expenseDbStatusMessage = dbClientOrError.message();
+        }
+        return;
     }
+
+    HealthCheckRow|error healthCheckResult = dbClientOrError->queryRow(`SELECT 1 AS status`, HealthCheckRow);
+    lock {
+        if healthCheckResult is error {
+            expenseDbHealthy = false;
+            expenseDbStatusMessage = healthCheckResult.message();
+            return;
+        }
+
+        expenseDbHealthy = true;
+        expenseDbStatusMessage = ();
+    }
+}
+
+public function getDatabaseHealth() returns json {
+    refreshExpenseDbHealth();
 
     lock {
         return {
