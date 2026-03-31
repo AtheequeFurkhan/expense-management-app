@@ -101,15 +101,3 @@ public function isDatabaseHealthy() returns boolean {
         return expenseDbHealthy;
     }
 }
-
-public isolated function getAnnualClaimLimit() returns decimal {
-    return annualClaimLimit;
-}
-
-public isolated function getClaimRangeStep() returns decimal {
-    return claimRangeStep;
-}
-
-public isolated function getLastYearClaimGracePeriodInDays() returns int {
-    return lastYearClaimGracePeriodInDays;
-}

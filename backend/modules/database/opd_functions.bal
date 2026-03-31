@@ -209,7 +209,6 @@ isolated function buildActiveClaimsChart(EmployeeTotalRow[] employeeTotals, deci
 # + return - OPD claim summary response if all queries succeed, otherwise an error
 public function getOpdClaimSummary(int year, int month, int months = 1)
         returns OpdClaimSummaryResponse|error {
-    decimal claimRangeStep = getClaimRangeStep();
     mysql:Client expenseDbClient = check getExpenseDbClient();
 
     decimal lastYearClaimAmount = check queryClaimAmount(
@@ -228,14 +227,13 @@ public function getOpdClaimSummary(int year, int month, int months = 1)
     int gracePeriodClaims = check queryGracePeriodClaimCount(
         expenseDbClient,
         year,
-        getLastYearClaimGracePeriodInDays()
+        lastYearClaimGracePeriodInDays
     );
     string[] allEmployeeEmails = check queryAllClaimEmployeeEmails(expenseDbClient);
     int totalEmployees = allEmployeeEmails.length();
     EmployeeTotalRow[] employeeTotals = check queryEmployeeTotals(expenseDbClient, year, month, months);
 
     map<boolean> employeesWithClaimsSet = toEmployeesWithClaimsSet(employeeTotals);
-    decimal annualClaimLimit = getAnnualClaimLimit();
     int fullyClaimedEmployees = countFullyClaimedEmployees(employeeTotals, annualClaimLimit);
     ClaimBucket[] activeClaimsChart = buildActiveClaimsChart(employeeTotals, annualClaimLimit, claimRangeStep);
 
