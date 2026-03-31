@@ -17,16 +17,6 @@
 import ballerina/sql;
 import ballerinax/mysql;
 
-# Validate OPD summary configuration before querying the database.
-#
-# + claimRangeStep - Configured amount step used for chart ranges
-# + return - An error if the configured value is invalid, otherwise `()`
-isolated function validateOpdClaimSummaryConfig(decimal claimRangeStep) returns error? {
-    if claimRangeStep <= 0.0d {
-        return error(string `Invalid claim range step '${claimRangeStep}'. Expected a value greater than 0.`);
-    }
-}
-
 # Build claim range labels for the active claims chart.
 #
 # + upperLimit - Maximum claim amount represented by the chart
@@ -220,11 +210,6 @@ isolated function buildActiveClaimsChart(EmployeeTotalRow[] employeeTotals, deci
 public function getOpdClaimSummary(int year, int month, int months = 1)
         returns OpdClaimSummaryResponse|error {
     decimal claimRangeStep = getClaimRangeStep();
-    error? validationError = validateOpdClaimSummaryConfig(claimRangeStep);
-    if validationError is error {
-        return validationError;
-    }
-
     mysql:Client expenseDbClient = check getExpenseDbClient();
 
     decimal lastYearClaimAmount = check queryClaimAmount(
