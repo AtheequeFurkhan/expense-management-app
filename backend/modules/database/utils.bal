@@ -63,3 +63,11 @@ isolated function buildSqlSelectQuery(sql:ParameterizedQuery mainQuery, sql:Para
 
     return updatedQuery;
 }
+
+# Convert a decimal value into a whole-number string.
+#
+# + amount - Decimal value to format
+# + return - String representation of the value without decimals
+isolated function formatWholeNumber(decimal amount) returns string {
+    return (<int> amount).toString();
+}
