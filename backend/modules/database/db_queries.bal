@@ -26,10 +26,10 @@ isolated function getClaimAmountQuery(int? year = (), int? month = ()) returns s
       AND c.status IN ('0', '2', '3')
 `;
 
-isolated function getPreviousYearClaimCountQuery(int year) returns sql:ParameterizedQuery => `
+isolated function getClaimCountQuery(int year) returns sql:ParameterizedQuery => `
     SELECT COUNT(DISTINCT c.id) AS count
     FROM opd_claim c
-    WHERE YEAR(c.added_date) = ${year - 1}
+    WHERE YEAR(c.added_date) = ${year}
       AND c.status IN ('0', '2', '3')
 `;
 

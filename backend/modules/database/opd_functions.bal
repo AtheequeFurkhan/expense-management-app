@@ -78,15 +78,15 @@ function queryClaimAmount(mysql:Client expenseDbClient, int? year = (), int? mon
     return amountResult.total;
 }
 
-# Query the number of claims submitted during the previous year.
+# Query the number of claims submitted during the given year.
 #
 # + expenseDbClient - Expense database client
-# + year - Current reporting year used to derive the previous year
-# + return - Previous year claim count if the query succeeds, otherwise an error
-function queryPreviousYearClaimCount(mysql:Client expenseDbClient, int year) returns int|error {
-    CountRow|error countResult = expenseDbClient->queryRow(getPreviousYearClaimCountQuery(year), CountRow);
+# + year - Reporting year used to filter claims
+# + return - Claim count for the given year if the query succeeds, otherwise an error
+function queryClaimCount(mysql:Client expenseDbClient, int year) returns int|error {
+    CountRow|error countResult = expenseDbClient->queryRow(getClaimCountQuery(year), CountRow);
     if countResult is error {
-        return error(string `Failed to query previous year claim count for year '${year}': ${countResult.message()}`);
+        return error(string `Failed to query claim count for year '${year}': ${countResult.message()}`);
     }
 
     return countResult.count;
@@ -224,7 +224,7 @@ public function getOpdClaimSummary(int year, int month, int months = 1)
         month,
         string `current month claim amount for year '${year}' and month '${month}'`
     );
-    int previousYearClaimCount = check queryPreviousYearClaimCount(expenseDbClient, year);
+    int previousYearClaimCount = check queryClaimCount(expenseDbClient, year - 1);
     int gracePeriodClaims = check queryGracePeriodClaimCount(
         expenseDbClient,
         year,
