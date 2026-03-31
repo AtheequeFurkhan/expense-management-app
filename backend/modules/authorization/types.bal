@@ -26,6 +26,6 @@ public type CustomJwtPayload record {
 public type AppRoles record {|
     # Role granted to employees.
     string employeeRole;
-    # Role granted to the head of people operations.
-    string headPeopleOperationsRole;
+    # Role granted to finance administrators.
+    string financeAdminRole;
 |};

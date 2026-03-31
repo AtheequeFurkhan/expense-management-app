@@ -1,6 +1,6 @@
 [expense_management.authorization.authorizedRoles]
 employeeRole = 
-headPeopleOperationsRole =
+financeAdminRole =
 
 [expense_management.appConfig]
 sampleAppConfig = 

@@ -91,8 +91,8 @@ service http:InterceptableService / on new http:Listener(9090) {
         if authorization:checkPermissions([authorization:authorizedRoles.employeeRole], userInfo.groups) {
             privileges.push(authorization:EMPLOYEE_ROLE_PRIVILEGE);
         }
-        if authorization:checkPermissions([authorization:authorizedRoles.headPeopleOperationsRole], userInfo.groups) {
-            privileges.push(authorization:HEAD_PEOPLE_OPERATIONS_PRIVILEGE);
+        if authorization:checkPermissions([authorization:authorizedRoles.financeAdminRole], userInfo.groups) {
+            privileges.push(authorization:FINANCE_ADMIN_PRIVILEGE);
         }
 
         UserInfoResponse userInfoResponse = {...loggedInUser, privileges};
@@ -144,12 +144,12 @@ service http:InterceptableService / on new http:Listener(9090) {
             [authorization:authorizedRoles.employeeRole],
             userInfo.groups
         );
-        boolean hasHeadPeopleOperationsRole = authorization:checkPermissions(
-            [authorization:authorizedRoles.headPeopleOperationsRole],
+        boolean hasFinanceAdminRole = authorization:checkPermissions(
+            [authorization:authorizedRoles.financeAdminRole],
             userInfo.groups
         );
 
-        if !(hasEmployeeRole || hasHeadPeopleOperationsRole) {
+        if !(hasEmployeeRole || hasFinanceAdminRole) {
             return <http:Forbidden>{
                 body: {
                     message: "Insufficient privileges!"
