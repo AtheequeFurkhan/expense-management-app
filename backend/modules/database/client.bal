@@ -32,35 +32,9 @@ mysql:Client? expenseDbClient = ();
 boolean expenseDbHealthy = false;
 string? expenseDbStatusMessage = ();
 
-# Function to create Expense DB connection.
+# Get the shared expense database client, initializing it lazily when needed.
 #
-# + return - If success returns MySQL DB client or error
-public isolated function initializeExpenseDbClient() returns mysql:Client|error {
-    mysql:Options expenseDbOptions = {
-        ssl: {
-            mode: mysql:SSL_REQUIRED
-        },
-        connectTimeout: connectTimeout
-    };
-
-    mysql:Client|error mysqlClient = new (
-        host = expenseDatabaseConfig.host,
-        port = expenseDatabaseConfig.port,
-        user = expenseDatabaseConfig.user,
-        password = expenseDatabaseConfig.password,
-        database = expenseDatabaseConfig.database,
-        connectionPool = expenseDatabaseConfig.connectionPool,
-        options = expenseDbOptions
-    );
-
-    if mysqlClient is error {
-        log:printError("Failed to initialize expense database client.", mysqlClient);
-        return error("Error in connecting to the expense database!");
-    }
-
-    return mysqlClient;
-}
-
+# + return - Cached MySQL DB client if initialization succeeds, otherwise an error
 public function getExpenseDbClient() returns mysql:Client|error {
     lock {
         mysql:Client? currentExpenseDbClient = expenseDbClient;
@@ -68,7 +42,22 @@ public function getExpenseDbClient() returns mysql:Client|error {
             return currentExpenseDbClient;
         }
 
-        mysql:Client|error dbClientOrError = initializeExpenseDbClient();
+        mysql:Options expenseDbOptions = {
+            ssl: {
+                mode: mysql:SSL_REQUIRED
+            },
+            connectTimeout: connectTimeout
+        };
+
+        mysql:Client|error dbClientOrError = new (
+            host = expenseDatabaseConfig.host,
+            port = expenseDatabaseConfig.port,
+            user = expenseDatabaseConfig.user,
+            password = expenseDatabaseConfig.password,
+            database = expenseDatabaseConfig.database,
+            connectionPool = expenseDatabaseConfig.connectionPool,
+            options = expenseDbOptions
+        );
         if dbClientOrError is mysql:Client {
             expenseDbClient = dbClientOrError;
             expenseDbHealthy = true;
@@ -76,9 +65,10 @@ public function getExpenseDbClient() returns mysql:Client|error {
             return dbClientOrError;
         }
 
+        log:printError("Failed to initialize expense database client.", dbClientOrError);
         expenseDbClient = ();
         expenseDbHealthy = false;
-        expenseDbStatusMessage = dbClientOrError.message();
+        expenseDbStatusMessage = "Error in connecting to the expense database!";
         return dbClientOrError;
     }
 }
