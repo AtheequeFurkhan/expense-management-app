@@ -20,4 +20,4 @@ public const HEADER_USER_INFO = "user-info";
 
 # Privileges.
 public const EMPLOYEE_ROLE_PRIVILEGE = 987;
-public const HEAD_PEOPLE_OPERATIONS_PRIVILEGE = 762;
+public const FINANCE_ADMIN_PRIVILEGE = 762;
