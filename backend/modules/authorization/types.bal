@@ -29,22 +29,3 @@ public type AppRoles record {|
     # Role granted to the head of people operations.
     string headPeopleOperationsRole;
 |};
-
-# Employee email details returned by the HR entity response.
-#
-# + workEmail - Work email address of the employee
-public type EmployeeEmail record {|
-    string workEmail;
-|};
-
-# HR entity payload section containing the employee email list.
-type EmployeesData record {|
-    # Employee records returned by the HR entity.
-    EmployeeEmail[] employees;
-|};
-
-# Top-level HR entity response containing employee data.
-type EmplyeesResponse record {|
-    # Data object returned by the HR entity query.
-    EmployeesData data;
-|};
