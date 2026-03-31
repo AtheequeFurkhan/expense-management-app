@@ -35,14 +35,6 @@ isolated function validateOpdClaimSummaryInputs(int month, int months, decimal c
     }
 }
 
-# Convert a decimal claim boundary into a whole-number string label.
-#
-# + amount - Claim amount boundary to format
-# + return - String representation of the boundary without decimals
-isolated function formatClaimRangeBoundary(decimal amount) returns string {
-    return (<int> amount).toString();
-}
-
 # Build claim range labels for the active claims chart.
 #
 # + upperLimit - Maximum claim amount represented by the chart
@@ -59,7 +51,7 @@ isolated function buildClaimRangeLabels(decimal upperLimit, decimal rangeStep) r
         }
 
         rangeLabels.push(
-            string `${formatClaimRangeBoundary(currentStart)}-${formatClaimRangeBoundary(currentEnd)}`
+            string `${formatWholeNumber(currentStart)}-${formatWholeNumber(currentEnd)}`
         );
         currentStart = currentEnd;
     }
