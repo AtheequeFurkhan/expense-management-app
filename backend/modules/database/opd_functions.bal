@@ -17,19 +17,11 @@
 import ballerina/sql;
 import ballerinax/mysql;
 
-# Validate OPD summary request inputs before querying the database.
+# Validate OPD summary configuration before querying the database.
 #
-# + month - Requested month for the summary
-# + months - Number of months included in the summary window
 # + claimRangeStep - Configured amount step used for chart ranges
-# + return - An error if any input is invalid, otherwise `()`
-isolated function validateOpdClaimSummaryInputs(int month, int months, decimal claimRangeStep) returns error? {
-    if month < 1 || month > 12 {
-        return error(string `Invalid month '${month}'. Expected a value between 1 and 12.`);
-    }
-    if months <= 0 {
-        return error(string `Invalid months '${months}'. Expected a value greater than 0.`);
-    }
+# + return - An error if the configured value is invalid, otherwise `()`
+isolated function validateOpdClaimSummaryConfig(decimal claimRangeStep) returns error? {
     if claimRangeStep <= 0.0d {
         return error(string `Invalid claim range step '${claimRangeStep}'. Expected a value greater than 0.`);
     }
@@ -228,7 +220,7 @@ isolated function buildActiveClaimsChart(EmployeeTotalRow[] employeeTotals, deci
 public function getOpdClaimSummary(int year, int month, int months = 1)
         returns OpdClaimSummaryResponse|error {
     decimal claimRangeStep = getClaimRangeStep();
-    error? validationError = validateOpdClaimSummaryInputs(month, months, claimRangeStep);
+    error? validationError = validateOpdClaimSummaryConfig(claimRangeStep);
     if validationError is error {
         return validationError;
     }
