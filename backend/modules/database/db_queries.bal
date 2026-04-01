@@ -23,14 +23,22 @@ isolated function getClaimAmountQuery(int? year = (), int? month = ()) returns s
         ON c.id = t.claim_id
     WHERE (YEAR(c.added_date) = ${year} OR ${year} IS NULL)
       AND (MONTH(c.added_date) = ${month} OR ${month} IS NULL)
-      AND c.status IN ('0', '2', '3')
+      AND c.status IN (
+            ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
+            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
+            ${OPD_CLAIM_STATUS_APPROVED}
+          )
 `;
 
 isolated function getClaimCountQuery(int year) returns sql:ParameterizedQuery => `
     SELECT COUNT(DISTINCT c.id) AS count
     FROM opd_claim c
     WHERE YEAR(c.added_date) = ${year}
-      AND c.status IN ('0', '2', '3')
+      AND c.status IN (
+            ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
+            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
+            ${OPD_CLAIM_STATUS_APPROVED}
+          )
 `;
 
 isolated function getGracePeriodClaimCountQuery(int year, int gracePeriodDays) returns sql:ParameterizedQuery => `
@@ -41,13 +49,21 @@ isolated function getGracePeriodClaimCountQuery(int year, int gracePeriodDays) r
             STR_TO_DATE(CONCAT(${year}, '-01-01'), '%Y-%m-%d'),
             INTERVAL ${gracePeriodDays} DAY
           )
-      AND c.status IN ('0', '2', '3')
+      AND c.status IN (
+            ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
+            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
+            ${OPD_CLAIM_STATUS_APPROVED}
+          )
 `;
 
 isolated function getAllClaimEmployeeEmailsQuery() returns sql:ParameterizedQuery => `
     SELECT DISTINCT employee_email AS employeeEmail
     FROM opd_claim
-    WHERE status IN ('0', '2', '3')
+    WHERE status IN (
+            ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
+            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
+            ${OPD_CLAIM_STATUS_APPROVED}
+          )
       AND employee_email IS NOT NULL
       AND employee_email <> ''
 `;
@@ -66,7 +82,11 @@ isolated function getEmployeeTotalsForRangeQuery(int year, int month, int months
             STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
             INTERVAL 1 MONTH
           )
-      AND c.status IN ('0', '2', '3')
+      AND c.status IN (
+            ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
+            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
+            ${OPD_CLAIM_STATUS_APPROVED}
+          )
       AND c.employee_email IS NOT NULL
       AND c.employee_email <> ''
     GROUP BY c.employee_email
@@ -86,7 +106,11 @@ isolated function getMonthlyClaimTransactionsQuery(int year, int month, int mont
             STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
             INTERVAL 1 MONTH
           )
-      AND c.status IN ('0', '2', '3')
+      AND c.status IN (
+            ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
+            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
+            ${OPD_CLAIM_STATUS_APPROVED}
+          )
       AND c.employee_email IS NOT NULL
       AND c.employee_email <> ''
 `;
