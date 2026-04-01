@@ -17,6 +17,16 @@
 import ballerina/http;
 import ballerina/sql;
 
+# OPD claim status codes stored in the database.
+public enum OpdClaimStatus {
+    OPD_CLAIM_STATUS_DELETED = "-1",
+    OPD_CLAIM_STATUS_PENDING_APPROVAL = "0",
+    OPD_CLAIM_STATUS_REJECTED = "1",
+    OPD_CLAIM_STATUS_LEAD_APPROVED = "2",
+    OPD_CLAIM_STATUS_APPROVED = "3",
+    OPD_CLAIM_STATUS_CANCELLED = "5"
+}
+
 # Configurable database connection settings.
 public type DatabaseConfig record {|
     # Host name or IP address of the database server.
