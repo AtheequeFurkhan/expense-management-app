@@ -14,9 +14,11 @@
 // specific language governing permissions and limitations
 // under the License.
 
-# + requiredRoles - Required Role list
-# + userRoles - Roles list, The user has
-# + return - Allow or not
+# Check whether the user has all required roles.
+#
+# + requiredRoles - Roles required for the action
+# + userRoles - Roles assigned to the user
+# + return - `true` if the user has all required roles, otherwise `false`
 public isolated function checkPermissions(string[] requiredRoles, string[] userRoles) returns boolean {
     if userRoles.length() == 0 && requiredRoles.length() > 0 {
         return false;
