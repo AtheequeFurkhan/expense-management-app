@@ -24,6 +24,9 @@ configurable decimal claimRangeStep = ?;
 configurable int lastYearClaimGracePeriodInDays = ?;
 configurable DatabaseConfig expenseDatabaseConfig = ?;
 
+# Database health check query result.
+#
+# + status - field description
 type HealthCheckRow record {|
     int status;
 |};
@@ -73,6 +76,7 @@ public function getExpenseDbClient() returns mysql:Client|error {
     }
 }
 
+# Refresh the cached health status of the expense database.
 function refreshExpenseDbHealth() {
     mysql:Client|error dbClientOrError = getExpenseDbClient();
     if dbClientOrError is error {
@@ -96,6 +100,9 @@ function refreshExpenseDbHealth() {
     }
 }
 
+# Get the health status of the expense database dependency.
+#
+# + return - Health information for the expense database
 public function getDatabaseHealth() returns json {
     refreshExpenseDbHealth();
 
@@ -112,6 +119,9 @@ public function getDatabaseHealth() returns json {
     }
 }
 
+# Check whether the expense database dependency is currently healthy.
+#
+# + return - `true` if the expense database is healthy, otherwise `false`
 public function isDatabaseHealthy() returns boolean {
     lock {
         return expenseDbHealthy;

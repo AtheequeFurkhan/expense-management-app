@@ -16,6 +16,11 @@
 
 import ballerina/sql;
 
+# Build the query for aggregated claim amount filtered by year and optional month.
+#
+# + year - Year used to filter claims, if provided
+# + month - Month used to filter claims, if provided
+# + return - Parameterized SQL query for aggregated claim amount
 isolated function getClaimAmountQuery(int? year = (), int? month = ()) returns sql:ParameterizedQuery => `
     SELECT COALESCE(SUM(CAST(t.txn_amount AS DECIMAL(10,2))), 0) AS total
     FROM opd_claim_transaction t
@@ -30,6 +35,10 @@ isolated function getClaimAmountQuery(int? year = (), int? month = ()) returns s
           )
 `;
 
+# Build the query for the total number of claims submitted during a given year.
+#
+# + year - Year used to filter claims
+# + return - Parameterized SQL query for annual claim count
 isolated function getClaimCountQuery(int year) returns sql:ParameterizedQuery => `
     SELECT COUNT(DISTINCT c.id) AS count
     FROM opd_claim c
@@ -41,6 +50,11 @@ isolated function getClaimCountQuery(int year) returns sql:ParameterizedQuery =>
           )
 `;
 
+# Build the query for the number of claims submitted during the January grace period.
+#
+# + year - Year used to evaluate the grace-period submission window
+# + gracePeriodDays - Number of days included in the grace period
+# + return - Parameterized SQL query for grace-period claim count
 isolated function getGracePeriodClaimCountQuery(int year, int gracePeriodDays) returns sql:ParameterizedQuery => `
     SELECT COUNT(DISTINCT c.id) AS count
     FROM opd_claim c
@@ -56,6 +70,9 @@ isolated function getGracePeriodClaimCountQuery(int year, int gracePeriodDays) r
           )
 `;
 
+# Build the query for all employee emails that have accepted OPD claims.
+#
+# + return - Parameterized SQL query for distinct employee emails in OPD claims
 isolated function getAllClaimEmployeeEmailsQuery() returns sql:ParameterizedQuery => `
     SELECT DISTINCT employee_email AS employeeEmail
     FROM opd_claim
@@ -68,6 +85,12 @@ isolated function getAllClaimEmployeeEmailsQuery() returns sql:ParameterizedQuer
       AND employee_email <> ''
 `;
 
+# Build the query for per-employee claim totals across the selected reporting range.
+#
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + return - Parameterized SQL query for per-employee claim totals
 isolated function getEmployeeTotalsForRangeQuery(int year, int month, int months) returns sql:ParameterizedQuery => `
     SELECT c.employee_email AS employeeEmail,
            COALESCE(SUM(CAST(t.txn_amount AS DECIMAL(10,2))), 0) AS totalAmount
@@ -92,6 +115,12 @@ isolated function getEmployeeTotalsForRangeQuery(int year, int month, int months
     GROUP BY c.employee_email
 `;
 
+# Build the query for claim transaction amounts across the selected reporting range.
+#
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + return - Parameterized SQL query for claim transaction amounts
 isolated function getMonthlyClaimTransactionsQuery(int year, int month, int months) returns sql:ParameterizedQuery => `
     SELECT c.employee_email AS employeeEmail,
            CAST(t.txn_amount AS DECIMAL(10,2)) AS amount

@@ -23,6 +23,12 @@ public configurable AppRoles authorizedRoles = ?;
 public isolated service class JwtInterceptor {
 
     *http:RequestInterceptor;
+
+    # Intercept incoming requests and attach validated user information to the request context.
+    #
+    # + ctx - Request context used to share authenticated user information
+    # + req - Incoming HTTP request
+    # + return - Next service when authorization succeeds, otherwise an HTTP error response
     isolated resource function default [string... path](http:RequestContext ctx, http:Request req)
         returns http:NextService|http:Forbidden|http:InternalServerError|error? {
 

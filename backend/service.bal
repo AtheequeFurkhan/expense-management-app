@@ -38,6 +38,11 @@ final cache:Cache cache = new ({
 service class ErrorInterceptor {
     *http:ResponseErrorInterceptor;
 
+    # Convert payload binding failures into client-friendly bad request responses.
+    #
+    # + err - Response error raised while handling the request
+    # + ctx - Request context for the current request
+    # + return - Bad request response for payload binding failures, otherwise the original error
     remote function interceptResponseError(error err, http:RequestContext ctx) returns http:BadRequest|error {
         if err is http:PayloadBindingError {
             string customError = "Payload binding failed!";
@@ -54,11 +59,21 @@ service class ErrorInterceptor {
 
 service http:InterceptableService / on new http:Listener(9090) {
 
+    # Create the interceptors applied to all service requests.
+    #
+    # + return - Ordered list of service interceptors
     public function createInterceptors() returns http:Interceptor[] =>
         [new authorization:JwtInterceptor(), new ErrorInterceptor()];
 
+    # Get frontend application configuration.
+    #
+    # + return - Application configuration used by the frontend
     resource function get app\-config() returns AppConfig => appConfig;
 
+    # Get user information and privileges for the authenticated user.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + return - User information response if successful, otherwise an internal server error
     resource function get user\-info(http:RequestContext ctx) returns UserInfoResponse|http:InternalServerError {
         authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
         if userInfo is error {
@@ -104,6 +119,13 @@ service http:InterceptableService / on new http:Listener(9090) {
         return userInfoResponse;
     }
 
+    # Get the OPD claim summary for the requested reporting period.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + year - Optional reporting year
+    # + month - Optional reporting month
+    # + months - Number of months included in the reporting window
+    # + return - OPD claim summary if successful, otherwise an HTTP error response
     resource function get opd\-claims(http:RequestContext ctx, int? year = (), int? month = (), int months = 1)
         returns database:OpdClaimSummaryResponse|http:Forbidden|http:BadRequest|database:HttpInternalServerError {
 
@@ -190,6 +212,9 @@ service http:InterceptableService / on new http:Listener(9090) {
         };
     }
 
+    # Get the health status of the service and its database dependency.
+    #
+    # + return - Health status response for the service
     resource function get health() returns json|http:ServiceUnavailable {
         json databaseHealth = database:getDatabaseHealth();
         if database:isDatabaseHealthy() {
