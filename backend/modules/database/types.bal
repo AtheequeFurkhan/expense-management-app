@@ -65,29 +65,3 @@ public type EmployeeTotalRow record {|
     # Total claim amount calculated for the employee.
     decimal totalAmount;
 |};
-
-# Claim distribution bucket used by the active claims chart.
-public type ClaimBucket record {|
-    # Amount range label represented by the bucket.
-    string range;
-    # Number of employees falling within the range.
-    int count;
-|};
-
-# Domain summary model produced by OPD claim queries.
-public type OpdClaimSummary record {|
-    # Total claim amount submitted during the selected year.
-    decimal lastYearClaimAmount;
-    # Total claim amount submitted during the selected month.
-    decimal currentMonthClaimAmount;
-    # Number of claims submitted during the previous year.
-    int previousYearClaimCount;
-    # Number of claims submitted within the configured grace period.
-    int gracePeriodClaims;
-    # Number of employees without claims in the selected period.
-    int unclaimedEmployees;
-    # Number of employees who reached the annual claim limit.
-    int fullyClaimedEmployees;
-    # Claim distribution data for the active claims chart.
-    ClaimBucket[] activeClaimsChart;
-|};
