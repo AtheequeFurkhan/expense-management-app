@@ -13,8 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
-import ballerina/log;
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 
@@ -68,7 +66,6 @@ public function getExpenseDbClient() returns mysql:Client|error {
             return dbClientOrError;
         }
 
-        log:printError("Failed to initialize expense database client.", dbClientOrError);
         expenseDbClient = ();
         expenseDbHealthy = false;
         expenseDbStatusMessage = "Error in connecting to the expense database!";

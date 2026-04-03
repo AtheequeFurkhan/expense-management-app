@@ -13,9 +13,9 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import ballerina/http;
 import ballerina/jwt;
+import ballerina/log;
 
 public configurable AppRoles authorizedRoles = ?;
 
@@ -35,6 +35,7 @@ public isolated service class JwtInterceptor {
         string|error idToken = req.getHeader(JWT_ASSERTION_HEADER);
         if idToken is error {
             string errorMsg = "Missing invoker info header!";
+            log:printError(errorMsg, idToken);
             return <http:InternalServerError>{
                 body: {
                     message: errorMsg
@@ -45,12 +46,14 @@ public isolated service class JwtInterceptor {
         [jwt:Header, jwt:Payload]|jwt:Error result = jwt:decode(idToken);
         if result is jwt:Error {
             string errorMsg = "Error while reading the Invoker info!";
+            log:printError(errorMsg, result);
             return <http:InternalServerError>{body: {message: errorMsg}};
         }
 
         CustomJwtPayload|error userInfo = result[1].cloneWithType(CustomJwtPayload);
         if userInfo is error {
             string errorMsg = "Malformed Invoker info object!";
+            log:printError(errorMsg, userInfo);
             return <http:InternalServerError>{body: {message: errorMsg}};
         }
 
