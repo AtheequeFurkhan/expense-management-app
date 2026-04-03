@@ -19,4 +19,4 @@ import ballerina/http;
 configurable string hrEntityBaseUrl = ?;
 
 # Shared HTTP client used for HR entity service requests.
-public final http:Client hrClient = checkpanic new (hrEntityBaseUrl);
+final http:Client hrClient = check new (hrEntityBaseUrl);
