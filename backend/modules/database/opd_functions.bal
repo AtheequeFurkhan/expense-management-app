@@ -85,18 +85,18 @@ public function queryAllClaimEmployeeEmails() returns string[]|error {
 # Query total claim amounts per employee for the selected reporting range.
 #
 # + year - Year used for the reporting range
-# + month - Ending month of the reporting range
+# + monthRange - Ending month of the reporting range
 # + months - Number of months included in the reporting range
 # + return - Per-employee totals if the query succeeds, otherwise an error
-public function queryEmployeeTotals(int year, int month, int months) returns EmployeeTotalRow[]|error {
+public function queryEmployeeTotals(int year, int monthRange, int months) returns EmployeeTotalRow[]|error {
     mysql:Client expenseDbClient = check getExpenseDbClient();
     stream<EmployeeTotalRow, sql:Error?> employeeTotalsStream =
-        expenseDbClient->query(getEmployeeTotalsForRangeQuery(year, month, months), EmployeeTotalRow);
+        expenseDbClient->query(getEmployeeTotalsForRangeQuery(year, monthRange, months), EmployeeTotalRow);
     EmployeeTotalRow[]|error employeeTotalsResult = from EmployeeTotalRow row in employeeTotalsStream
         select row;
     if employeeTotalsResult is error {
         return error(
-            string `Failed to query employee totals for year '${year}', month '${month}', months '${months}': ${employeeTotalsResult.message()}`
+            string `Failed to query employee totals for year '${year}', month range '${monthRange}', months '${months}': ${employeeTotalsResult.message()}`
         );
     }
 
