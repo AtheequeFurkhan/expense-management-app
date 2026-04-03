@@ -29,62 +29,29 @@ type HealthCheckRow record {|
     int status;
 |};
 
-mysql:Client? expenseDbClient = ();
+final mysql:Options expenseDbOptions = {
+    ssl: {
+        mode: mysql:SSL_REQUIRED
+    },
+    connectTimeout: connectTimeout
+};
+
+public final mysql:Client expenseDbClient = check new (
+    expenseDatabaseConfig.host,
+    expenseDatabaseConfig.user,
+    expenseDatabaseConfig.password,
+    expenseDatabaseConfig.database,
+    expenseDatabaseConfig.port,
+    expenseDbOptions,
+    expenseDatabaseConfig.connectionPool
+);
+
 boolean expenseDbHealthy = false;
 string? expenseDbStatusMessage = ();
 
-# Get the shared expense database client, initializing it lazily when needed.
-#
-# + return - Cached MySQL DB client if initialization succeeds, otherwise an error
-public function getExpenseDbClient() returns mysql:Client|error {
-    lock {
-        mysql:Client? currentExpenseDbClient = expenseDbClient;
-        if currentExpenseDbClient is mysql:Client {
-            return currentExpenseDbClient;
-        }
-
-        mysql:Options expenseDbOptions = {
-            ssl: {
-                mode: mysql:SSL_REQUIRED
-            },
-            connectTimeout: connectTimeout
-        };
-
-        mysql:Client|error dbClientOrError = new (
-            host = expenseDatabaseConfig.host,
-            port = expenseDatabaseConfig.port,
-            user = expenseDatabaseConfig.user,
-            password = expenseDatabaseConfig.password,
-            database = expenseDatabaseConfig.database,
-            connectionPool = expenseDatabaseConfig.connectionPool,
-            options = expenseDbOptions
-        );
-        if dbClientOrError is mysql:Client {
-            expenseDbClient = dbClientOrError;
-            expenseDbHealthy = true;
-            expenseDbStatusMessage = ();
-            return dbClientOrError;
-        }
-
-        expenseDbClient = ();
-        expenseDbHealthy = false;
-        expenseDbStatusMessage = "Error in connecting to the expense database!";
-        return dbClientOrError;
-    }
-}
-
 # Refresh the cached health status of the expense database.
 function refreshExpenseDbHealth() {
-    mysql:Client|error dbClientOrError = getExpenseDbClient();
-    if dbClientOrError is error {
-        lock {
-            expenseDbHealthy = false;
-            expenseDbStatusMessage = dbClientOrError.message();
-        }
-        return;
-    }
-
-    HealthCheckRow|error healthCheckResult = dbClientOrError->queryRow(`SELECT 1 AS status`, HealthCheckRow);
+    HealthCheckRow|error healthCheckResult = expenseDbClient->queryRow(`SELECT 1 AS status`, HealthCheckRow);
     lock {
         if healthCheckResult is error {
             expenseDbHealthy = false;

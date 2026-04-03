@@ -14,7 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 import ballerina/sql;
-import ballerinax/mysql;
 
 # Query an aggregated claim amount for the given year and optional month.
 #
@@ -22,7 +21,6 @@ import ballerinax/mysql;
 # + month - Optional month used to narrow the claim amount query
 # + return - Aggregated claim amount if the query succeeds, otherwise an error
 public function queryClaimAmount(int? year = (), int? month = ()) returns decimal|error {
-    mysql:Client expenseDbClient = check getExpenseDbClient();
     AmountRow amountResult = check expenseDbClient->queryRow(getClaimAmountQuery(year, month), AmountRow);
 
     return amountResult.total;
@@ -33,7 +31,6 @@ public function queryClaimAmount(int? year = (), int? month = ()) returns decima
 # + year - Reporting year used to filter claims
 # + return - Claim count for the given year if the query succeeds, otherwise an error
 public function queryClaimCount(int year) returns int|error {
-    mysql:Client expenseDbClient = check getExpenseDbClient();
     CountRow countResult = check expenseDbClient->queryRow(getClaimCountQuery(year), CountRow);
 
     return countResult.count;
@@ -45,7 +42,6 @@ public function queryClaimCount(int year) returns int|error {
 # + gracePeriodDays - Number of days included in the grace period
 # + return - Grace period claim count if the query succeeds, otherwise an error
 public function queryGracePeriodClaimCount(int year, int gracePeriodDays) returns int|error {
-    mysql:Client expenseDbClient = check getExpenseDbClient();
     CountRow countResult = check expenseDbClient->queryRow(getGracePeriodClaimCountQuery(year, gracePeriodDays), CountRow);
 
     return countResult.count;
@@ -55,7 +51,6 @@ public function queryGracePeriodClaimCount(int year, int gracePeriodDays) return
 #
 # + return - Normalized employee emails from OPD claims if the query succeeds, otherwise an error
 public function queryAllClaimEmployeeEmails() returns string[]|error {
-    mysql:Client expenseDbClient = check getExpenseDbClient();
     stream<EmployeeEmailRow, sql:Error?> allEmployeesStream =
         expenseDbClient->query(getAllClaimEmployeeEmailsQuery(), EmployeeEmailRow);
     EmployeeEmailRow[] allEmployeeRowsResult = check from EmployeeEmailRow row in allEmployeesStream
@@ -72,7 +67,6 @@ public function queryAllClaimEmployeeEmails() returns string[]|error {
 # + months - Number of months included in the reporting range
 # + return - Per-employee totals if the query succeeds, otherwise an error
 public function queryEmployeeTotals(int year, int monthRange, int months) returns EmployeeTotalRow[]|error {
-    mysql:Client expenseDbClient = check getExpenseDbClient();
     stream<EmployeeTotalRow, sql:Error?> employeeTotalsStream =
         expenseDbClient->query(getEmployeeTotalsForRangeQuery(year, monthRange, months), EmployeeTotalRow);
     return check from EmployeeTotalRow row in employeeTotalsStream
