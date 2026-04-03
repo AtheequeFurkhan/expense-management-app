@@ -30,7 +30,6 @@ isolated function getClaimAmountQuery(int? year = (), int? month = ()) returns s
       AND (MONTH(c.added_date) = ${month} OR ${month} IS NULL)
       AND c.status IN (
             ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
-            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
             ${OPD_CLAIM_STATUS_APPROVED}
           )
 `;
@@ -45,7 +44,6 @@ isolated function getClaimCountQuery(int year) returns sql:ParameterizedQuery =>
     WHERE YEAR(c.added_date) = ${year}
       AND c.status IN (
             ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
-            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
             ${OPD_CLAIM_STATUS_APPROVED}
           )
 `;
@@ -65,7 +63,6 @@ isolated function getGracePeriodClaimCountQuery(int year, int gracePeriodDays) r
           )
       AND c.status IN (
             ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
-            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
             ${OPD_CLAIM_STATUS_APPROVED}
           )
 `;
@@ -78,7 +75,6 @@ isolated function getAllClaimEmployeeEmailsQuery() returns sql:ParameterizedQuer
     FROM opd_claim
     WHERE status IN (
             ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
-            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
             ${OPD_CLAIM_STATUS_APPROVED}
           )
       AND employee_email IS NOT NULL
@@ -107,7 +103,6 @@ isolated function getEmployeeTotalsForRangeQuery(int year, int month, int months
           )
       AND c.status IN (
             ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
-            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
             ${OPD_CLAIM_STATUS_APPROVED}
           )
       AND c.employee_email IS NOT NULL
@@ -137,7 +132,6 @@ isolated function getMonthlyClaimTransactionsQuery(int year, int month, int mont
           )
       AND c.status IN (
             ${OPD_CLAIM_STATUS_PENDING_APPROVAL},
-            ${OPD_CLAIM_STATUS_LEAD_APPROVED},
             ${OPD_CLAIM_STATUS_APPROVED}
           )
       AND c.employee_email IS NOT NULL

@@ -14,6 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import ballerina/http;
+
 # Represents the response structure for retrieving user information.
 public type UserInfoResponse record {|
     # Id of the employee
@@ -42,4 +44,43 @@ public type AppConfig record {|
 
     # Number of grace days allowed for previous year claims
     int lastYearClaimGracePeriodInDays;
+|};
+
+# Claim distribution bucket used by OPD summary responses.
+public type OpdClaimBucket record {|
+    # Amount range label represented by the bucket.
+    string range;
+    # Number of employees falling within the range.
+    int count;
+|};
+
+# HTTP response returned by the OPD claim summary endpoint.
+public type OpdClaimSummaryResponse record {|
+    # Total claim amount submitted during the selected year.
+    decimal lastYearClaimAmount;
+    # Total claim amount submitted during the selected month.
+    decimal currentMonthClaimAmount;
+    # Number of claims submitted during the previous year.
+    int previousYearClaimCount;
+    # Number of claims submitted within the configured grace period.
+    int gracePeriodClaims;
+    # Number of employees without claims in the selected period.
+    int unclaimedEmployees;
+    # Number of employees who reached the annual claim limit.
+    int fullyClaimedEmployees;
+    # Claim distribution data for the active claims chart.
+    OpdClaimBucket[] activeClaimsChart;
+|};
+
+# Standard error payload returned to API clients.
+public type ErrorResponse record {|
+    # Client-safe error message.
+    string message;
+|};
+
+# Internal server error response shape for API resources.
+public type HttpInternalServerError record {|
+    *http:InternalServerError;
+    # Error payload returned in the response body.
+    ErrorResponse body;
 |};

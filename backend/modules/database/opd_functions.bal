@@ -208,7 +208,7 @@ isolated function buildActiveClaimsChart(EmployeeTotalRow[] employeeTotals, deci
 # + months - Number of months included in the reporting window
 # + return - OPD claim summary response if all queries succeed, otherwise an error
 public function getOpdClaimSummary(int year, int month, int months = 1)
-        returns OpdClaimSummaryResponse|error {
+        returns OpdClaimSummary|error {
     mysql:Client expenseDbClient = check getExpenseDbClient();
 
     decimal lastYearClaimAmount = check queryClaimAmount(
