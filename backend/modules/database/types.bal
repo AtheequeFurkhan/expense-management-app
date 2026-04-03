@@ -14,7 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/http;
 import ballerina/sql;
 
 # OPD claim status codes stored in the database.
@@ -22,9 +21,7 @@ public enum OpdClaimStatus {
     OPD_CLAIM_STATUS_DELETED = "-1",
     OPD_CLAIM_STATUS_PENDING_APPROVAL = "0",
     OPD_CLAIM_STATUS_REJECTED = "1",
-    OPD_CLAIM_STATUS_LEAD_APPROVED = "2",
-    OPD_CLAIM_STATUS_APPROVED = "3",
-    OPD_CLAIM_STATUS_CANCELLED = "5"
+    OPD_CLAIM_STATUS_APPROVED = "3"
 }
 
 # Configurable database connection settings.
@@ -77,8 +74,8 @@ public type ClaimBucket record {|
     int count;
 |};
 
-# Response returned by the OPD claim summary endpoint.
-public type OpdClaimSummaryResponse record {|
+# Domain summary model produced by OPD claim queries.
+public type OpdClaimSummary record {|
     # Total claim amount submitted during the selected year.
     decimal lastYearClaimAmount;
     # Total claim amount submitted during the selected month.
@@ -93,17 +90,4 @@ public type OpdClaimSummaryResponse record {|
     int fullyClaimedEmployees;
     # Claim distribution data for the active claims chart.
     ClaimBucket[] activeClaimsChart;
-|};
-
-# Standard error payload returned to API clients.
-public type ErrorResponse record {|
-    # Client-safe error message.
-    string message;
-|};
-
-# Internal server error response shape for API resources.
-public type HttpInternalServerError record {|
-    *http:InternalServerError;
-    # Error payload returned in the response body.
-    ErrorResponse body;
 |};

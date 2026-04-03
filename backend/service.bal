@@ -127,7 +127,7 @@ service http:InterceptableService / on new http:Listener(9090) {
     # + months - Number of months included in the reporting window
     # + return - OPD claim summary if successful, otherwise an HTTP error response
     resource function get opd\-claims(http:RequestContext ctx, int? year = (), int? month = (), int months = 1)
-        returns database:OpdClaimSummaryResponse|http:Forbidden|http:BadRequest|database:HttpInternalServerError {
+        returns OpdClaimSummaryResponse|http:Forbidden|http:BadRequest|HttpInternalServerError {
 
         authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
         if userInfo is error {
@@ -184,7 +184,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         if civilTime is error {
             string customError = "Failed to resolve the current date for OPD claim summary defaults.";
             log:printError(customError, civilTime);
-            return <database:HttpInternalServerError>{
+            return <HttpInternalServerError>{
                 body: {
                     message: customError
                 }
@@ -194,18 +194,26 @@ service http:InterceptableService / on new http:Listener(9090) {
         int effectiveYear = year ?: civilTime.year;
         int effectiveMonth = month ?: civilTime.month;
 
-        database:OpdClaimSummaryResponse|error summary = database:getOpdClaimSummary(
+        database:OpdClaimSummary|error summary = database:getOpdClaimSummary(
             effectiveYear,
             effectiveMonth,
             months
         );
-        if summary is database:OpdClaimSummaryResponse {
-            return summary;
+        if summary is database:OpdClaimSummary {
+            return {
+                lastYearClaimAmount: summary.lastYearClaimAmount,
+                currentMonthClaimAmount: summary.currentMonthClaimAmount,
+                previousYearClaimCount: summary.previousYearClaimCount,
+                gracePeriodClaims: summary.gracePeriodClaims,
+                unclaimedEmployees: summary.unclaimedEmployees,
+                fullyClaimedEmployees: summary.fullyClaimedEmployees,
+                activeClaimsChart: summary.activeClaimsChart
+            };
         }
 
         string customError = "Failed to build OPD claim summary.";
         log:printError(customError, summary);
-        return <database:HttpInternalServerError>{
+        return <HttpInternalServerError>{
             body: {
                 message: customError
             }
