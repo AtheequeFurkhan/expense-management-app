@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import ballerina/sql;
 
 # Build the query for aggregated claim amount filtered by year and optional month.
@@ -113,21 +112,21 @@ isolated function getEmployeeTotalsForRangeQuery(int year, int monthRange, int m
 # Build the query for claim transaction amounts across the selected reporting range.
 #
 # + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
+# + monthRange - Ending month of the reporting range
 # + months - Number of months included in the reporting range
 # + return - Parameterized SQL query for claim transaction amounts
-isolated function getMonthlyClaimTransactionsQuery(int year, int month, int months) returns sql:ParameterizedQuery => `
+isolated function getMonthlyClaimTransactionsQuery(int year, int monthRange, int months) returns sql:ParameterizedQuery => `
     SELECT c.employee_email AS employeeEmail,
            CAST(t.txn_amount AS DECIMAL(10,2)) AS amount
     FROM opd_claim_transaction t
     INNER JOIN opd_claim c
         ON c.id = t.claim_id
     WHERE c.added_date >= DATE_SUB(
-            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
+            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${monthRange}, 2, '0'), '-01'), '%Y-%m-%d'),
             INTERVAL ${months - 1} MONTH
           )
       AND c.added_date < DATE_ADD(
-            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
+            STR_TO_DATE(CONCAT(${year}, '-', LPAD(${monthRange}, 2, '0'), '-01'), '%Y-%m-%d'),
             INTERVAL 1 MONTH
           )
       AND c.status IN (
