@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import ballerina/sql;
 import ballerinax/mysql;
 
@@ -92,13 +91,8 @@ public function queryEmployeeTotals(int year, int monthRange, int months) return
     mysql:Client expenseDbClient = check getExpenseDbClient();
     stream<EmployeeTotalRow, sql:Error?> employeeTotalsStream =
         expenseDbClient->query(getEmployeeTotalsForRangeQuery(year, monthRange, months), EmployeeTotalRow);
-    EmployeeTotalRow[]|error employeeTotalsResult = from EmployeeTotalRow row in employeeTotalsStream
+    EmployeeTotalRow[] employeeTotalsResult = check from EmployeeTotalRow row in employeeTotalsStream
         select row;
-    if employeeTotalsResult is error {
-        return error(
-            string `Failed to query employee totals for year '${year}', month range '${monthRange}', months '${months}': ${employeeTotalsResult.message()}`
-        );
-    }
 
     return employeeTotalsResult;
 }
