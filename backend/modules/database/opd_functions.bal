@@ -24,10 +24,7 @@ import ballerinax/mysql;
 # + return - Aggregated claim amount if the query succeeds, otherwise an error
 public function queryClaimAmount(int? year = (), int? month = (), string context = "claim amount") returns decimal|error {
     mysql:Client expenseDbClient = check getExpenseDbClient();
-    AmountRow|error amountResult = expenseDbClient->queryRow(getClaimAmountQuery(year, month), AmountRow);
-    if amountResult is error {
-        return error(string `Failed to query ${context}: ${amountResult.message()}`);
-    }
+    AmountRow amountResult = check expenseDbClient->queryRow(getClaimAmountQuery(year, month), AmountRow);
 
     return amountResult.total;
 }
@@ -38,10 +35,7 @@ public function queryClaimAmount(int? year = (), int? month = (), string context
 # + return - Claim count for the given year if the query succeeds, otherwise an error
 public function queryClaimCount(int year) returns int|error {
     mysql:Client expenseDbClient = check getExpenseDbClient();
-    CountRow|error countResult = expenseDbClient->queryRow(getClaimCountQuery(year), CountRow);
-    if countResult is error {
-        return error(string `Failed to query claim count for year '${year}': ${countResult.message()}`);
-    }
+    CountRow countResult = check expenseDbClient->queryRow(getClaimCountQuery(year), CountRow);
 
     return countResult.count;
 }
@@ -53,13 +47,7 @@ public function queryClaimCount(int year) returns int|error {
 # + return - Grace period claim count if the query succeeds, otherwise an error
 public function queryGracePeriodClaimCount(int year, int gracePeriodDays) returns int|error {
     mysql:Client expenseDbClient = check getExpenseDbClient();
-    CountRow|error countResult =
-        expenseDbClient->queryRow(getGracePeriodClaimCountQuery(year, gracePeriodDays), CountRow);
-    if countResult is error {
-        return error(
-            string `Failed to query grace period claim count for year '${year}' and grace period '${gracePeriodDays}' days: ${countResult.message()}`
-        );
-    }
+    CountRow countResult = check expenseDbClient->queryRow(getGracePeriodClaimCountQuery(year, gracePeriodDays), CountRow);
 
     return countResult.count;
 }
@@ -71,11 +59,8 @@ public function queryAllClaimEmployeeEmails() returns string[]|error {
     mysql:Client expenseDbClient = check getExpenseDbClient();
     stream<EmployeeEmailRow, sql:Error?> allEmployeesStream =
         expenseDbClient->query(getAllClaimEmployeeEmailsQuery(), EmployeeEmailRow);
-    EmployeeEmailRow[]|error allEmployeeRowsResult = from EmployeeEmailRow row in allEmployeesStream
+    EmployeeEmailRow[] allEmployeeRowsResult = check from EmployeeEmailRow row in allEmployeesStream
         select row;
-    if allEmployeeRowsResult is error {
-        return error(string `Failed to query employee emails from OPD claims: ${allEmployeeRowsResult.message()}`);
-    }
 
     return from EmployeeEmailRow row in allEmployeeRowsResult
         select row.employeeEmail.toLowerAscii();
