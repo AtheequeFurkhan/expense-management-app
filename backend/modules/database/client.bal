@@ -127,3 +127,18 @@ public function isDatabaseHealthy() returns boolean {
         return expenseDbHealthy;
     }
 }
+
+# Get the configured annual claim limit used for OPD summaries.
+#
+# + return - Annual claim limit
+public function getAnnualClaimLimit() returns decimal => annualClaimLimit;
+
+# Get the configured claim range step used for OPD summary charts.
+#
+# + return - Claim range step
+public function getClaimRangeStep() returns decimal => claimRangeStep;
+
+# Get the configured grace period length used for previous-year OPD claims.
+#
+# + return - Grace period length in days
+public function getLastYearClaimGracePeriodInDays() returns int => lastYearClaimGracePeriodInDays;

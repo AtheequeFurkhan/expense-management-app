@@ -194,21 +194,13 @@ service http:InterceptableService / on new http:Listener(9090) {
         int effectiveYear = year ?: civilTime.year;
         int effectiveMonth = month ?: civilTime.month;
 
-        database:OpdClaimSummary|error summary = database:getOpdClaimSummary(
+        OpdClaimSummaryResponse|error summary = getOpdClaimSummary(
             effectiveYear,
             effectiveMonth,
             months
         );
-        if summary is database:OpdClaimSummary {
-            return {
-                lastYearClaimAmount: summary.lastYearClaimAmount,
-                currentMonthClaimAmount: summary.currentMonthClaimAmount,
-                previousYearClaimCount: summary.previousYearClaimCount,
-                gracePeriodClaims: summary.gracePeriodClaims,
-                unclaimedEmployees: summary.unclaimedEmployees,
-                fullyClaimedEmployees: summary.fullyClaimedEmployees,
-                activeClaimsChart: summary.activeClaimsChart
-            };
+        if summary is OpdClaimSummaryResponse {
+            return summary;
         }
 
         string customError = "Failed to build OPD claim summary.";
