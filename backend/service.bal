@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import expense_management.authorization;
 import expense_management.database;
 import expense_management.entity;
@@ -31,10 +30,6 @@ final cache:Cache cache = new ({
     cleanupInterval: 900.0
 });
 
-@display {
-    label: "Expense Management App",
-    id: "domain/expense-management-app"
-}
 service class ErrorInterceptor {
     *http:ResponseErrorInterceptor;
 
@@ -57,6 +52,10 @@ service class ErrorInterceptor {
     }
 }
 
+@display {
+    label: "Expense Management App",
+    id: "finance/expense-management-app"
+}
 service http:InterceptableService / on new http:Listener(9090) {
 
     # Create the interceptors applied to all service requests.
