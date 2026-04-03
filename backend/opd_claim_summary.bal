@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import expense_management.database;
 
 # Convert a decimal value into a whole-number string.
@@ -21,7 +20,7 @@ import expense_management.database;
 # + amount - Decimal value to format
 # + return - String representation of the value without decimals
 isolated function formatWholeNumber(decimal amount) returns string {
-    return (<int> amount).toString();
+    return (<int>amount).toString();
 }
 
 # Build claim range labels for the active claims chart.
@@ -125,10 +124,10 @@ isolated function buildActiveClaimsChart(database:EmployeeTotalRow[] employeeTot
 # Build the OPD claim summary used by the dashboard.
 #
 # + year - Reporting year for the summary
-# + month - Reporting month for the summary
+# + monthRange - Reporting month for the summary
 # + months - Number of months included in the reporting window
 # + return - OPD claim summary response if all queries succeed, otherwise an error
-public function getOpdClaimSummary(int year, int month, int months = 1) returns OpdClaimSummaryResponse|error {
+public function getOpdClaimSummary(int year, int monthRange, int months = 1) returns OpdClaimSummaryResponse|error {
     decimal lastYearClaimAmount = check database:queryClaimAmount(
         year,
         (),
@@ -136,8 +135,8 @@ public function getOpdClaimSummary(int year, int month, int months = 1) returns 
     );
     decimal currentMonthClaimAmount = check database:queryClaimAmount(
         year,
-        month,
-        string `current month claim amount for year '${year}' and month '${month}'`
+        monthRange,
+        string `current month claim amount for year '${year}' and month '${monthRange}'`
     );
     int previousYearClaimCount = check database:queryClaimCount(year - 1);
     int gracePeriodClaims = check database:queryGracePeriodClaimCount(
@@ -146,7 +145,7 @@ public function getOpdClaimSummary(int year, int month, int months = 1) returns 
     );
     string[] allEmployeeEmails = check database:queryAllClaimEmployeeEmails();
     int totalEmployees = allEmployeeEmails.length();
-    database:EmployeeTotalRow[] employeeTotals = check database:queryEmployeeTotals(year, month, months);
+    database:EmployeeTotalRow[] employeeTotals = check database:queryEmployeeTotals(year, monthRange, months);
 
     decimal annualClaimLimit = database:getAnnualClaimLimit();
     map<boolean> employeesWithClaimsSet = toEmployeesWithClaimsSet(employeeTotals);
