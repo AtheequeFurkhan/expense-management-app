@@ -126,7 +126,7 @@ service http:InterceptableService / on new http:Listener(9090) {
     # + months - Number of months included in the reporting window
     # + return - OPD claim summary if successful, otherwise an HTTP error response
     resource function get opd\-claims(http:RequestContext ctx, int? year = (), int? month = (), int months = 1)
-        returns OpdClaimSummaryResponse|http:Forbidden|http:BadRequest|HttpInternalServerError {
+        returns OpdClaimSummaryResponse|http:BadRequest|HttpInternalServerError {
 
         authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
         if userInfo is error {
@@ -153,31 +153,6 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
-        if months < 1 {
-            return <http:BadRequest>{
-                body: {
-                    message: "Invalid months. Expected a value greater than or equal to 1."
-                }
-            };
-        }
-
-        boolean hasEmployeeRole = authorization:checkPermissions(
-            [authorization:authorizedRoles.employeeRole],
-            userInfo.groups
-        );
-        boolean hasFinanceAdminRole = authorization:checkPermissions(
-            [authorization:authorizedRoles.financeAdminRole],
-            userInfo.groups
-        );
-
-        if !(hasEmployeeRole || hasFinanceAdminRole) {
-            return <http:Forbidden>{
-                body: {
-                    message: "Insufficient privileges!"
-                }
-            };
-        }
-
         time:Utc utcNow = time:utcNow();
         time:Civil|error civilTime = time:utcToCivil(utcNow);
         if civilTime is error {
@@ -198,36 +173,29 @@ service http:InterceptableService / on new http:Listener(9090) {
             effectiveMonth,
             months
         );
-        if summary is OpdClaimSummaryResponse {
-            return summary;
+        if summary is error {
+            string customError = "Failed to build OPD claim summary.";
+            log:printError(customError, summary);
+            return <HttpInternalServerError>{
+                body: {
+                    message: customError
+                }
+            };
         }
 
-        string customError = "Failed to build OPD claim summary.";
-        log:printError(customError, summary);
-        return <HttpInternalServerError>{
-            body: {
-                message: customError
-            }
-        };
+        return summary;
     }
 
     # Get the health status of the service and its database dependency.
     #
     # + return - Health status response for the service
-    resource function get health() returns json|http:ServiceUnavailable {
+    resource function get health() returns json {
         json databaseHealth = database:getDatabaseHealth();
-        if database:isDatabaseHealthy() {
-            return {
-                status: "ok",
-                database: databaseHealth
-            };
-        }
+        string status = database:isDatabaseHealthy() ? "ok" : "degraded";
 
-        return <http:ServiceUnavailable>{
-            body: {
-                status: "degraded",
-                database: databaseHealth
-            }
+        return {
+            status: status,
+            database: databaseHealth
         };
     }
 }
