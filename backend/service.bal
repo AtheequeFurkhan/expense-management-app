@@ -189,8 +189,17 @@ service http:InterceptableService / on new http:Listener(9090) {
     # Get the health status of the service and its database dependency.
     #
     # + return - Health status response for the service
-    resource function get health() returns json {
-        json databaseHealth = database:getDatabaseHealth();
+    resource function get health() returns json|http:InternalServerError {
+        json|error databaseHealth = database:getDatabaseHealth();
+        if databaseHealth is error {
+            log:printError("Health check process failed.", databaseHealth);
+            return <http:InternalServerError>{
+                body: {
+                    message: "Health check process failed."
+                }
+            };
+        }
+
         string status = database:isDatabaseHealthy() ? "ok" : "degraded";
 
         return {
