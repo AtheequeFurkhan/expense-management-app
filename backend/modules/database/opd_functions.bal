@@ -20,9 +20,8 @@ import ballerinax/mysql;
 #
 # + year - Year used to filter the claim amount query
 # + month - Optional month used to narrow the claim amount query
-# + context - Error context included in failures
 # + return - Aggregated claim amount if the query succeeds, otherwise an error
-public function queryClaimAmount(int? year = (), int? month = (), string context = "claim amount") returns decimal|error {
+public function queryClaimAmount(int? year = (), int? month = ()) returns decimal|error {
     mysql:Client expenseDbClient = check getExpenseDbClient();
     AmountRow amountResult = check expenseDbClient->queryRow(getClaimAmountQuery(year, month), AmountRow);
 
@@ -76,8 +75,6 @@ public function queryEmployeeTotals(int year, int monthRange, int months) return
     mysql:Client expenseDbClient = check getExpenseDbClient();
     stream<EmployeeTotalRow, sql:Error?> employeeTotalsStream =
         expenseDbClient->query(getEmployeeTotalsForRangeQuery(year, monthRange, months), EmployeeTotalRow);
-    EmployeeTotalRow[] employeeTotalsResult = check from EmployeeTotalRow row in employeeTotalsStream
+    return check from EmployeeTotalRow row in employeeTotalsStream
         select row;
-
-    return employeeTotalsResult;
 }
