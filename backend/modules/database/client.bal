@@ -99,8 +99,8 @@ function refreshExpenseDbHealth() {
 
 # Get the health status of the expense database dependency.
 #
-# + return - Health information for the expense database
-public function getDatabaseHealth() returns json {
+# + return - Health information for the expense database, or an error if the health check process itself fails
+public function getDatabaseHealth() returns json|error {
     refreshExpenseDbHealth();
 
     lock {
