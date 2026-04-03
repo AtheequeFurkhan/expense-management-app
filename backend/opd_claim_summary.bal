@@ -128,16 +128,8 @@ isolated function buildActiveClaimsChart(database:EmployeeTotalRow[] employeeTot
 # + months - Number of months included in the reporting window
 # + return - OPD claim summary response if all queries succeed, otherwise an error
 public function getOpdClaimSummary(int year, int monthRange, int months = 1) returns OpdClaimSummaryResponse|error {
-    decimal lastYearClaimAmount = check database:queryClaimAmount(
-        year,
-        (),
-        string `last year claim amount for year '${year}'`
-    );
-    decimal currentMonthClaimAmount = check database:queryClaimAmount(
-        year,
-        monthRange,
-        string `current month claim amount for year '${year}' and month '${monthRange}'`
-    );
+    decimal lastYearClaimAmount = check database:queryClaimAmount(year);
+    decimal currentMonthClaimAmount = check database:queryClaimAmount(year, monthRange);
     int previousYearClaimCount = check database:queryClaimCount(year - 1);
     int gracePeriodClaims = check database:queryGracePeriodClaimCount(
         year,
