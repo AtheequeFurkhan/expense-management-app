@@ -94,10 +94,12 @@ export default function ExpenseClaims() {
       sx={{
         p: 2,
         bgcolor: "background.default",
-        minHeight: "100%",
+        height: "100%",
         width: "100%",
         maxWidth: "100%",
         boxSizing: "border-box",
+        overflowY: "auto",
+        overflowX: "hidden",
       }}
     >
       {/* Filter bar */}
