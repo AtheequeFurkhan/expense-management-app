@@ -13,10 +13,9 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { Box, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 export interface BarChartItem {
   label: string;
@@ -31,6 +30,7 @@ export interface BarChartProps {
   formatValue?: (value: number) => string;
   yAxisLabel?: string;
   xAxisLabel?: string;
+  tooltipContent?: (item: BarChartItem, index: number) => ReactNode;
 }
 
 export default function BarChart({
@@ -41,6 +41,7 @@ export default function BarChart({
   formatValue = (v) => v.toLocaleString(),
   yAxisLabel = "Amount",
   xAxisLabel,
+  tooltipContent,
 }: BarChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const theme = useTheme();
@@ -52,7 +53,13 @@ export default function BarChart({
   const resolvedBarHoverColor = barHoverColor ?? defaultBarHoverColor;
 
   const maxValue = Math.max(...data.map((d) => d.value), 1);
-  const yAxisValues = [maxValue, Math.round(maxValue * 0.75), Math.round(maxValue * 0.5), Math.round(maxValue * 0.25), 0];
+  const yAxisValues = [
+    maxValue,
+    Math.round(maxValue * 0.75),
+    Math.round(maxValue * 0.5),
+    Math.round(maxValue * 0.25),
+    0,
+  ];
 
   return (
     <Box sx={{ display: "flex", gap: 0.5, flex: 1 }}>
@@ -110,14 +117,18 @@ export default function BarChart({
               <Tooltip
                 key={index}
                 title={
-                  <Box sx={{ px: 0.5, py: 0.2 }}>
-                    <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
-                      {formatValue(item.value)}
-                    </Typography>
-                    <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.2 }}>
-                      {item.label}
-                    </Typography>
-                  </Box>
+                  tooltipContent ? (
+                    tooltipContent(item, index)
+                  ) : (
+                    <Box sx={{ px: 0.5, py: 0.2 }}>
+                      <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
+                        {formatValue(item.value)}
+                      </Typography>
+                      <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.2 }}>
+                        {item.label}
+                      </Typography>
+                    </Box>
+                  )
                 }
                 placement="top"
                 arrow

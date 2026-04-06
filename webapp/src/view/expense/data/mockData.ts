@@ -27,12 +27,14 @@ export interface ExpenseTypeItem {
 export interface TopEmployeeItem {
   name: string;
   email: string;
+  bu: string;
   amount: number;
 }
 
 export interface TopLeadItem {
   name: string;
   email: string;
+  bu: string;
   count: number;
 }
 
@@ -107,24 +109,75 @@ export const MOCK_ACTIVE_CLAIM_STATS: ActiveClaimStatItem[] = [
 ];
 
 export const MOCK_TOP_SPENDING_EMPLOYEES: TopEmployeeItem[] = [
-  { name: "Amal Perera", email: "amal@wso2.com", amount: 185_400 },
-  { name: "Nimal Silva", email: "nimal@wso2.com", amount: 142_800 },
-  { name: "Kamal Fernando", email: "kamal@wso2.com", amount: 128_500 },
-  { name: "Sunil Rajapaksa", email: "sunil@wso2.com", amount: 115_200 },
-  { name: "Priya Mendis", email: "priya@wso2.com", amount: 98_600 },
-  { name: "Dinesh Kumara", email: "dinesh@wso2.com", amount: 87_300 },
-  { name: "Rashmi Jayasinghe", email: "rashmi@wso2.com", amount: 76_500 },
+  { name: "Amal Perera", email: "amal@wso2.com", bu: "Engineering", amount: 185_400 },
+  { name: "Nimal Silva", email: "nimal@wso2.com", bu: "Marketing", amount: 142_800 },
+  { name: "Kamal Fernando", email: "kamal@wso2.com", bu: "Sales", amount: 128_500 },
+  { name: "Sunil Rajapaksa", email: "sunil@wso2.com", bu: "Engineering", amount: 115_200 },
+  { name: "Priya Mendis", email: "priya@wso2.com", bu: "Finance", amount: 98_600 },
+  { name: "Dinesh Kumara", email: "dinesh@wso2.com", bu: "Operations", amount: 87_300 },
+  { name: "Rashmi Jayasinghe", email: "rashmi@wso2.com", bu: "HR", amount: 76_500 },
 ];
 
 export const MOCK_TOP_APPROVING_LEADS: TopLeadItem[] = [
-  { name: "Saman Kumara", email: "saman@wso2.com", count: 58 },
-  { name: "Lakshmi Rao", email: "lakshmi@wso2.com", count: 45 },
-  { name: "Ravi Shankar", email: "ravi@wso2.com", count: 39 },
-  { name: "Chaminda Bandara", email: "chaminda@wso2.com", count: 34 },
-  { name: "Niluka Perera", email: "niluka@wso2.com", count: 28 },
-  { name: "Tharushi Silva", email: "tharushi@wso2.com", count: 22 },
-  { name: "Kasun Wijesekara", email: "kasun@wso2.com", count: 18 },
+  { name: "Saman Kumara", email: "saman@wso2.com", bu: "Engineering", count: 58 },
+  { name: "Lakshmi Rao", email: "lakshmi@wso2.com", bu: "Marketing", count: 45 },
+  { name: "Ravi Shankar", email: "ravi@wso2.com", bu: "Sales", count: 39 },
+  { name: "Chaminda Bandara", email: "chaminda@wso2.com", bu: "Finance", count: 34 },
+  { name: "Niluka Perera", email: "niluka@wso2.com", bu: "Engineering", count: 28 },
+  { name: "Tharushi Silva", email: "tharushi@wso2.com", bu: "Operations", count: 22 },
+  { name: "Kasun Wijesekara", email: "kasun@wso2.com", bu: "HR", count: 18 },
 ];
+
+// Period multipliers to simulate different data for each chart filter period
+const PERIOD_MULTIPLIERS: Record<string, number> = {
+  current: 1,
+  pastThree: 2.8,
+  pastSix: 5.2,
+  pastNine: 7.6,
+  pastTwelve: 10.4,
+};
+
+// Seeded-ish variation so each item shifts differently per period
+function varyValue(base: number, period: string, seed: number): number {
+  const multiplier = PERIOD_MULTIPLIERS[period] ?? 1;
+  const jitter = 0.85 + ((seed * 7 + 3) % 10) / 30; // 0.85–1.18
+  return Math.round(base * multiplier * jitter);
+}
+
+export function getMockBuExpenses(period: string): BuExpenseItem[] {
+  return MOCK_BU_EXPENSES.map((d, i) => ({
+    ...d,
+    value: varyValue(d.value, period, i),
+  }));
+}
+
+export function getMockActiveClaimStats(period: string): ActiveClaimStatItem[] {
+  return MOCK_ACTIVE_CLAIM_STATS.map((d, i) => ({
+    ...d,
+    value: varyValue(d.value, period, i),
+  }));
+}
+
+export function getMockTopSpendingEmployees(period: string): TopEmployeeItem[] {
+  return MOCK_TOP_SPENDING_EMPLOYEES.map((d, i) => ({
+    ...d,
+    amount: varyValue(d.amount, period, i + 10),
+  }));
+}
+
+export function getMockTopApprovingLeads(period: string): TopLeadItem[] {
+  return MOCK_TOP_APPROVING_LEADS.map((d, i) => ({
+    ...d,
+    count: varyValue(d.count, period, i + 20),
+  }));
+}
+
+export function getMockRecurringExpenseTypes(period: string): ExpenseTypeItem[] {
+  return MOCK_RECURRING_EXPENSE_TYPES.map((d, i) => ({
+    ...d,
+    amount: varyValue(d.amount, period, i + 5),
+  }));
+}
 
 export interface ExpenseFilters {
   dateRange: string;
