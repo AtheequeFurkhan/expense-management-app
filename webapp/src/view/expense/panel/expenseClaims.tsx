@@ -13,28 +13,27 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box } from "@wso2/oxygen-ui";
-import { CheckCircle, DollarSign, Hash, TrendingUp } from "lucide-react";
+import { Alert, Box, Stack } from "@wso2/oxygen-ui";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import SummaryCard from "@component/card/SummaryCard";
 import BarChart from "@component/chart/BarChart";
 import ChartCard from "@component/chart/ChartCard";
-import ComparisonChart from "@component/chart/ComparisonChart";
+import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
 import HorizontalBarChart from "@component/chart/HorizontalBarChart";
+import LeaderboardChart from "@component/chart/LeaderboardChart";
+import { MONTH_OPTIONS, OPD_SUMMARY_CARDS_CONFIG } from "@config/constant";
+import { resetExpenseClaims, useExpenseClaims } from "@slices/expenseSlice/useExpenseClaims";
+import { useAppDispatch } from "@slices/store";
 
-import {
-  type ExpenseFilters,
-  INITIAL_FILTERS,
-  MOCK_ACTIVE_CLAIM_STATS,
-  MOCK_BU_EXPENSES,
-  MOCK_RECURRING_REVENUE,
-  MOCK_SUMMARY_STATS,
-  MOCK_TOP_APPROVING_LEADS,
-  MOCK_TOP_SPENDING_EMPLOYEES,
-} from "../data/mockData";
+import ExpenseClaimsSkeleton from "./ExpenseClaimsSkeleton";
 import FilterPanel from "./FilterPanel";
+
+const prevMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLocaleString(
+  "default",
+  { month: "long" },
+);
 
 const formatCurrency = (v: number) => {
   if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
@@ -43,7 +42,52 @@ const formatCurrency = (v: number) => {
 };
 
 export default function ExpenseClaims() {
-  const [filters, setFilters] = useState<ExpenseFilters>(INITIAL_FILTERS);
+  const dispatch = useAppDispatch();
+  const { data, filters, loading, error, handleFiltersChange } = useExpenseClaims();
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [buPeriod, setBuPeriod] = useState("current");
+  const [claimStatsPeriod, setClaimStatsPeriod] = useState("current");
+  const [recurringPeriod, setRecurringPeriod] = useState("current");
+  const [topEmployeesPeriod, setTopEmployeesPeriod] = useState("current");
+  const [topLeadsPeriod, setTopLeadsPeriod] = useState("current");
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetExpenseClaims());
+    };
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!loading && !error) {
+      setHasLoadedOnce(true);
+    }
+  }, [loading, error]);
+
+  if (loading && !hasLoadedOnce) {
+    return <ExpenseClaimsSkeleton />;
+  }
+
+  if (error) {
+    return (
+      <Box
+        sx={{
+          p: 2,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          minHeight: "70vh",
+          bgcolor: "background.default",
+          overflow: "hidden",
+        }}
+      >
+        <Stack sx={{ width: "fit-content", minWidth: 400, maxWidth: "90%" }} spacing={2}>
+          <Alert severity="error" sx={{ width: "100%" }}>
+            {error}
+          </Alert>
+        </Stack>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -58,61 +102,54 @@ export default function ExpenseClaims() {
     >
       {/* Filter bar */}
       <Box sx={{ mb: 2 }}>
-        <FilterPanel filters={filters} onFiltersChange={setFilters} />
+        <FilterPanel filters={filters} onFiltersChange={handleFiltersChange} />
       </Box>
 
-      {/* Summary stat cards — 4 across */}
+      {/* Summary stat cards — same 3-card layout as OPD Claims */}
       <Box
         sx={{
           width: "100%",
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)", md: "repeat(4, minmax(0, 1fr))" },
+          gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
           gap: 2,
         }}
       >
         <SummaryCard
-          icon={DollarSign}
-          iconBg="#fff3e0"
-          iconColor="#f57c00"
-          title="Total Claim Amount"
-          chipLabel={new Date().getFullYear().toString()}
-          value={MOCK_SUMMARY_STATS.totalClaimAmount.toLocaleString()}
-          suffix="LKR"
-          trend="+12.4%"
-          trendVariant="positive"
+          icon={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.icon}
+          iconBg={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.iconBg}
+          iconColor={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.iconColor}
+          title={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.title}
+          chipLabel={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.chipLabel}
+          value={data.totalClaimAmount.toLocaleString()}
+          suffix={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.suffix}
+          trend={`${data.trendTotalAmount > 0 ? "+" : ""}${data.trendTotalAmount}%`}
+          trendVariant={data.trendTotalAmount < 0 ? "negative" : "positive"}
         />
+
         <SummaryCard
-          icon={Hash}
-          iconBg="#e3f2fd"
-          iconColor="#1976d2"
-          title="Total Claims"
-          chipLabel="YTD"
-          value={MOCK_SUMMARY_STATS.totalClaimCount.toLocaleString()}
-          trend="+8.2%"
-          trendVariant="positive"
+          icon={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.icon}
+          iconBg={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.iconBg}
+          iconColor={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.iconColor}
+          title={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.title}
+          chipLabel={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.chipLabel}
+          value={data.avgClaimAmount.toLocaleString()}
+          suffix={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.suffix}
+          trend={`${data.trendAvgAmount > 0 ? "+" : ""}${data.trendAvgAmount}%`}
+          trendVariant={data.trendAvgAmount < 0 ? "negative" : "positive"}
+          trendLabel={`VS ${prevMonth}`}
         />
+
         <SummaryCard
-          icon={CheckCircle}
-          iconBg="#f0fff4"
-          iconColor="#2e7d32"
-          title="Approved Claims"
-          value={MOCK_SUMMARY_STATS.approvedClaims.toLocaleString()}
-          trend="+5.1%"
-          trendVariant="positive"
-          footerRight={MOCK_SUMMARY_STATS.pendingClaims.toString()}
-          footerRightLabel="Pending"
-        />
-        <SummaryCard
-          icon={TrendingUp}
-          iconBg="#f3e5f5"
-          iconColor="#7b1fa2"
-          title="Avg. Claim Amount"
-          value={MOCK_SUMMARY_STATS.avgClaimAmount.toLocaleString()}
-          suffix="LKR"
-          trend="-2.3%"
-          trendVariant="negative"
-          footerRight={MOCK_SUMMARY_STATS.rejectedClaims.toString()}
-          footerRightLabel="Rejected"
+          icon={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.icon}
+          iconBg={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.iconBg}
+          iconColor={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.iconColor}
+          title={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.title}
+          chipLabel={OPD_SUMMARY_CARDS_CONFIG.previousYearCard.chipLabel}
+          value={data.totalClaimCount.toLocaleString()}
+          trend={`${data.trendTotalCount > 0 ? "+" : ""}${data.trendTotalCount}%`}
+          trendVariant={data.trendTotalCount < 0 ? "negative" : "positive"}
+          footerRight={data.pendingClaims.toString()}
+          footerRightLabel="Grace Period Claims"
         />
       </Box>
 
@@ -125,31 +162,34 @@ export default function ExpenseClaims() {
           gap: 2,
         }}
       >
-        <ChartCard title="Expense from BU" subtitle="Total expense amount by Business Unit">
+        <ChartCard
+          title="Expense from BU"
+          subtitle="Total expense amount by Business Unit"
+          action={
+            <ChartPeriodFilter value={buPeriod} options={MONTH_OPTIONS} onChange={setBuPeriod} />
+          }
+        >
           <BarChart
-            data={MOCK_BU_EXPENSES.map((d) => ({ label: d.label, value: d.value }))}
+            data={data.buExpenses.map((d) => ({ label: d.label, value: d.value }))}
             formatValue={formatCurrency}
             yAxisLabel="Amount (LKR)"
             xAxisLabel="Business Unit"
           />
         </ChartCard>
 
-        <ChartCard title="Recurring Revenue" subtitle="Period comparison of recurring expenses">
-          <ComparisonChart
-            data={MOCK_RECURRING_REVENUE}
-            currentLabel={new Date().getFullYear().toString()}
-            previousLabel={(new Date().getFullYear() - 1).toString()}
-            formatValue={formatCurrency}
-            yAxisLabel="Amount (LKR)"
-          />
-        </ChartCard>
-      </Box>
-
-      {/* Row 3: Active Claim Stats (bar) */}
-      <Box sx={{ mt: 2 }}>
-        <ChartCard title="Active Claim Stats" subtitle="Claim counts by status">
+        <ChartCard
+          title="Active Claim Stats"
+          subtitle="Claim counts by status"
+          action={
+            <ChartPeriodFilter
+              value={claimStatsPeriod}
+              options={MONTH_OPTIONS}
+              onChange={setClaimStatsPeriod}
+            />
+          }
+        >
           <BarChart
-            data={MOCK_ACTIVE_CLAIM_STATS.map((d) => ({ label: d.label, value: d.value }))}
+            data={data.activeClaimStats.map((d) => ({ label: d.label, value: d.value }))}
             height={220}
             yAxisLabel="Count"
             xAxisLabel="Status"
@@ -159,7 +199,7 @@ export default function ExpenseClaims() {
         </ChartCard>
       </Box>
 
-      {/* Row 4: Top Spending Employees + Top Approving Lead */}
+      {/* Row 3: Top Spending Employees + Top Approving Lead (leaderboards) */}
       <Box
         sx={{
           mt: 2,
@@ -168,30 +208,95 @@ export default function ExpenseClaims() {
           gap: 2,
         }}
       >
-        <ChartCard title="Top Spending Employees" subtitle="Employees with highest spending">
-          <HorizontalBarChart
-            data={MOCK_TOP_SPENDING_EMPLOYEES.map((d) => ({
+        <ChartCard
+          title="Top Spending Employees"
+          subtitle="Employees with highest spending"
+          action={
+            <ChartPeriodFilter
+              value={topEmployeesPeriod}
+              options={MONTH_OPTIONS}
+              onChange={setTopEmployeesPeriod}
+            />
+          }
+        >
+          <LeaderboardChart
+            data={data.topSpendingEmployees.map((d) => ({
               label: d.name,
               sublabel: d.email,
               value: d.amount,
             }))}
             formatValue={(v) => `${formatCurrency(v)} LKR`}
-            barColor="#4A8EDB"
-            barHoverColor="#3672b5"
+            accentColor="#4A8EDB"
           />
         </ChartCard>
 
-        <ChartCard title="Top Approving Lead" subtitle="Leads with most approved claims">
-          <HorizontalBarChart
-            data={MOCK_TOP_APPROVING_LEADS.map((d) => ({
+        <ChartCard
+          title="Top Approving Lead"
+          subtitle="Leads with most approved claims"
+          action={
+            <ChartPeriodFilter
+              value={topLeadsPeriod}
+              options={MONTH_OPTIONS}
+              onChange={setTopLeadsPeriod}
+            />
+          }
+        >
+          <LeaderboardChart
+            data={data.topApprovingLeads.map((d) => ({
               label: d.name,
               sublabel: d.email,
               value: d.count,
             }))}
             formatValue={(v) => `${v} claims`}
-            barColor="#AB7AE0"
-            barHoverColor="#9360cc"
+            accentColor="#AB7AE0"
           />
+        </ChartCard>
+      </Box>
+
+      {/* Row 4: Recurring Expense Types — scrollable horizontal bar chart */}
+      <Box sx={{ mt: 2 }}>
+        <ChartCard
+          title="Recurring Expense"
+          subtitle="Top expense types by recurring spend"
+          minHeight={520}
+          action={
+            <ChartPeriodFilter
+              value={recurringPeriod}
+              options={MONTH_OPTIONS}
+              onChange={setRecurringPeriod}
+            />
+          }
+        >
+          <Box
+            sx={{
+              maxHeight: 460,
+              overflowY: "auto",
+              pr: 1,
+              "&::-webkit-scrollbar": { width: 6 },
+              "&::-webkit-scrollbar-track": {
+                bgcolor: "action.hover",
+                borderRadius: 3,
+              },
+              "&::-webkit-scrollbar-thumb": {
+                bgcolor: "text.disabled",
+                borderRadius: 3,
+                "&:hover": { bgcolor: "text.secondary" },
+              },
+            }}
+          >
+            <HorizontalBarChart
+              data={data.recurringExpenseTypes.map((d) => ({
+                label: d.name,
+                value: d.amount,
+              }))}
+              formatValue={(v) => `${formatCurrency(v)} LKR`}
+              barColor="#2E8B57"
+              barHoverColor="#246d45"
+              showRank={false}
+              barHeight={24}
+              labelWidth={220}
+            />
+          </Box>
         </ChartCard>
       </Box>
     </Box>
