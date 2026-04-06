@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { Box, Skeleton } from "@wso2/oxygen-ui";
 
 export default function ExpenseClaimsSkeleton() {
@@ -22,9 +21,11 @@ export default function ExpenseClaimsSkeleton() {
       sx={{
         p: 2,
         bgcolor: "background.default",
-        minHeight: "100%",
+        height: "100%",
         width: "100%",
         boxSizing: "border-box",
+        overflowY: "auto",
+        overflowX: "hidden",
       }}
     >
       {/* Filter button skeleton */}
@@ -58,28 +59,13 @@ export default function ExpenseClaimsSkeleton() {
           gap: 2,
         }}
       >
-        <Skeleton
-          variant="rectangular"
-          height={340}
-          sx={{ borderRadius: 1 }}
-          animation="wave"
-        />
-        <Skeleton
-          variant="rectangular"
-          height={340}
-          sx={{ borderRadius: 1 }}
-          animation="wave"
-        />
+        <Skeleton variant="rectangular" height={340} sx={{ borderRadius: 1 }} animation="wave" />
+        <Skeleton variant="rectangular" height={340} sx={{ borderRadius: 1 }} animation="wave" />
       </Box>
 
       {/* Row 3: Full-width chart card */}
       <Box sx={{ mt: 2 }}>
-        <Skeleton
-          variant="rectangular"
-          height={300}
-          sx={{ borderRadius: 1 }}
-          animation="wave"
-        />
+        <Skeleton variant="rectangular" height={300} sx={{ borderRadius: 1 }} animation="wave" />
       </Box>
 
       {/* Row 4: Two chart cards side by side */}
@@ -91,18 +77,8 @@ export default function ExpenseClaimsSkeleton() {
           gap: 2,
         }}
       >
-        <Skeleton
-          variant="rectangular"
-          height={340}
-          sx={{ borderRadius: 1 }}
-          animation="wave"
-        />
-        <Skeleton
-          variant="rectangular"
-          height={340}
-          sx={{ borderRadius: 1 }}
-          animation="wave"
-        />
+        <Skeleton variant="rectangular" height={340} sx={{ borderRadius: 1 }} animation="wave" />
+        <Skeleton variant="rectangular" height={340} sx={{ borderRadius: 1 }} animation="wave" />
       </Box>
     </Box>
   );
