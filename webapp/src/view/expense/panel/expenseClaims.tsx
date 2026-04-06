@@ -73,6 +73,47 @@ export default function ExpenseClaims() {
     [recurringPeriod],
   );
 
+  // Fixed axis max from the largest period so bars visually change, not the axis
+  const buMaxValue = useMemo(
+    () => Math.max(...getMockBuExpenses("pastTwelve").map((d) => d.value)),
+    [],
+  );
+  const claimStatsMaxValue = useMemo(
+    () => Math.max(...getMockActiveClaimStats("pastTwelve").map((d) => d.value)),
+    [],
+  );
+  const topEmployeesMaxValue = useMemo(
+    () => Math.max(...getMockTopSpendingEmployees("pastTwelve").map((d) => d.amount)),
+    [],
+  );
+  const topLeadsMaxValue = useMemo(
+    () => Math.max(...getMockTopApprovingLeads("pastTwelve").map((d) => d.count)),
+    [],
+  );
+  const recurringMaxValue = useMemo(
+    () => Math.max(...getMockRecurringExpenseTypes("pastTwelve").map((d) => d.amount)),
+    [],
+  );
+
+  // Sync main Date Range filter → all chart mini period filters
+  useEffect(() => {
+    const mapping: Record<string, string> = {
+      "This Month": "current",
+      "Last Month": "current",
+      "Last 3 Months": "pastThree",
+      "Last 6 Months": "pastSix",
+      "Year to Date": "pastTwelve",
+      "Last Year": "pastTwelve",
+    };
+    const period = mapping[filters.dateRange] ?? "current";
+
+    setBuPeriod(period);
+    setClaimStatsPeriod(period);
+    setTopEmployeesPeriod(period);
+    setTopLeadsPeriod(period);
+    setRecurringPeriod(period);
+  }, [filters.dateRange]);
+
   useEffect(() => {
     return () => {
       dispatch(resetExpenseClaims());
@@ -245,6 +286,7 @@ export default function ExpenseClaims() {
             formatValue={fmt}
             yAxisLabel={`Amount (${CURRENCIES[currency].code})`}
             xAxisLabel="Business Unit"
+            maxValue={buMaxValue}
           />
         </ChartCard>
 
@@ -263,6 +305,7 @@ export default function ExpenseClaims() {
             data={claimStats.map((d) => ({ label: d.label, value: d.value }))}
             yAxisLabel="Count"
             xAxisLabel="Status"
+            maxValue={claimStatsMaxValue}
           />
         </ChartCard>
       </Box>
@@ -296,6 +339,7 @@ export default function ExpenseClaims() {
             formatValue={(v) => fmtSym(v)}
             barColor="#4A8EDB"
             barHoverColor="#3672b5"
+            maxValue={topEmployeesMaxValue}
             tooltipContent={(_item, index) => {
               const emp = topEmployees[index];
               return (
@@ -338,6 +382,7 @@ export default function ExpenseClaims() {
             formatValue={(v) => `${v} claims`}
             barColor="#AB7AE0"
             barHoverColor="#9360cc"
+            maxValue={topLeadsMaxValue}
             tooltipContent={(_item, index) => {
               const lead = topLeads[index];
               return (
@@ -400,6 +445,7 @@ export default function ExpenseClaims() {
               formatValue={(v) => fmtSym(v)}
               barColor="#2E8B57"
               barHoverColor="#246d45"
+              maxValue={recurringMaxValue}
               showRank={false}
               barHeight={24}
               labelWidth={220}

@@ -32,6 +32,7 @@ export interface HorizontalBarChartProps {
   barHeight?: number;
   labelWidth?: number;
   tooltipContent?: (item: HorizontalBarItem, index: number) => ReactNode;
+  maxValue?: number;
 }
 
 export default function HorizontalBarChart({
@@ -43,6 +44,7 @@ export default function HorizontalBarChart({
   barHeight = 28,
   labelWidth = 130,
   tooltipContent,
+  maxValue: maxValueProp,
 }: HorizontalBarChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const theme = useTheme();
@@ -53,7 +55,7 @@ export default function HorizontalBarChart({
   const resolvedBarColor = barColor ?? defaultBarColor;
   const resolvedBarHoverColor = barHoverColor ?? defaultBarHoverColor;
 
-  const maxValue = Math.max(...data.map((d) => d.value), 1);
+  const maxValue = maxValueProp ?? Math.max(...data.map((d) => d.value), 1);
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2, flex: 1 }}>

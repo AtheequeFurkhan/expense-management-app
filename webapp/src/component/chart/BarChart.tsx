@@ -31,6 +31,7 @@ export interface BarChartProps {
   yAxisLabel?: string;
   xAxisLabel?: string;
   tooltipContent?: (item: BarChartItem, index: number) => ReactNode;
+  maxValue?: number;
 }
 
 export default function BarChart({
@@ -42,6 +43,7 @@ export default function BarChart({
   yAxisLabel = "Amount",
   xAxisLabel,
   tooltipContent,
+  maxValue: maxValueProp,
 }: BarChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const theme = useTheme();
@@ -52,7 +54,7 @@ export default function BarChart({
   const resolvedBarColor = barColor ?? defaultBarColor;
   const resolvedBarHoverColor = barHoverColor ?? defaultBarHoverColor;
 
-  const maxValue = Math.max(...data.map((d) => d.value), 1);
+  const maxValue = maxValueProp ?? Math.max(...data.map((d) => d.value), 1);
   const yAxisValues = [
     maxValue,
     Math.round(maxValue * 0.75),
