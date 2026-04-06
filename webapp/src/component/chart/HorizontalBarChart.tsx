@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { Box, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
 
 import { useState } from "react";
@@ -31,6 +30,7 @@ export interface HorizontalBarChartProps {
   formatValue?: (value: number) => string;
   showRank?: boolean;
   barHeight?: number;
+  labelWidth?: number;
 }
 
 export default function HorizontalBarChart({
@@ -40,6 +40,7 @@ export default function HorizontalBarChart({
   formatValue = (v) => v.toLocaleString(),
   showRank = true,
   barHeight = 28,
+  labelWidth = 130,
 }: HorizontalBarChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const theme = useTheme();
@@ -74,7 +75,7 @@ export default function HorizontalBarChart({
               </Typography>
             )}
 
-            <Box sx={{ minWidth: 110, maxWidth: 130 }}>
+            <Box sx={{ minWidth: labelWidth, maxWidth: labelWidth }}>
               <Typography
                 sx={{
                   fontSize: 12,

@@ -19,10 +19,9 @@ export interface BuExpenseItem {
   value: number;
 }
 
-export interface RecurringRevenueItem {
-  label: string;
-  current: number;
-  previous: number;
+export interface ExpenseTypeItem {
+  name: string;
+  amount: number;
 }
 
 export interface TopEmployeeItem {
@@ -71,13 +70,32 @@ export const MOCK_BU_EXPENSES: BuExpenseItem[] = [
   { label: "Support", value: 100_600 },
 ];
 
-export const MOCK_RECURRING_REVENUE: RecurringRevenueItem[] = [
-  { label: "Jan", current: 180_000, previous: 160_000 },
-  { label: "Feb", current: 220_000, previous: 190_000 },
-  { label: "Mar", current: 195_000, previous: 210_000 },
-  { label: "Apr", current: 310_000, previous: 240_000 },
-  { label: "May", current: 275_000, previous: 260_000 },
-  { label: "Jun", current: 340_000, previous: 290_000 },
+export const MOCK_RECURRING_EXPENSE_TYPES: ExpenseTypeItem[] = [
+  { name: "COS-PublicCloud-AWS", amount: 1_245_000 },
+  { name: "RND-AWS-Choreo", amount: 982_400 },
+  { name: "Cloud Hosting", amount: 874_500 },
+  { name: "RND-GCP-Choreo", amount: 756_200 },
+  { name: "Google Apps", amount: 645_800 },
+  { name: "COS-Gen-AWS-Subs", amount: 598_300 },
+  { name: "Office 365", amount: 534_100 },
+  { name: "RND-AWS-IAM", amount: 487_600 },
+  { name: "COS-Gen-GCP-Subs", amount: 432_900 },
+  { name: "Salesforce Inc", amount: 398_200 },
+  { name: "RND-AWS-Integration", amount: 367_500 },
+  { name: "MS EA - Choreo (Azure CoS)", amount: 342_100 },
+  { name: "Github", amount: 312_400 },
+  { name: "COS-Gen-Azure-Subs", amount: 289_700 },
+  { name: "Netsuite", amount: 267_300 },
+  { name: "COS-Gen-JIRA-License", amount: 245_800 },
+  { name: "Rent", amount: 234_500 },
+  { name: "Domain/SSL Certs Renewal", amount: 198_600 },
+  { name: "Concur", amount: 187_200 },
+  { name: "People HR", amount: 176_400 },
+  { name: "Intercom", amount: 165_300 },
+  { name: "RND-Figma", amount: 154_800 },
+  { name: "Pager Duty", amount: 143_200 },
+  { name: "RND-Github-Copilot", amount: 132_600 },
+  { name: "Zoom", amount: 128_400 },
 ];
 
 export const MOCK_ACTIVE_CLAIM_STATS: ActiveClaimStatItem[] = [
