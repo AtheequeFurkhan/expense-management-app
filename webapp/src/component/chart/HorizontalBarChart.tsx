@@ -15,7 +15,7 @@
 // under the License.
 import { Box, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 
 export interface HorizontalBarItem {
   label: string;
@@ -31,6 +31,7 @@ export interface HorizontalBarChartProps {
   showRank?: boolean;
   barHeight?: number;
   labelWidth?: number;
+  tooltipContent?: (item: HorizontalBarItem, index: number) => ReactNode;
 }
 
 export default function HorizontalBarChart({
@@ -41,6 +42,7 @@ export default function HorizontalBarChart({
   showRank = true,
   barHeight = 28,
   labelWidth = 130,
+  tooltipContent,
 }: HorizontalBarChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const theme = useTheme();
@@ -108,14 +110,18 @@ export default function HorizontalBarChart({
             <Box sx={{ flex: 1 }}>
               <Tooltip
                 title={
-                  <Box sx={{ px: 0.5, py: 0.2 }}>
-                    <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
-                      {formatValue(item.value)}
-                    </Typography>
-                    <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.2 }}>
-                      {item.label}
-                    </Typography>
-                  </Box>
+                  tooltipContent ? (
+                    tooltipContent(item, index)
+                  ) : (
+                    <Box sx={{ px: 0.5, py: 0.2 }}>
+                      <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
+                        {formatValue(item.value)}
+                      </Typography>
+                      <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.2 }}>
+                        {item.label}
+                      </Typography>
+                    </Box>
+                  )
                 }
                 placement="top"
                 arrow

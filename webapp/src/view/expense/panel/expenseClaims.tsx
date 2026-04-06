@@ -13,21 +13,26 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Alert, Box, Stack } from "@wso2/oxygen-ui";
+import { Alert, Box, Skeleton, Stack, Typography } from "@wso2/oxygen-ui";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import SummaryCard from "@component/card/SummaryCard";
 import BarChart from "@component/chart/BarChart";
 import ChartCard from "@component/chart/ChartCard";
 import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
 import HorizontalBarChart from "@component/chart/HorizontalBarChart";
-import LeaderboardChart from "@component/chart/LeaderboardChart";
 import { MONTH_OPTIONS, OPD_SUMMARY_CARDS_CONFIG } from "@config/constant";
 import { resetExpenseClaims, useExpenseClaims } from "@slices/expenseSlice/useExpenseClaims";
 import { useAppDispatch } from "@slices/store";
+import {
+  getMockActiveClaimStats,
+  getMockBuExpenses,
+  getMockRecurringExpenseTypes,
+  getMockTopApprovingLeads,
+  getMockTopSpendingEmployees,
+} from "@view/expense/data/mockData";
 
-import ExpenseClaimsSkeleton from "./ExpenseClaimsSkeleton";
 import FilterPanel from "./FilterPanel";
 
 const prevMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLocaleString(
@@ -51,6 +56,18 @@ export default function ExpenseClaims() {
   const [topEmployeesPeriod, setTopEmployeesPeriod] = useState("current");
   const [topLeadsPeriod, setTopLeadsPeriod] = useState("current");
 
+  const buExpenses = useMemo(() => getMockBuExpenses(buPeriod), [buPeriod]);
+  const claimStats = useMemo(() => getMockActiveClaimStats(claimStatsPeriod), [claimStatsPeriod]);
+  const topEmployees = useMemo(
+    () => getMockTopSpendingEmployees(topEmployeesPeriod),
+    [topEmployeesPeriod],
+  );
+  const topLeads = useMemo(() => getMockTopApprovingLeads(topLeadsPeriod), [topLeadsPeriod]);
+  const recurringExpenses = useMemo(
+    () => getMockRecurringExpenseTypes(recurringPeriod),
+    [recurringPeriod],
+  );
+
   useEffect(() => {
     return () => {
       dispatch(resetExpenseClaims());
@@ -64,7 +81,53 @@ export default function ExpenseClaims() {
   }, [loading, error]);
 
   if (loading && !hasLoadedOnce) {
-    return <ExpenseClaimsSkeleton />;
+    return (
+      <Box
+        sx={{
+          p: 2,
+          bgcolor: "background.default",
+          height: "100%",
+          width: "100%",
+          boxSizing: "border-box",
+          overflowY: "auto",
+          overflowX: "hidden",
+        }}
+      >
+        <Skeleton variant="rectangular" width={100} height={32} sx={{ borderRadius: 1, mb: 2 }} />
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", md: "repeat(3, minmax(0, 1fr))" },
+            gap: 2,
+          }}
+        >
+          {[0, 1, 2].map((i) => (
+            <Skeleton
+              key={i}
+              variant="rectangular"
+              height={130}
+              sx={{ borderRadius: 1 }}
+              animation="wave"
+            />
+          ))}
+        </Box>
+        <Box
+          sx={{ mt: 2, display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" }, gap: 2 }}
+        >
+          <Skeleton variant="rectangular" height={340} sx={{ borderRadius: 1 }} animation="wave" />
+          <Skeleton variant="rectangular" height={340} sx={{ borderRadius: 1 }} animation="wave" />
+        </Box>
+        <Box
+          sx={{ mt: 2, display: "grid", gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" }, gap: 2 }}
+        >
+          <Skeleton variant="rectangular" height={340} sx={{ borderRadius: 1 }} animation="wave" />
+          <Skeleton variant="rectangular" height={340} sx={{ borderRadius: 1 }} animation="wave" />
+        </Box>
+        <Box sx={{ mt: 2 }}>
+          <Skeleton variant="rectangular" height={400} sx={{ borderRadius: 1 }} animation="wave" />
+        </Box>
+      </Box>
+    );
   }
 
   if (error) {
@@ -172,7 +235,7 @@ export default function ExpenseClaims() {
           }
         >
           <BarChart
-            data={data.buExpenses.map((d) => ({ label: d.label, value: d.value }))}
+            data={buExpenses.map((d) => ({ label: d.label, value: d.value }))}
             formatValue={formatCurrency}
             yAxisLabel="Amount (LKR)"
             xAxisLabel="Business Unit"
@@ -191,17 +254,14 @@ export default function ExpenseClaims() {
           }
         >
           <BarChart
-            data={data.activeClaimStats.map((d) => ({ label: d.label, value: d.value }))}
-            height={220}
+            data={claimStats.map((d) => ({ label: d.label, value: d.value }))}
             yAxisLabel="Count"
             xAxisLabel="Status"
-            barColor="#7E4FCA"
-            barHoverColor="#6a3cb5"
           />
         </ChartCard>
       </Box>
 
-      {/* Row 3: Top Spending Employees + Top Approving Lead (leaderboards) */}
+      {/* Row 3: Top Spending Employees + Top Approving Lead (horizontal bars) */}
       <Box
         sx={{
           mt: 2,
@@ -221,14 +281,34 @@ export default function ExpenseClaims() {
             />
           }
         >
-          <LeaderboardChart
-            data={data.topSpendingEmployees.map((d) => ({
+          <HorizontalBarChart
+            data={topEmployees.map((d) => ({
               label: d.name,
               sublabel: d.email,
               value: d.amount,
             }))}
             formatValue={(v) => `${formatCurrency(v)} LKR`}
-            accentColor="#4A8EDB"
+            barColor="#4A8EDB"
+            barHoverColor="#3672b5"
+            tooltipContent={(_item, index) => {
+              const emp = topEmployees[index];
+              return (
+                <Box sx={{ px: 0.5, py: 0.2 }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
+                    {formatCurrency(emp.amount)} LKR
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.3 }}>
+                    {emp.name}
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
+                    {emp.email}
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
+                    BU: {emp.bu}
+                  </Typography>
+                </Box>
+              );
+            }}
           />
         </ChartCard>
 
@@ -243,14 +323,34 @@ export default function ExpenseClaims() {
             />
           }
         >
-          <LeaderboardChart
-            data={data.topApprovingLeads.map((d) => ({
+          <HorizontalBarChart
+            data={topLeads.map((d) => ({
               label: d.name,
               sublabel: d.email,
               value: d.count,
             }))}
             formatValue={(v) => `${v} claims`}
-            accentColor="#AB7AE0"
+            barColor="#AB7AE0"
+            barHoverColor="#9360cc"
+            tooltipContent={(_item, index) => {
+              const lead = topLeads[index];
+              return (
+                <Box sx={{ px: 0.5, py: 0.2 }}>
+                  <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
+                    {lead.count} claims
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.3 }}>
+                    {lead.name}
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
+                    {lead.email}
+                  </Typography>
+                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
+                    BU: {lead.bu}
+                  </Typography>
+                </Box>
+              );
+            }}
           />
         </ChartCard>
       </Box>
@@ -287,7 +387,7 @@ export default function ExpenseClaims() {
             }}
           >
             <HorizontalBarChart
-              data={data.recurringExpenseTypes.map((d) => ({
+              data={recurringExpenses.map((d) => ({
                 label: d.name,
                 value: d.amount,
               }))}
