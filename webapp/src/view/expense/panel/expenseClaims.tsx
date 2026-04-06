@@ -22,9 +22,16 @@ import BarChart from "@component/chart/BarChart";
 import ChartCard from "@component/chart/ChartCard";
 import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
 import HorizontalBarChart from "@component/chart/HorizontalBarChart";
+import CurrencySelector from "@component/common/CurrencySelector";
 import { MONTH_OPTIONS, OPD_SUMMARY_CARDS_CONFIG } from "@config/constant";
 import { resetExpenseClaims, useExpenseClaims } from "@slices/expenseSlice/useExpenseClaims";
 import { useAppDispatch } from "@slices/store";
+import {
+  CURRENCIES,
+  type CurrencyCode,
+  formatCurrencyValue,
+  formatWithSymbol,
+} from "@utils/currency";
 import {
   getMockActiveClaimStats,
   getMockBuExpenses,
@@ -40,12 +47,6 @@ const prevMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLoc
   { month: "long" },
 );
 
-const formatCurrency = (v: number) => {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}K`;
-  return v.toLocaleString();
-};
-
 export default function ExpenseClaims() {
   const dispatch = useAppDispatch();
   const { data, filters, loading, error, handleFiltersChange } = useExpenseClaims();
@@ -55,6 +56,10 @@ export default function ExpenseClaims() {
   const [recurringPeriod, setRecurringPeriod] = useState("current");
   const [topEmployeesPeriod, setTopEmployeesPeriod] = useState("current");
   const [topLeadsPeriod, setTopLeadsPeriod] = useState("current");
+  const [currency, setCurrency] = useState<CurrencyCode>("LKR");
+
+  const fmt = (v: number) => formatCurrencyValue(v, currency);
+  const fmtSym = (v: number) => formatWithSymbol(v, currency);
 
   const buExpenses = useMemo(() => getMockBuExpenses(buPeriod), [buPeriod]);
   const claimStats = useMemo(() => getMockActiveClaimStats(claimStatsPeriod), [claimStatsPeriod]);
@@ -166,8 +171,9 @@ export default function ExpenseClaims() {
       }}
     >
       {/* Filter bar */}
-      <Box sx={{ mb: 2 }}>
+      <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
         <FilterPanel filters={filters} onFiltersChange={handleFiltersChange} />
+        <CurrencySelector value={currency} onChange={setCurrency} />
       </Box>
 
       {/* Summary stat cards — same 3-card layout as OPD Claims */}
@@ -185,8 +191,8 @@ export default function ExpenseClaims() {
           iconColor={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.iconColor}
           title={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.title}
           chipLabel={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.chipLabel}
-          value={data.totalClaimAmount.toLocaleString()}
-          suffix={OPD_SUMMARY_CARDS_CONFIG.lastYearCard.suffix}
+          value={fmtSym(data.totalClaimAmount)}
+          suffix={CURRENCIES[currency].code}
           trend={`${data.trendTotalAmount > 0 ? "+" : ""}${data.trendTotalAmount}%`}
           trendVariant={data.trendTotalAmount < 0 ? "negative" : "positive"}
         />
@@ -197,8 +203,8 @@ export default function ExpenseClaims() {
           iconColor={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.iconColor}
           title={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.title}
           chipLabel={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.chipLabel}
-          value={data.avgClaimAmount.toLocaleString()}
-          suffix={OPD_SUMMARY_CARDS_CONFIG.currentMonthCard.suffix}
+          value={fmtSym(data.avgClaimAmount)}
+          suffix={CURRENCIES[currency].code}
           trend={`${data.trendAvgAmount > 0 ? "+" : ""}${data.trendAvgAmount}%`}
           trendVariant={data.trendAvgAmount < 0 ? "negative" : "positive"}
           trendLabel={`VS ${prevMonth}`}
@@ -236,8 +242,8 @@ export default function ExpenseClaims() {
         >
           <BarChart
             data={buExpenses.map((d) => ({ label: d.label, value: d.value }))}
-            formatValue={formatCurrency}
-            yAxisLabel="Amount (LKR)"
+            formatValue={fmt}
+            yAxisLabel={`Amount (${CURRENCIES[currency].code})`}
             xAxisLabel="Business Unit"
           />
         </ChartCard>
@@ -287,7 +293,7 @@ export default function ExpenseClaims() {
               sublabel: d.email,
               value: d.amount,
             }))}
-            formatValue={(v) => `${formatCurrency(v)} LKR`}
+            formatValue={(v) => fmtSym(v)}
             barColor="#4A8EDB"
             barHoverColor="#3672b5"
             tooltipContent={(_item, index) => {
@@ -295,7 +301,7 @@ export default function ExpenseClaims() {
               return (
                 <Box sx={{ px: 0.5, py: 0.2 }}>
                   <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
-                    {formatCurrency(emp.amount)} LKR
+                    {fmtSym(emp.amount)}
                   </Typography>
                   <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.3 }}>
                     {emp.name}
@@ -391,7 +397,7 @@ export default function ExpenseClaims() {
                 label: d.name,
                 value: d.amount,
               }))}
-              formatValue={(v) => `${formatCurrency(v)} LKR`}
+              formatValue={(v) => fmtSym(v)}
               barColor="#2E8B57"
               barHoverColor="#246d45"
               showRank={false}
