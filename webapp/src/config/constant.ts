@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { DollarSign, Hash, TrendingUp } from "lucide-react";
 
 export const SnackMessage = {
@@ -91,6 +90,7 @@ export const OPD_SIDE_CARDS_CONFIG = {
 };
 
 export const MONTH_OPTIONS = [
+  { value: "all", label: "All Time" },
   { value: "current", label: "Current Month" },
   { value: "pastThree", label: "Past 3 Months" },
   { value: "pastSix", label: "Past 6 Months" },

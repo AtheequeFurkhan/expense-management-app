@@ -14,23 +14,19 @@
 // specific language governing permissions and limitations
 // under the License.
 import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 
 import { useEffect } from "react";
 
 import type { AppDispatch, RootState } from "@slices/store";
+import { apiService } from "@utils/apiService";
 import {
   type ActiveClaimStatItem,
   type BuExpenseItem,
   type ExpenseFilters,
   type ExpenseTypeItem,
   INITIAL_FILTERS,
-  MOCK_ACTIVE_CLAIM_STATS,
-  MOCK_BU_EXPENSES,
-  MOCK_RECURRING_EXPENSE_TYPES,
-  MOCK_SUMMARY_STATS,
-  MOCK_TOP_APPROVING_LEADS,
-  MOCK_TOP_SPENDING_EMPLOYEES,
   type TopEmployeeItem,
   type TopLeadItem,
 } from "@view/expense/data/mockData";
@@ -85,37 +81,121 @@ const initialState: ExpenseClaimsState = {
   error: null,
 };
 
-// TODO: Replace mock fetch with real API call once backend is ready
+interface BackendExpenseClaimsData {
+  totalClaimAmount?: number;
+  totalClaimCount?: number;
+  pendingClaims?: number;
+  approvedClaims?: number;
+  rejectedClaims?: number;
+  avgClaimAmount?: number;
+  buExpenses?: BuExpenseItem[];
+  recurringExpenseTypes?: { name: string; amount: number }[];
+  activeClaimStats?: ActiveClaimStatItem[];
+  topSpendingEmployees?: TopEmployeeItem[];
+  topApprovingLeads?: TopLeadItem[];
+  trendTotalAmount?: number;
+  trendTotalCount?: number;
+  trendApproved?: number;
+  trendAvgAmount?: number;
+}
+
+const resolveDateRangeParams = (
+  dateRange: string,
+): { year: string; month: string; months: string } => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  switch (dateRange) {
+    case "All Time":
+      return { year: String(currentYear), month: String(currentMonth), months: "0" };
+    case "This Month":
+      return { year: String(currentYear), month: String(currentMonth), months: "1" };
+    case "Last Month": {
+      const m = currentMonth === 1 ? 12 : currentMonth - 1;
+      const y = currentMonth === 1 ? currentYear - 1 : currentYear;
+      return { year: String(y), month: String(m), months: "1" };
+    }
+    case "Last 3 Months":
+      return { year: String(currentYear), month: String(currentMonth), months: "3" };
+    case "Last 6 Months":
+      return { year: String(currentYear), month: String(currentMonth), months: "6" };
+    case "Year to Date":
+      return {
+        year: String(currentYear),
+        month: String(currentMonth),
+        months: String(currentMonth),
+      };
+    case "Last Year":
+      return { year: String(currentYear - 1), month: "12", months: "12" };
+    default:
+      return {
+        year: String(currentYear),
+        month: String(currentMonth),
+        months: "0",
+      };
+  }
+};
+
+const normalizeExpenseClaimsData = (
+  data?: Partial<BackendExpenseClaimsData> | null,
+): ExpenseClaimsData => ({
+  totalClaimAmount: data?.totalClaimAmount ?? DEFAULT_EXPENSE_DATA.totalClaimAmount,
+  totalClaimCount: data?.totalClaimCount ?? DEFAULT_EXPENSE_DATA.totalClaimCount,
+  pendingClaims: data?.pendingClaims ?? DEFAULT_EXPENSE_DATA.pendingClaims,
+  approvedClaims: data?.approvedClaims ?? DEFAULT_EXPENSE_DATA.approvedClaims,
+  rejectedClaims: data?.rejectedClaims ?? DEFAULT_EXPENSE_DATA.rejectedClaims,
+  avgClaimAmount: data?.avgClaimAmount ?? DEFAULT_EXPENSE_DATA.avgClaimAmount,
+  buExpenses:
+    data?.buExpenses?.map((b) => ({ label: b.label, value: Number(b.value) })) ??
+    DEFAULT_EXPENSE_DATA.buExpenses,
+  recurringExpenseTypes:
+    data?.recurringExpenseTypes?.map((r) => ({ name: r.name, amount: Number(r.amount) })) ??
+    DEFAULT_EXPENSE_DATA.recurringExpenseTypes,
+  activeClaimStats:
+    data?.activeClaimStats?.map((a) => ({ label: a.label, value: Number(a.value) })) ??
+    DEFAULT_EXPENSE_DATA.activeClaimStats,
+  topSpendingEmployees:
+    data?.topSpendingEmployees?.map((e) => ({
+      name: e.name,
+      email: e.email,
+      bu: e.bu,
+      amount: Number(e.amount),
+    })) ?? DEFAULT_EXPENSE_DATA.topSpendingEmployees,
+  topApprovingLeads:
+    data?.topApprovingLeads?.map((l) => ({
+      name: l.name,
+      email: l.email,
+      bu: l.bu,
+      count: Number(l.count),
+    })) ?? DEFAULT_EXPENSE_DATA.topApprovingLeads,
+  trendTotalAmount: data?.trendTotalAmount ?? DEFAULT_EXPENSE_DATA.trendTotalAmount,
+  trendTotalCount: data?.trendTotalCount ?? DEFAULT_EXPENSE_DATA.trendTotalCount,
+  trendApproved: data?.trendApproved ?? DEFAULT_EXPENSE_DATA.trendApproved,
+  trendAvgAmount: data?.trendAvgAmount ?? DEFAULT_EXPENSE_DATA.trendAvgAmount,
+});
+
 export const fetchExpenseClaims = createAsyncThunk<
   ExpenseClaimsData,
   { filters: ExpenseFilters },
   { rejectValue: string }
->("expenseClaims/fetchExpenseClaims", async (_args, { rejectWithValue }) => {
+>("expenseClaims/fetchExpenseClaims", async ({ filters }, { rejectWithValue }) => {
   try {
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    const { year, month, months } = resolveDateRangeParams(filters.dateRange);
+    const params: Record<string, string> = { year, month, months };
 
-    // Return mock data — replace with real API call later:
-    // const response = await apiService.get<...>("/expense-claims", { params });
-    // return normalizeExpenseClaimsData(response?.data);
-    return {
-      totalClaimAmount: MOCK_SUMMARY_STATS.totalClaimAmount,
-      totalClaimCount: MOCK_SUMMARY_STATS.totalClaimCount,
-      pendingClaims: MOCK_SUMMARY_STATS.pendingClaims,
-      approvedClaims: MOCK_SUMMARY_STATS.approvedClaims,
-      rejectedClaims: MOCK_SUMMARY_STATS.rejectedClaims,
-      avgClaimAmount: MOCK_SUMMARY_STATS.avgClaimAmount,
-      buExpenses: MOCK_BU_EXPENSES,
-      recurringExpenseTypes: MOCK_RECURRING_EXPENSE_TYPES,
-      activeClaimStats: MOCK_ACTIVE_CLAIM_STATS,
-      topSpendingEmployees: MOCK_TOP_SPENDING_EMPLOYEES,
-      topApprovingLeads: MOCK_TOP_APPROVING_LEADS,
-      trendTotalAmount: 12.4,
-      trendTotalCount: 8.2,
-      trendApproved: 5.1,
-      trendAvgAmount: -2.3,
-    };
+    if (filters.businessUnit && filters.businessUnit !== "All Business Units") {
+      params.businessUnit = filters.businessUnit;
+    }
+
+    const response = await apiService.get<BackendExpenseClaimsData | null>("/expense-claims", {
+      params,
+    });
+    return normalizeExpenseClaimsData(response?.data);
   } catch (err) {
+    if (axios.isCancel(err)) {
+      return DEFAULT_EXPENSE_DATA;
+    }
     console.warn("Error fetching expense claims:", err);
     return rejectWithValue("Failed to load expense claims data.");
   }

@@ -189,6 +189,85 @@ service http:InterceptableService / on new http:Listener(9090) {
         return summary;
     }
 
+    # Get the expense claims summary for the requested reporting period.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + year - Optional reporting year (defaults to current year)
+    # + month - Optional reporting month (defaults to current month)
+    # + months - Number of months included in the reporting window
+    # + businessUnit - Optional business unit filter
+    # + return - Expense claim summary if successful, otherwise an HTTP error response
+    resource function get expense\-claims(http:RequestContext ctx, int? year = (), int? month = (),
+            int months = 1, string? businessUnit = ())
+        returns ExpenseClaimSummaryResponse|http:BadRequest|HttpInternalServerError {
+
+        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
+        if userInfo is error {
+            return <http:BadRequest>{
+                body: {
+                    message: "User information header not found!"
+                }
+            };
+        }
+
+        if year is int && year <= 0 {
+            return <http:BadRequest>{
+                body: {
+                    message: "Invalid year. Expected a positive value."
+                }
+            };
+        }
+
+        if month is int && (month < 1 || month > 12) {
+            return <http:BadRequest>{
+                body: {
+                    message: "Invalid month. Expected a value between 1 and 12."
+                }
+            };
+        }
+
+        time:Utc utcNow = time:utcNow();
+        time:Civil|error civilTime = time:utcToCivil(utcNow);
+        if civilTime is error {
+            string customError = "Failed to resolve the current date for expense claim summary defaults.";
+            log:printError(customError, civilTime);
+            return <HttpInternalServerError>{
+                body: {
+                    message: customError
+                }
+            };
+        }
+
+        int effectiveYear = year ?: civilTime.year;
+        int effectiveMonth = month ?: civilTime.month;
+
+        // Normalize businessUnit: treat empty string or "All Business Units" as no filter
+        string? effectiveBusinessUnit = businessUnit;
+        if effectiveBusinessUnit is string &&
+                (effectiveBusinessUnit.trim().length() == 0 ||
+                effectiveBusinessUnit == "All Business Units") {
+            effectiveBusinessUnit = ();
+        }
+
+        ExpenseClaimSummaryResponse|error summary = getExpenseClaimSummary(
+            effectiveYear,
+            effectiveMonth,
+            months,
+            effectiveBusinessUnit
+        );
+        if summary is error {
+            string customError = "Failed to build expense claim summary.";
+            log:printError(customError, summary);
+            return <HttpInternalServerError>{
+                body: {
+                    message: customError
+                }
+            };
+        }
+
+        return summary;
+    }
+
     # Get the health status of the service and its database dependency.
     #
     # + return - Health status response for the service
