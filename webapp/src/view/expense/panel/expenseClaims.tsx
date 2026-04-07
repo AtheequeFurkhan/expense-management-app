@@ -15,7 +15,7 @@
 // under the License.
 import { Alert, Box, Skeleton, Stack, Typography } from "@wso2/oxygen-ui";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import SummaryCard from "@component/card/SummaryCard";
 import BarChart from "@component/chart/BarChart";
@@ -32,13 +32,6 @@ import {
   formatCurrencyValue,
   formatWithSymbol,
 } from "@utils/currency";
-import {
-  getMockActiveClaimStats,
-  getMockBuExpenses,
-  getMockRecurringExpenseTypes,
-  getMockTopApprovingLeads,
-  getMockTopSpendingEmployees,
-} from "@view/expense/data/mockData";
 
 import FilterPanel from "./FilterPanel";
 
@@ -47,72 +40,65 @@ const prevMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLoc
   { month: "long" },
 );
 
+const PERIOD_TO_DATE_RANGE: Record<string, string> = {
+  all: "All Time",
+  current: "This Month",
+  pastThree: "Last 3 Months",
+  pastSix: "Last 6 Months",
+  pastNine: "Last 6 Months",
+  pastTwelve: "Year to Date",
+};
+
+const DATE_RANGE_TO_PERIOD: Record<string, string> = {
+  "All Time": "all",
+  "This Month": "current",
+  "Last Month": "current",
+  "Last 3 Months": "pastThree",
+  "Last 6 Months": "pastSix",
+  "Year to Date": "pastTwelve",
+  "Last Year": "pastTwelve",
+};
+
 export default function ExpenseClaims() {
   const dispatch = useAppDispatch();
   const { data, filters, loading, error, handleFiltersChange } = useExpenseClaims();
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
-  const [buPeriod, setBuPeriod] = useState("current");
-  const [claimStatsPeriod, setClaimStatsPeriod] = useState("current");
-  const [recurringPeriod, setRecurringPeriod] = useState("current");
-  const [topEmployeesPeriod, setTopEmployeesPeriod] = useState("current");
-  const [topLeadsPeriod, setTopLeadsPeriod] = useState("current");
+  const [chartPeriod, setChartPeriod] = useState("all");
   const [currency, setCurrency] = useState<CurrencyCode>("LKR");
 
   const fmt = (v: number) => formatCurrencyValue(v, currency);
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
 
-  const buExpenses = useMemo(() => getMockBuExpenses(buPeriod), [buPeriod]);
-  const claimStats = useMemo(() => getMockActiveClaimStats(claimStatsPeriod), [claimStatsPeriod]);
-  const topEmployees = useMemo(
-    () => getMockTopSpendingEmployees(topEmployeesPeriod),
-    [topEmployeesPeriod],
-  );
-  const topLeads = useMemo(() => getMockTopApprovingLeads(topLeadsPeriod), [topLeadsPeriod]);
-  const recurringExpenses = useMemo(
-    () => getMockRecurringExpenseTypes(recurringPeriod),
-    [recurringPeriod],
-  );
+  const {
+    buExpenses,
+    activeClaimStats: claimStats,
+    topSpendingEmployees: topEmployees,
+    topApprovingLeads: topLeads,
+    recurringExpenseTypes: recurringExpenses,
+  } = data;
 
-  // Fixed axis max from the largest period so bars visually change, not the axis
-  const buMaxValue = useMemo(
-    () => Math.max(...getMockBuExpenses("pastTwelve").map((d) => d.value)),
-    [],
-  );
-  const claimStatsMaxValue = useMemo(
-    () => Math.max(...getMockActiveClaimStats("pastTwelve").map((d) => d.value)),
-    [],
-  );
-  const topEmployeesMaxValue = useMemo(
-    () => Math.max(...getMockTopSpendingEmployees("pastTwelve").map((d) => d.amount)),
-    [],
-  );
-  const topLeadsMaxValue = useMemo(
-    () => Math.max(...getMockTopApprovingLeads("pastTwelve").map((d) => d.count)),
-    [],
-  );
-  const recurringMaxValue = useMemo(
-    () => Math.max(...getMockRecurringExpenseTypes("pastTwelve").map((d) => d.amount)),
-    [],
-  );
+  const buMaxValue = Math.max(...buExpenses.map((d) => d.value), 1);
+  const claimStatsMaxValue = Math.max(...claimStats.map((d) => d.value), 1);
+  const topEmployeesMaxValue = Math.max(...topEmployees.map((d) => d.amount), 1);
+  const topLeadsMaxValue = Math.max(...topLeads.map((d) => d.count), 1);
+  const recurringMaxValue = Math.max(...recurringExpenses.map((d) => d.amount), 1);
 
-  // Sync main Date Range filter → all chart mini period filters
+  // Sync main date range → chart period
   useEffect(() => {
-    const mapping: Record<string, string> = {
-      "This Month": "current",
-      "Last Month": "current",
-      "Last 3 Months": "pastThree",
-      "Last 6 Months": "pastSix",
-      "Year to Date": "pastTwelve",
-      "Last Year": "pastTwelve",
-    };
-    const period = mapping[filters.dateRange] ?? "current";
-
-    setBuPeriod(period);
-    setClaimStatsPeriod(period);
-    setTopEmployeesPeriod(period);
-    setTopLeadsPeriod(period);
-    setRecurringPeriod(period);
+    setChartPeriod(DATE_RANGE_TO_PERIOD[filters.dateRange] ?? "pastTwelve");
   }, [filters.dateRange]);
+
+  // When chart period filter changes, update the main date range
+  const handlePeriodChange = useCallback(
+    (period: string) => {
+      setChartPeriod(period);
+      const newDateRange = PERIOD_TO_DATE_RANGE[period];
+      if (newDateRange && newDateRange !== filters.dateRange) {
+        handleFiltersChange({ ...filters, dateRange: newDateRange });
+      }
+    },
+    [filters, handleFiltersChange],
+  );
 
   useEffect(() => {
     return () => {
@@ -278,7 +264,11 @@ export default function ExpenseClaims() {
           title="Expense from BU"
           subtitle="Total expense amount by Business Unit"
           action={
-            <ChartPeriodFilter value={buPeriod} options={MONTH_OPTIONS} onChange={setBuPeriod} />
+            <ChartPeriodFilter
+              value={chartPeriod}
+              options={MONTH_OPTIONS}
+              onChange={handlePeriodChange}
+            />
           }
         >
           <BarChart
@@ -295,9 +285,9 @@ export default function ExpenseClaims() {
           subtitle="Claim counts by status"
           action={
             <ChartPeriodFilter
-              value={claimStatsPeriod}
+              value={chartPeriod}
               options={MONTH_OPTIONS}
-              onChange={setClaimStatsPeriod}
+              onChange={handlePeriodChange}
             />
           }
         >
@@ -324,9 +314,9 @@ export default function ExpenseClaims() {
           subtitle="Employees with highest spending"
           action={
             <ChartPeriodFilter
-              value={topEmployeesPeriod}
+              value={chartPeriod}
               options={MONTH_OPTIONS}
-              onChange={setTopEmployeesPeriod}
+              onChange={handlePeriodChange}
             />
           }
         >
@@ -367,9 +357,9 @@ export default function ExpenseClaims() {
           subtitle="Leads with most approved claims"
           action={
             <ChartPeriodFilter
-              value={topLeadsPeriod}
+              value={chartPeriod}
               options={MONTH_OPTIONS}
-              onChange={setTopLeadsPeriod}
+              onChange={handlePeriodChange}
             />
           }
         >
@@ -414,9 +404,9 @@ export default function ExpenseClaims() {
           minHeight={520}
           action={
             <ChartPeriodFilter
-              value={recurringPeriod}
+              value={chartPeriod}
               options={MONTH_OPTIONS}
-              onChange={setRecurringPeriod}
+              onChange={handlePeriodChange}
             />
           }
         >

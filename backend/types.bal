@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import ballerina/http;
 
 # Represents the response structure for retrieving user information.
@@ -70,6 +69,92 @@ public type OpdClaimSummaryResponse record {|
     int fullyClaimedEmployees;
     # Claim distribution data for the active claims chart.
     OpdClaimBucket[] activeClaimsChart;
+|};
+
+// ---------------------------------------------------------------------------
+// Expense Claims response types
+// ---------------------------------------------------------------------------
+
+# Business unit expense item in the summary response.
+public type BuExpenseItem record {|
+    # Business unit label.
+    string label;
+    # Total reimbursement amount.
+    decimal value;
+|};
+
+# Active claim stats item in the summary response.
+public type ActiveClaimStatItem record {|
+    # Claim status label.
+    string label;
+    # Number of claims with this status.
+    int value;
+|};
+
+# Top spending employee item in the summary response.
+public type TopEmployeeItem record {|
+    # Display name derived from employee email.
+    string name;
+    # Employee email.
+    string email;
+    # Business unit.
+    string bu;
+    # Total reimbursement amount.
+    decimal amount;
+|};
+
+# Top approving lead item in the summary response.
+public type TopLeadItem record {|
+    # Display name derived from lead email.
+    string name;
+    # Lead email.
+    string email;
+    # Business unit.
+    string bu;
+    # Number of approved claims.
+    int count;
+|};
+
+# Recurring expense type item in the summary response.
+public type ExpenseTypeItem record {|
+    # Expense type name.
+    string name;
+    # Total reimbursement amount.
+    decimal amount;
+|};
+
+# HTTP response returned by the expense claims summary endpoint.
+public type ExpenseClaimSummaryResponse record {|
+    # Total reimbursement amount for the selected period.
+    decimal totalClaimAmount;
+    # Total number of claims in the selected period.
+    int totalClaimCount;
+    # Number of pending claims.
+    int pendingClaims;
+    # Number of approved claims.
+    int approvedClaims;
+    # Number of rejected claims.
+    int rejectedClaims;
+    # Average reimbursement amount per claim.
+    decimal avgClaimAmount;
+    # Expense amounts grouped by business unit.
+    BuExpenseItem[] buExpenses;
+    # Claim counts grouped by status.
+    ActiveClaimStatItem[] activeClaimStats;
+    # Top spending employees.
+    TopEmployeeItem[] topSpendingEmployees;
+    # Top approving leads.
+    TopLeadItem[] topApprovingLeads;
+    # Top recurring expense types by total amount.
+    ExpenseTypeItem[] recurringExpenseTypes;
+    # Trend percentage for total claim amount vs previous period.
+    decimal trendTotalAmount;
+    # Trend percentage for total claim count vs previous period.
+    decimal trendTotalCount;
+    # Trend percentage for approved claims vs previous period.
+    decimal trendApproved;
+    # Trend percentage for average claim amount vs previous period.
+    decimal trendAvgAmount;
 |};
 
 # Standard error payload returned to API clients.

@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import ballerina/sql;
 
 # OPD claim status codes stored in the database.
@@ -64,4 +63,70 @@ public type EmployeeTotalRow record {|
     string employeeEmail;
     # Total claim amount calculated for the employee.
     decimal totalAmount;
+|};
+
+// ---------------------------------------------------------------------------
+// Expense Claims types
+// ---------------------------------------------------------------------------
+
+# Query result for expense claim aggregated amount.
+public type ExpenseAmountRow record {|
+    # Aggregated total amount returned by the query.
+    decimal total;
+|};
+
+# Query result for expense claim aggregated count.
+public type ExpenseCountRow record {|
+    # Aggregated count returned by the query.
+    int count;
+|};
+
+# Query result for expense claim average amount.
+public type ExpenseAvgRow record {|
+    # Average amount returned by the query.
+    decimal avg;
+|};
+
+# Query result for expense amount grouped by business unit.
+public type BuExpenseRow record {|
+    # Business unit label.
+    string businessUnit;
+    # Total reimbursement amount for the business unit.
+    decimal total;
+|};
+
+# Query result for claim count grouped by status.
+public type ClaimStatusRow record {|
+    # Claim status label.
+    string status;
+    # Number of claims with this status.
+    int count;
+|};
+
+# Query result for top spending employees.
+public type TopSpendingEmployeeRow record {|
+    # Employee email.
+    string employeeEmail;
+    # Business unit associated with the employee's claims.
+    string businessUnit;
+    # Total reimbursement amount.
+    decimal total;
+|};
+
+# Query result for top approving leads.
+public type TopApprovingLeadRow record {|
+    # Lead email.
+    string leadEmail;
+    # Business unit associated with the lead's approved claims.
+    string businessUnit;
+    # Number of claims approved by the lead.
+    int count;
+|};
+
+# Query result for recurring expense types.
+public type RecurringExpenseTypeRow record {|
+    # Expense type name.
+    string expenseType;
+    # Total reimbursement amount for the expense type.
+    decimal total;
 |};
