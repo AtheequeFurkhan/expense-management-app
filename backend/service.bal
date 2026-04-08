@@ -23,6 +23,9 @@ import ballerina/log;
 import ballerina/time;
 
 public configurable AppConfig appConfig = ?;
+configurable decimal annualClaimLimit = ?;
+configurable decimal claimRangeStep = ?;
+configurable int lastYearClaimGracePeriodInDays = ?;
 
 final cache:Cache cache = new ({
     capacity: 2000,
@@ -53,8 +56,8 @@ service class ErrorInterceptor {
 }
 
 @display {
-    label: "Expense Management App",
-    id: "finance/expense-management-app"
+    label: "Expense Management Dashboard",
+    id: "finance/expense-management-dashboard"
 }
 service http:InterceptableService / on new http:Listener(9090) {
 
@@ -238,7 +241,6 @@ service http:InterceptableService / on new http:Listener(9090) {
         int effectiveYear = year ?: civilTime.year;
         int effectiveMonth = month ?: civilTime.month;
 
-        // Normalize businessUnit: treat empty string or "All Business Units" as no filter
         string? effectiveBusinessUnit = businessUnit;
         if effectiveBusinessUnit is string &&
                 (effectiveBusinessUnit.trim().length() == 0 ||
@@ -268,22 +270,16 @@ service http:InterceptableService / on new http:Listener(9090) {
     # Get the health status of the service and its database dependency.
     #
     # + return - Health status response for the service
-    resource function get health() returns json|http:InternalServerError {
-        json|error databaseHealth = database:getDatabaseHealth();
-        if databaseHealth is error {
-            log:printError("Health check process failed.", databaseHealth);
-            return <http:InternalServerError>{
-                body: {
-                    message: "Health check process failed."
-                }
-            };
-        }
-
-        string status = database:isDatabaseHealthy() ? "ok" : "degraded";
+    resource function get health() returns json {
+        string? dbError = database:getDatabaseHealth();
+        string status = dbError is () ? "ok" : "degraded";
 
         return {
             status: status,
-            database: databaseHealth
+            database: {
+                healthy: dbError is (),
+                message: dbError
+            }
         };
     }
 }

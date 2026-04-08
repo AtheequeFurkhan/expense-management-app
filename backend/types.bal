@@ -40,9 +40,6 @@ public type AppConfig record {|
 
     # Allowed employee locations for claim submissions
     string[] submissionsAllowedLocations;
-
-    # Number of grace days allowed for previous year claims
-    int lastYearClaimGracePeriodInDays;
 |};
 
 # Claim distribution bucket used by OPD summary responses.
@@ -70,10 +67,6 @@ public type OpdClaimSummaryResponse record {|
     # Claim distribution data for the active claims chart.
     OpdClaimBucket[] activeClaimsChart;
 |};
-
-// ---------------------------------------------------------------------------
-// Expense Claims response types
-// ---------------------------------------------------------------------------
 
 # Business unit expense item in the summary response.
 public type BuExpenseItem record {|
@@ -156,7 +149,6 @@ public type ExpenseClaimSummaryResponse record {|
     # Trend percentage for average claim amount vs previous period.
     decimal trendAvgAmount;
 |};
-
 # Standard error payload returned to API clients.
 public type ErrorResponse record {|
     # Client-safe error message.

@@ -104,6 +104,7 @@ export const routes: RouteObjectWithRole[] = [
 const hiddenNavigationPaths = new Set([
   "/profile",
   "/admin",
+  "/expense-claim-summary",
   "/employee-summary",
   "/credit-card-summary",
   "/report-summary",
