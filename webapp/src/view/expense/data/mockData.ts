@@ -38,6 +38,11 @@ export interface TopLeadItem {
   count: number;
 }
 
+export interface LeadApprovalFrequencyItem {
+  label: string;
+  value: number;
+}
+
 export interface ActiveClaimStatItem {
   label: string;
   value: number;

@@ -27,6 +27,7 @@ export interface BarChartProps {
   height?: number;
   barColor?: string;
   barHoverColor?: string;
+  barWidth?: string | number;
   formatValue?: (value: number) => string;
   yAxisLabel?: string;
   xAxisLabel?: string;
@@ -39,6 +40,7 @@ export default function BarChart({
   height = 260,
   barColor,
   barHoverColor,
+  barWidth = "100%",
   formatValue = (v) => v.toLocaleString(),
   yAxisLabel = "Amount",
   xAxisLabel,
@@ -142,12 +144,14 @@ export default function BarChart({
                     height: "100%",
                     display: "flex",
                     alignItems: "flex-end",
+                    justifyContent: "center",
                     cursor: "pointer",
                   }}
                 >
                   <Box
                     sx={{
-                      width: "100%",
+                      width: barWidth,
+                      maxWidth: "100%",
                       height: `${heightPercent}%`,
                       minHeight: heightPercent > 0 ? 4 : 0,
                       backgroundColor: isHovered ? resolvedBarHoverColor : resolvedBarColor,

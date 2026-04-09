@@ -239,6 +239,38 @@ isolated function getExpenseClaimsByStatusQuery(int year, int month, int months,
     );
 }
 
+# Build the query for lead-approved claim frequency grouped by month.
+#
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + businessUnit - Optional business unit filter
+# + return - Parameterized SQL query
+isolated function getLeadApprovalFrequencyQuery(int year, int month, int months,
+        string? businessUnit = ()) returns sql:ParameterizedQuery {
+
+    sql:ParameterizedQuery baseQuery = `
+        SELECT DATE_FORMAT(ec.txn_date, '%b %Y') AS label,
+               YEAR(ec.txn_date) AS year,
+               MONTH(ec.txn_date) AS month,
+               COUNT(*) AS count
+        FROM expense_claims ec
+        WHERE `;
+
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
+    query = sql:queryConcat(query, ` AND ec.status = '2'`);
+
+    if businessUnit is string {
+        query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
+    }
+
+    return sql:queryConcat(query,
+        ` GROUP BY DATE_FORMAT(ec.txn_date, '%b %Y'), YEAR(ec.txn_date), MONTH(ec.txn_date)
+          ORDER BY YEAR(ec.txn_date), MONTH(ec.txn_date)`
+    );
+}
+
 # Build the query for top spending employees by reimbursement amount.
 #
 # + year - Ending year of the reporting range

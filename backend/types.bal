@@ -112,6 +112,14 @@ public type TopLeadItem record {|
     int count;
 |};
 
+# Lead approval frequency item in the summary response.
+public type LeadApprovalFrequencyItem record {|
+    # Time-window label.
+    string label;
+    # Number of lead-approved claims in the window.
+    int value;
+|};
+
 # Recurring expense type item in the summary response.
 public type ExpenseTypeItem record {|
     # Expense type name.
@@ -140,6 +148,8 @@ public type ExpenseClaimSummaryResponse record {|
     ActiveClaimStatItem[] activeClaimStats;
     # Top spending employees.
     TopEmployeeItem[] topSpendingEmployees;
+    # Lead approval frequency across date windows.
+    LeadApprovalFrequencyItem[] leadApprovalFrequency;
     # Top approving leads.
     TopLeadItem[] topApprovingLeads;
     # Top recurring expense types by total amount.

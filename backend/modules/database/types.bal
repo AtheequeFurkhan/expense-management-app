@@ -123,6 +123,18 @@ public type TopApprovingLeadRow record {|
     int count;
 |};
 
+# Query result for lead-approved claim frequency over time.
+public type LeadApprovalFrequencyRow record {|
+    # Display label for the approval window.
+    string label;
+    # Calendar year for sorting.
+    int year;
+    # Calendar month for sorting.
+    int month;
+    # Number of lead-approved claims in the window.
+    int count;
+|};
+
 # Query result for recurring expense types.
 public type RecurringExpenseTypeRow record {|
     # Expense type name.

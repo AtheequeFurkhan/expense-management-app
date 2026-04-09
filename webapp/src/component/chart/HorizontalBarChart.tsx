@@ -28,6 +28,7 @@ export interface HorizontalBarChartProps {
   barColor?: string;
   barHoverColor?: string;
   formatValue?: (value: number) => string;
+  onItemClick?: (item: HorizontalBarItem, index: number) => void;
   showRank?: boolean;
   barHeight?: number;
   labelWidth?: number;
@@ -40,6 +41,7 @@ export default function HorizontalBarChart({
   barColor,
   barHoverColor,
   formatValue = (v) => v.toLocaleString(),
+  onItemClick,
   showRank = true,
   barHeight = 28,
   labelWidth = 130,
@@ -131,6 +133,7 @@ export default function HorizontalBarChart({
                 <Box
                   onMouseEnter={() => setHoveredIndex(index)}
                   onMouseLeave={() => setHoveredIndex(null)}
+                  onClick={() => onItemClick?.(item, index)}
                   sx={{
                     width: `${widthPercent}%`,
                     minWidth: widthPercent > 0 ? 4 : 0,
@@ -139,7 +142,7 @@ export default function HorizontalBarChart({
                     borderRadius: "0 4px 4px 0",
                     transition: "background-color 0.25s ease, opacity 0.25s ease, width 0.4s ease",
                     opacity: hoveredIndex !== null && !isHovered ? 0.5 : 1,
-                    cursor: "pointer",
+                    cursor: onItemClick ? "pointer" : "default",
                   }}
                 />
               </Tooltip>

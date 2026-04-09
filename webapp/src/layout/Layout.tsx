@@ -140,7 +140,7 @@ function Layout() {
           <Header.Actions>
             <ColorSchemeToggle />
             <UserMenu>
-              <UserMenu.Trigger name={userName} avatar={profileImage} />
+              <UserMenu.Trigger avatar={profileImage} />
               <UserMenu.Header
                 name={userName}
                 email={userEmail}

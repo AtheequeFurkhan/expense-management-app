@@ -123,6 +123,24 @@ public function queryExpenseClaimsByStatus(int year, int month, int months,
         select row;
 }
 
+# Query lead-approved claim frequency grouped by month for the given date range.
+#
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + businessUnit - Optional business unit filter
+# + return - Lead approval frequency rows if the query succeeds, otherwise an error
+public function queryLeadApprovalFrequency(int year, int month, int months,
+        string? businessUnit = ()) returns LeadApprovalFrequencyRow[]|error {
+    stream<LeadApprovalFrequencyRow, sql:Error?> resultStream =
+        expenseDbClient->query(
+            getLeadApprovalFrequencyQuery(year, month, months, businessUnit),
+            LeadApprovalFrequencyRow
+        );
+    return check from LeadApprovalFrequencyRow row in resultStream
+        select row;
+}
+
 # Query the top spending employees for the given date range.
 #
 # + year - Ending year of the reporting range

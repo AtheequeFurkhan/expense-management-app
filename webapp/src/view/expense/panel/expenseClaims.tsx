@@ -13,7 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Alert, Box, Skeleton, Stack, Typography } from "@wso2/oxygen-ui";
+import { Alert, Box, Button, Skeleton, Stack, Typography } from "@wso2/oxygen-ui";
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -21,6 +21,7 @@ import SummaryCard from "@component/card/SummaryCard";
 import BarChart from "@component/chart/BarChart";
 import ChartCard from "@component/chart/ChartCard";
 import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
+import DoughnutChart from "@component/chart/DoughnutChart";
 import HorizontalBarChart from "@component/chart/HorizontalBarChart";
 import CurrencySelector from "@component/common/CurrencySelector";
 import { MONTH_OPTIONS, OPD_SUMMARY_CARDS_CONFIG } from "@config/constant";
@@ -65,6 +66,7 @@ export default function ExpenseClaims() {
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [chartPeriod, setChartPeriod] = useState("all");
   const [currency, setCurrency] = useState<CurrencyCode>("LKR");
+  const [selectedRecurringCategory, setSelectedRecurringCategory] = useState<string | null>(null);
 
   const fmt = (v: number) => formatCurrencyValue(v, currency);
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
@@ -73,6 +75,7 @@ export default function ExpenseClaims() {
     buExpenses,
     activeClaimStats: claimStats,
     topSpendingEmployees: topEmployees,
+    leadApprovalFrequency,
     topApprovingLeads: topLeads,
     recurringExpenseTypes: recurringExpenses,
   } = data;
@@ -80,8 +83,72 @@ export default function ExpenseClaims() {
   const buMaxValue = Math.max(...buExpenses.map((d) => d.value), 1);
   const claimStatsMaxValue = Math.max(...claimStats.map((d) => d.value), 1);
   const topEmployeesMaxValue = Math.max(...topEmployees.map((d) => d.amount), 1);
+  const leadApprovalFrequencyMaxValue = Math.max(...leadApprovalFrequency.map((d) => d.value), 1);
   const topLeadsMaxValue = Math.max(...topLeads.map((d) => d.count), 1);
-  const recurringMaxValue = Math.max(...recurringExpenses.map((d) => d.amount), 1);
+  const isAllTimeLeadView = filters.dateRange === "All Time";
+
+  const getRecurringCategory = (expenseName: string) => {
+    const normalizedName = expenseName.trim();
+    const separators = [" - ", " : "];
+
+    for (const separator of separators) {
+      const separatorIndex = normalizedName.indexOf(separator);
+      if (separatorIndex > 0) {
+        return normalizedName.substring(0, separatorIndex).trim();
+      }
+    }
+
+    return normalizedName;
+  };
+
+  const getRecurringSubcategory = (expenseName: string, category: string) => {
+    const normalizedName = expenseName.trim();
+    const prefixPatterns = [`${category} - `, `${category} : `];
+
+    for (const prefix of prefixPatterns) {
+      if (normalizedName.startsWith(prefix)) {
+        return normalizedName.substring(prefix.length).trim();
+      }
+    }
+
+    return normalizedName;
+  };
+
+  const recurringExpenseGroups = recurringExpenses.reduce<
+    Record<string, { total: number; items: { name: string; amount: number }[] }>
+  >((acc, expense) => {
+    const category = getRecurringCategory(expense.name);
+    const existingGroup = acc[category] ?? { total: 0, items: [] };
+
+    existingGroup.total += expense.amount;
+    existingGroup.items.push(expense);
+    acc[category] = existingGroup;
+
+    return acc;
+  }, {});
+
+  const recurringCategoryItems = Object.entries(recurringExpenseGroups)
+    .map(([label, group]) => ({
+      label,
+      value: group.total,
+      sublabel: `${group.items.length} expense type${group.items.length === 1 ? "" : "s"}`,
+    }))
+    .sort((a, b) => b.value - a.value);
+
+  const recurringDetailItems = selectedRecurringCategory
+    ? (recurringExpenseGroups[selectedRecurringCategory]?.items ?? [])
+        .map((expense) => ({
+          label: getRecurringSubcategory(expense.name, selectedRecurringCategory),
+          sublabel: selectedRecurringCategory,
+          value: expense.amount,
+        }))
+        .sort((a, b) => b.value - a.value)
+    : [];
+
+  const recurringChartItems =
+    selectedRecurringCategory === null ? recurringCategoryItems : recurringDetailItems;
+
+  const recurringMaxValue = Math.max(...recurringChartItems.map((d) => d.value), 1);
 
   // Sync main date range → chart period
   useEffect(() => {
@@ -111,6 +178,15 @@ export default function ExpenseClaims() {
       setHasLoadedOnce(true);
     }
   }, [loading, error]);
+
+  useEffect(() => {
+    if (
+      selectedRecurringCategory &&
+      recurringExpenseGroups[selectedRecurringCategory] === undefined
+    ) {
+      setSelectedRecurringCategory(null);
+    }
+  }, [recurringExpenseGroups, selectedRecurringCategory]);
 
   if (loading && !hasLoadedOnce) {
     return (
@@ -293,6 +369,7 @@ export default function ExpenseClaims() {
         >
           <BarChart
             data={claimStats.map((d) => ({ label: d.label, value: d.value }))}
+            barWidth="72%"
             yAxisLabel="Count"
             xAxisLabel="Status"
             maxValue={claimStatsMaxValue}
@@ -353,8 +430,12 @@ export default function ExpenseClaims() {
         </ChartCard>
 
         <ChartCard
-          title="Top Approving Lead"
-          subtitle="Leads with most approved claims"
+          title={isAllTimeLeadView ? "Top Approving Leads" : "Lead Approval Frequency"}
+          subtitle={
+            isAllTimeLeadView
+              ? "Leads by total approved claims"
+              : "Lead-approved withdrawals across date windows"
+          }
           action={
             <ChartPeriodFilter
               value={chartPeriod}
@@ -363,36 +444,47 @@ export default function ExpenseClaims() {
             />
           }
         >
-          <HorizontalBarChart
-            data={topLeads.map((d) => ({
-              label: d.name,
-              sublabel: d.email,
-              value: d.count,
-            }))}
-            formatValue={(v) => `${v} claims`}
-            barColor="#AB7AE0"
-            barHoverColor="#9360cc"
-            maxValue={topLeadsMaxValue}
-            tooltipContent={(_item, index) => {
-              const lead = topLeads[index];
-              return (
-                <Box sx={{ px: 0.5, py: 0.2 }}>
-                  <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
-                    {lead.count} claims
-                  </Typography>
-                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.3 }}>
-                    {lead.name}
-                  </Typography>
-                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
-                    {lead.email}
-                  </Typography>
-                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
-                    BU: {lead.bu}
-                  </Typography>
-                </Box>
-              );
-            }}
-          />
+          {isAllTimeLeadView ? (
+            <HorizontalBarChart
+              data={topLeads.map((d) => ({
+                label: d.name,
+                sublabel: d.email,
+                value: d.count,
+              }))}
+              formatValue={(v) => `${v} claims`}
+              barColor="#AB7AE0"
+              barHoverColor="#9360cc"
+              maxValue={topLeadsMaxValue}
+              tooltipContent={(_item, index) => {
+                const lead = topLeads[index];
+                return (
+                  <Box sx={{ px: 0.5, py: 0.2 }}>
+                    <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
+                      {lead.count} claims
+                    </Typography>
+                    <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.3 }}>
+                      {lead.name}
+                    </Typography>
+                    <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
+                      {lead.email}
+                    </Typography>
+                    <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
+                      BU: {lead.bu}
+                    </Typography>
+                  </Box>
+                );
+              }}
+            />
+          ) : (
+            <BarChart
+              data={leadApprovalFrequency.map((d) => ({ label: d.label, value: d.value }))}
+              barWidth="68%"
+              yAxisLabel="Approved Count"
+              xAxisLabel="Date Window"
+              maxValue={leadApprovalFrequencyMaxValue}
+              formatValue={(v) => `${v}`}
+            />
+          )}
         </ChartCard>
       </Box>
 
@@ -400,14 +492,29 @@ export default function ExpenseClaims() {
       <Box sx={{ mt: 2 }}>
         <ChartCard
           title="Recurring Expense"
-          subtitle="Top expense types by recurring spend"
+          subtitle={
+            selectedRecurringCategory
+              ? `${selectedRecurringCategory} sub-expenses by recurring spend`
+              : "Grouped expense categories by recurring spend"
+          }
           minHeight={520}
           action={
-            <ChartPeriodFilter
-              value={chartPeriod}
-              options={MONTH_OPTIONS}
-              onChange={handlePeriodChange}
-            />
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+              {selectedRecurringCategory ? (
+                <Button
+                  variant="text"
+                  onClick={() => setSelectedRecurringCategory(null)}
+                  sx={{ minWidth: "auto", px: 1.25, textTransform: "none", fontWeight: 600 }}
+                >
+                  Back
+                </Button>
+              ) : null}
+              <ChartPeriodFilter
+                value={chartPeriod}
+                options={MONTH_OPTIONS}
+                onChange={handlePeriodChange}
+              />
+            </Box>
           }
         >
           <Box
@@ -427,19 +534,30 @@ export default function ExpenseClaims() {
               },
             }}
           >
-            <HorizontalBarChart
-              data={recurringExpenses.map((d) => ({
-                label: d.name,
-                value: d.amount,
-              }))}
-              formatValue={(v) => fmtSym(v)}
-              barColor="#2E8B57"
-              barHoverColor="#246d45"
-              maxValue={recurringMaxValue}
-              showRank={false}
-              barHeight={24}
-              labelWidth={220}
-            />
+            {selectedRecurringCategory === null ? (
+              <HorizontalBarChart
+                data={recurringCategoryItems}
+                formatValue={(v) => fmtSym(v)}
+                barColor="#2E8B57"
+                barHoverColor="#246d45"
+                maxValue={recurringMaxValue}
+                onItemClick={(item) => {
+                  setSelectedRecurringCategory(item.label);
+                }}
+                showRank={false}
+                barHeight={24}
+                labelWidth={220}
+              />
+            ) : (
+              <DoughnutChart
+                data={recurringDetailItems}
+                formatValue={(v) => fmtSym(v)}
+                centerLabel={selectedRecurringCategory}
+                centerValue={fmtSym(
+                  recurringExpenseGroups[selectedRecurringCategory]?.total ?? 0,
+                )}
+              />
+            )}
           </Box>
         </ChartCard>
       </Box>

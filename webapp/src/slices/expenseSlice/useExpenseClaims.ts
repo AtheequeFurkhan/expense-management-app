@@ -27,6 +27,7 @@ import {
   type ExpenseFilters,
   type ExpenseTypeItem,
   INITIAL_FILTERS,
+  type LeadApprovalFrequencyItem,
   type TopEmployeeItem,
   type TopLeadItem,
 } from "@view/expense/data/mockData";
@@ -42,6 +43,7 @@ export interface ExpenseClaimsData {
   recurringExpenseTypes: ExpenseTypeItem[];
   activeClaimStats: ActiveClaimStatItem[];
   topSpendingEmployees: TopEmployeeItem[];
+  leadApprovalFrequency: LeadApprovalFrequencyItem[];
   topApprovingLeads: TopLeadItem[];
   trendTotalAmount: number;
   trendTotalCount: number;
@@ -56,6 +58,21 @@ export interface ExpenseClaimsState {
   error: string | null;
 }
 
+const ACTIVE_CLAIM_STATUS_ORDER = [
+  "Claims Submitted",
+  "Lead Approved",
+  "Finance Approved",
+  "Rejected",
+] as const;
+
+const ACTIVE_CLAIM_STATUS_LABEL_MAP: Record<string, string> = {
+  Draft: "Claims Submitted",
+  Submitted: "Claims Submitted",
+  "Lead Approved": "Lead Approved",
+  "Finance Approved": "Finance Approved",
+  Rejected: "Rejected",
+};
+
 export const DEFAULT_EXPENSE_DATA: ExpenseClaimsData = {
   totalClaimAmount: 0,
   totalClaimCount: 0,
@@ -67,6 +84,7 @@ export const DEFAULT_EXPENSE_DATA: ExpenseClaimsData = {
   recurringExpenseTypes: [],
   activeClaimStats: [],
   topSpendingEmployees: [],
+  leadApprovalFrequency: [],
   topApprovingLeads: [],
   trendTotalAmount: 0,
   trendTotalCount: 0,
@@ -92,6 +110,7 @@ interface BackendExpenseClaimsData {
   recurringExpenseTypes?: { name: string; amount: number }[];
   activeClaimStats?: ActiveClaimStatItem[];
   topSpendingEmployees?: TopEmployeeItem[];
+  leadApprovalFrequency?: LeadApprovalFrequencyItem[];
   topApprovingLeads?: TopLeadItem[];
   trendTotalAmount?: number;
   trendTotalCount?: number;
@@ -139,7 +158,26 @@ const resolveDateRangeParams = (
 
 const normalizeExpenseClaimsData = (
   data?: Partial<BackendExpenseClaimsData> | null,
-): ExpenseClaimsData => ({
+): ExpenseClaimsData => {
+  const normalizedClaimStats =
+    data?.activeClaimStats?.map((a) => ({
+      label: ACTIVE_CLAIM_STATUS_LABEL_MAP[a.label] ?? a.label,
+      value: Number(a.value),
+    })) ?? DEFAULT_EXPENSE_DATA.activeClaimStats;
+
+  const groupedClaimStats = normalizedClaimStats.reduce<Record<string, number>>((acc, stat) => {
+    acc[stat.label] = (acc[stat.label] ?? 0) + stat.value;
+    return acc;
+  }, {});
+
+  const orderedClaimStats = ACTIVE_CLAIM_STATUS_ORDER
+    .filter((label) => groupedClaimStats[label] !== undefined)
+    .map((label) => ({
+      label,
+      value: groupedClaimStats[label],
+    }));
+
+  return {
   totalClaimAmount: data?.totalClaimAmount ?? DEFAULT_EXPENSE_DATA.totalClaimAmount,
   totalClaimCount: data?.totalClaimCount ?? DEFAULT_EXPENSE_DATA.totalClaimCount,
   pendingClaims: data?.pendingClaims ?? DEFAULT_EXPENSE_DATA.pendingClaims,
@@ -152,9 +190,7 @@ const normalizeExpenseClaimsData = (
   recurringExpenseTypes:
     data?.recurringExpenseTypes?.map((r) => ({ name: r.name, amount: Number(r.amount) })) ??
     DEFAULT_EXPENSE_DATA.recurringExpenseTypes,
-  activeClaimStats:
-    data?.activeClaimStats?.map((a) => ({ label: a.label, value: Number(a.value) })) ??
-    DEFAULT_EXPENSE_DATA.activeClaimStats,
+  activeClaimStats: orderedClaimStats,
   topSpendingEmployees:
     data?.topSpendingEmployees?.map((e) => ({
       name: e.name,
@@ -162,6 +198,11 @@ const normalizeExpenseClaimsData = (
       bu: e.bu,
       amount: Number(e.amount),
     })) ?? DEFAULT_EXPENSE_DATA.topSpendingEmployees,
+  leadApprovalFrequency:
+    data?.leadApprovalFrequency?.map((item) => ({
+      label: item.label,
+      value: Number(item.value),
+    })) ?? DEFAULT_EXPENSE_DATA.leadApprovalFrequency,
   topApprovingLeads:
     data?.topApprovingLeads?.map((l) => ({
       name: l.name,
@@ -173,7 +214,8 @@ const normalizeExpenseClaimsData = (
   trendTotalCount: data?.trendTotalCount ?? DEFAULT_EXPENSE_DATA.trendTotalCount,
   trendApproved: data?.trendApproved ?? DEFAULT_EXPENSE_DATA.trendApproved,
   trendAvgAmount: data?.trendAvgAmount ?? DEFAULT_EXPENSE_DATA.trendAvgAmount,
-});
+  };
+};
 
 export const fetchExpenseClaims = createAsyncThunk<
   ExpenseClaimsData,

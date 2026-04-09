@@ -108,6 +108,12 @@ public function getExpenseClaimSummary(int year, int month, int months,
     database:BuExpenseRow[] buExpenseRows = check database:queryExpenseByBu(year, month, months);
     database:ClaimStatusRow[] claimStatusRows = check database:queryExpenseClaimsByStatus(year, month, months, businessUnit);
     database:TopSpendingEmployeeRow[] topEmployeeRows = check database:queryTopSpendingEmployees(year, month, months, 7, businessUnit);
+    database:LeadApprovalFrequencyRow[] leadApprovalFrequencyRows = check database:queryLeadApprovalFrequency(
+        year,
+        month,
+        months,
+        businessUnit
+    );
     database:TopApprovingLeadRow[] topLeadRows = check database:queryTopApprovingLeads(year, month, months, 7, businessUnit);
     database:RecurringExpenseTypeRow[] recurringRows = check database:queryRecurringExpenseTypes(year, month, months, 25, businessUnit);
 
@@ -152,6 +158,12 @@ public function getExpenseClaimSummary(int year, int month, int months,
             amount: row.total
         };
 
+    LeadApprovalFrequencyItem[] leadApprovalFrequency = from database:LeadApprovalFrequencyRow row in leadApprovalFrequencyRows
+        select {
+            label: row.label,
+            value: row.count
+        };
+
     TopLeadItem[] topApprovingLeads = from database:TopApprovingLeadRow row in topLeadRows
         select {
             name: deriveDisplayName(row.leadEmail),
@@ -176,6 +188,7 @@ public function getExpenseClaimSummary(int year, int month, int months,
         buExpenses: buExpenses,
         activeClaimStats: activeClaimStats,
         topSpendingEmployees: topSpendingEmployees,
+        leadApprovalFrequency: leadApprovalFrequency,
         topApprovingLeads: topApprovingLeads,
         recurringExpenseTypes: recurringExpenseTypes,
         trendTotalAmount: calculateTrend(totalClaimAmount, prevTotalAmount),
