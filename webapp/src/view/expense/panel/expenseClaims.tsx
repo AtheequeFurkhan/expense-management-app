@@ -22,6 +22,7 @@ import BarChart from "@component/chart/BarChart";
 import ChartCard from "@component/chart/ChartCard";
 import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
 import DoughnutChart from "@component/chart/DoughnutChart";
+import EmployeeSpendingBreakdownPanel from "@component/chart/EmployeeSpendingBreakdownPanel";
 import HorizontalBarChart from "@component/chart/HorizontalBarChart";
 import CurrencySelector from "@component/common/CurrencySelector";
 import { MONTH_OPTIONS, OPD_SUMMARY_CARDS_CONFIG } from "@config/constant";
@@ -74,7 +75,6 @@ export default function ExpenseClaims() {
   const {
     buExpenses,
     activeClaimStats: claimStats,
-    topSpendingEmployees: topEmployees,
     leadApprovalFrequency,
     topApprovingLeads: topLeads,
     recurringExpenseTypes: recurringExpenses,
@@ -82,7 +82,6 @@ export default function ExpenseClaims() {
 
   const buMaxValue = Math.max(...buExpenses.map((d) => d.value), 1);
   const claimStatsMaxValue = Math.max(...claimStats.map((d) => d.value), 1);
-  const topEmployeesMaxValue = Math.max(...topEmployees.map((d) => d.amount), 1);
   const leadApprovalFrequencyMaxValue = Math.max(...leadApprovalFrequency.map((d) => d.value), 1);
   const topLeadsMaxValue = Math.max(...topLeads.map((d) => d.count), 1);
   const isAllTimeLeadView = filters.dateRange === "All Time";
@@ -377,7 +376,18 @@ export default function ExpenseClaims() {
         </ChartCard>
       </Box>
 
-      {/* Row 3: Top Spending Employees + Top Approving Lead (horizontal bars) */}
+      {/* Row 3: Employee Spending Breakdown (standalone full-width) */}
+      <Box sx={{ mt: 2 }}>
+        <EmployeeSpendingBreakdownPanel
+          dateRange={filters.dateRange}
+          businessUnit={filters.businessUnit}
+          currency={currency}
+          chartPeriod={chartPeriod}
+          onPeriodChange={handlePeriodChange}
+        />
+      </Box>
+
+      {/* Row 4: Top Approving Lead */}
       <Box
         sx={{
           mt: 2,
@@ -386,49 +396,6 @@ export default function ExpenseClaims() {
           gap: 2,
         }}
       >
-        <ChartCard
-          title="Top Spending Employees"
-          subtitle="Employees with highest spending"
-          action={
-            <ChartPeriodFilter
-              value={chartPeriod}
-              options={MONTH_OPTIONS}
-              onChange={handlePeriodChange}
-            />
-          }
-        >
-          <HorizontalBarChart
-            data={topEmployees.map((d) => ({
-              label: d.name,
-              sublabel: d.email,
-              value: d.amount,
-            }))}
-            formatValue={(v) => fmtSym(v)}
-            barColor="#4A8EDB"
-            barHoverColor="#3672b5"
-            maxValue={topEmployeesMaxValue}
-            tooltipContent={(_item, index) => {
-              const emp = topEmployees[index];
-              return (
-                <Box sx={{ px: 0.5, py: 0.2 }}>
-                  <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
-                    {fmtSym(emp.amount)}
-                  </Typography>
-                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.3 }}>
-                    {emp.name}
-                  </Typography>
-                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
-                    {emp.email}
-                  </Typography>
-                  <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
-                    BU: {emp.bu}
-                  </Typography>
-                </Box>
-              );
-            }}
-          />
-        </ChartCard>
-
         <ChartCard
           title={isAllTimeLeadView ? "Top Approving Leads" : "Lead Approval Frequency"}
           subtitle={
@@ -488,7 +455,7 @@ export default function ExpenseClaims() {
         </ChartCard>
       </Box>
 
-      {/* Row 4: Recurring Expense Types — scrollable horizontal bar chart */}
+      {/* Row 5: Recurring Expense Types — scrollable horizontal bar chart */}
       <Box sx={{ mt: 2 }}>
         <ChartCard
           title="Recurring Expense"
@@ -553,9 +520,7 @@ export default function ExpenseClaims() {
                 data={recurringDetailItems}
                 formatValue={(v) => fmtSym(v)}
                 centerLabel={selectedRecurringCategory}
-                centerValue={fmtSym(
-                  recurringExpenseGroups[selectedRecurringCategory]?.total ?? 0,
-                )}
+                centerValue={fmtSym(recurringExpenseGroups[selectedRecurringCategory]?.total ?? 0)}
               />
             )}
           </Box>

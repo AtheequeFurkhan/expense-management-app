@@ -197,3 +197,60 @@ public function queryRecurringExpenseTypes(int year, int month, int months,
     return check from RecurringExpenseTypeRow row in resultStream
         select row;
 }
+
+# Query all spending employees with their total amount and claim count.
+#
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + businessUnit - Optional business unit filter
+# + return - All spending employee rows if the query succeeds, otherwise an error
+public function queryAllSpendingEmployees(int year, int month, int months,
+        string? businessUnit = ()) returns AllSpendingEmployeeRow[]|error {
+    stream<AllSpendingEmployeeRow, sql:Error?> resultStream =
+        expenseDbClient->query(
+            getAllSpendingEmployeesQuery(year, month, months, businessUnit),
+            AllSpendingEmployeeRow
+        );
+    return check from AllSpendingEmployeeRow row in resultStream
+        select row;
+}
+
+# Query an employee's expense breakdown grouped by category.
+#
+# + email - Employee email to filter on
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + statusFilter - Optional status group filter: "Approved" or "Pending"
+# + return - Employee category rows if the query succeeds, otherwise an error
+public function queryEmployeeCategoryBreakdown(string email, int year, int month, int months,
+        string? statusFilter = ()) returns EmployeeCategoryRow[]|error {
+    stream<EmployeeCategoryRow, sql:Error?> resultStream =
+        expenseDbClient->query(
+            getEmployeeCategoryBreakdownQuery(email, year, month, months, statusFilter),
+            EmployeeCategoryRow
+        );
+    return check from EmployeeCategoryRow row in resultStream
+        select row;
+}
+
+# Query individual transactions for an employee within a specific expense category.
+#
+# + email - Employee email to filter on
+# + category - Expense category label to filter on
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + statusFilter - Optional status group filter: "Approved" or "Pending"
+# + return - Employee category transaction rows if the query succeeds, otherwise an error
+public function queryEmployeeCategoryTransactions(string email, string category,
+        int year, int month, int months, string? statusFilter = ()) returns EmployeeCategoryTransactionRow[]|error {
+    stream<EmployeeCategoryTransactionRow, sql:Error?> resultStream =
+        expenseDbClient->query(
+            getEmployeeCategoryTransactionsQuery(email, category, year, month, months, statusFilter),
+            EmployeeCategoryTransactionRow
+        );
+    return check from EmployeeCategoryTransactionRow row in resultStream
+        select row;
+}

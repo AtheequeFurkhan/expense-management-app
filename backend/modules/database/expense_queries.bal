@@ -157,8 +157,8 @@ isolated function getExpenseByBuQuery(int year, int month, int months)
     sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
 
     return sql:queryConcat(
-        sql:queryConcat(baseQuery, dateClause),
-        ` AND ec.business_unit IS NOT NULL
+            sql:queryConcat(baseQuery, dateClause),
+            ` AND ec.business_unit IS NOT NULL
           AND ec.business_unit <> ''
           GROUP BY ec.business_unit
           ORDER BY total DESC`
@@ -232,7 +232,7 @@ isolated function getExpenseClaimsByStatusQuery(int year, int month, int months,
     }
 
     return sql:queryConcat(query,
-        ` AND ec.status IS NOT NULL
+            ` AND ec.status IS NOT NULL
           AND ec.status <> ''
           GROUP BY ec.status
           ORDER BY count DESC`
@@ -266,7 +266,7 @@ isolated function getLeadApprovalFrequencyQuery(int year, int month, int months,
     }
 
     return sql:queryConcat(query,
-        ` GROUP BY DATE_FORMAT(ec.txn_date, '%b %Y'), YEAR(ec.txn_date), MONTH(ec.txn_date)
+            ` GROUP BY DATE_FORMAT(ec.txn_date, '%b %Y'), YEAR(ec.txn_date), MONTH(ec.txn_date)
           ORDER BY YEAR(ec.txn_date), MONTH(ec.txn_date)`
     );
 }
@@ -297,7 +297,7 @@ isolated function getTopSpendingEmployeesQuery(int year, int month, int months,
     }
 
     return sql:queryConcat(query,
-        ` AND ec.employee_email IS NOT NULL
+            ` AND ec.employee_email IS NOT NULL
           AND ec.employee_email <> ''
           GROUP BY ec.employee_email, ec.business_unit
           ORDER BY total DESC
@@ -332,7 +332,7 @@ isolated function getTopApprovingLeadsQuery(int year, int month, int months,
     }
 
     return sql:queryConcat(query,
-        ` AND ec.lead_email IS NOT NULL
+            ` AND ec.lead_email IS NOT NULL
           AND ec.lead_email <> ''
           GROUP BY ec.lead_email, ec.business_unit
           ORDER BY count DESC
@@ -367,9 +367,129 @@ isolated function getRecurringExpenseTypesQuery(int year, int month, int months,
     }
 
     return sql:queryConcat(query,
-        ` AND ec.expense_type_id IS NOT NULL
+            ` AND ec.expense_type_id IS NOT NULL
           GROUP BY et.expense_type
           ORDER BY total DESC
           LIMIT ${'limit}`
+    );
+}
+
+# Build the query for all spending employees with their claim count (no LIMIT).
+#
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + businessUnit - Optional business unit filter
+# + return - Parameterized SQL query
+isolated function getAllSpendingEmployeesQuery(int year, int month, int months,
+        string? businessUnit = ()) returns sql:ParameterizedQuery {
+
+    sql:ParameterizedQuery baseQuery = `
+        SELECT ec.employee_email AS employeeEmail,
+               COALESCE(ec.business_unit, '') AS businessUnit,
+               COALESCE(SUM(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS total,
+               COUNT(*) AS claimCount
+        FROM expense_claims ec
+        WHERE `;
+
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
+
+    if businessUnit is string {
+        query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
+    }
+
+    return sql:queryConcat(query,
+            ` AND ec.employee_email IS NOT NULL
+          AND ec.employee_email <> ''
+          GROUP BY ec.employee_email, ec.business_unit
+          ORDER BY total DESC`
+    );
+}
+
+# Build the query for an employee's expense breakdown grouped by category.
+#
+# + email - Employee email to filter on
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + statusFilter - Optional status group filter: "Approved" or "Pending"
+# + return - Parameterized SQL query
+isolated function getEmployeeCategoryBreakdownQuery(string email, int year, int month, int months,
+        string? statusFilter = ()) returns sql:ParameterizedQuery {
+
+    sql:ParameterizedQuery baseQuery = `
+        SELECT SUBSTRING_INDEX(et.expense_type, ' - ', 1) AS category,
+               COALESCE(SUM(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS total,
+               COUNT(*) AS claimCount
+        FROM expense_claims ec
+        INNER JOIN expense_type et ON et.id = ec.expense_type_id
+        WHERE `;
+
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
+    query = sql:queryConcat(query, ` AND ec.employee_email = ${email}`);
+
+    if statusFilter is string {
+        if statusFilter == "Approved" {
+            query = sql:queryConcat(query, ` AND ec.status IN ('2', '3')`);
+        } else if statusFilter == "Pending" {
+            query = sql:queryConcat(query, ` AND ec.status IN ('0', '1')`);
+        }
+    }
+
+    return sql:queryConcat(query,
+            ` AND ec.expense_type_id IS NOT NULL
+          GROUP BY category
+          ORDER BY total DESC`
+    );
+}
+
+# Build the query for individual transactions for an employee within a specific category.
+#
+# + email - Employee email to filter on
+# + category - Expense category label to filter on
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + statusFilter - Optional status group filter: "Approved" or "Pending"
+# + return - Parameterized SQL query
+isolated function getEmployeeCategoryTransactionsQuery(string email, string category,
+        int year, int month, int months, string? statusFilter = ()) returns sql:ParameterizedQuery {
+
+    sql:ParameterizedQuery baseQuery = `
+        SELECT et.expense_type AS description,
+               DATE_FORMAT(ec.txn_date, '%b %e, %Y') AS txnDate,
+               CAST(ec.reimbursement_amount AS DECIMAL(10,2)) AS amount,
+               CASE ec.status
+                 WHEN '-1' THEN 'Rejected'
+                 WHEN '0'  THEN 'Pending'
+                 WHEN '1'  THEN 'Pending'
+                 WHEN '2'  THEN 'Approved'
+                 WHEN '3'  THEN 'Approved'
+                 ELSE 'Unknown'
+               END AS status
+        FROM expense_claims ec
+        INNER JOIN expense_type et ON et.id = ec.expense_type_id
+        WHERE `;
+
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
+    query = sql:queryConcat(query, ` AND ec.employee_email = ${email}`);
+    query = sql:queryConcat(query,
+            ` AND SUBSTRING_INDEX(et.expense_type, ' - ', 1) = ${category}`
+    );
+
+    if statusFilter is string {
+        if statusFilter == "Approved" {
+            query = sql:queryConcat(query, ` AND ec.status IN ('2', '3')`);
+        } else if statusFilter == "Pending" {
+            query = sql:queryConcat(query, ` AND ec.status IN ('0', '1')`);
+        }
+    }
+
+    return sql:queryConcat(query,
+            ` AND ec.expense_type_id IS NOT NULL
+          ORDER BY ec.txn_date DESC`
     );
 }

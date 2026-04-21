@@ -65,10 +65,6 @@ public type EmployeeTotalRow record {|
     decimal totalAmount;
 |};
 
-// ---------------------------------------------------------------------------
-// Expense Claims types
-// ---------------------------------------------------------------------------
-
 # Query result for expense claim aggregated amount.
 public type ExpenseAmountRow record {|
     # Aggregated total amount returned by the query.
@@ -141,4 +137,38 @@ public type RecurringExpenseTypeRow record {|
     string expenseType;
     # Total reimbursement amount for the expense type.
     decimal total;
+|};
+
+# Query result for all spending employees with claim count.
+public type AllSpendingEmployeeRow record {|
+    # Employee email.
+    string employeeEmail;
+    # Business unit associated with the employee's claims.
+    string businessUnit;
+    # Total reimbursement amount.
+    decimal total;
+    # Number of claims submitted.
+    int claimCount;
+|};
+
+# Query result for employee expense breakdown by category.
+public type EmployeeCategoryRow record {|
+    # Expense category label.
+    string category;
+    # Total reimbursement amount for the category.
+    decimal total;
+    # Number of claims in this category.
+    int claimCount;
+|};
+
+# Query result for individual transactions within an employee's expense category.
+public type EmployeeCategoryTransactionRow record {|
+    # Description of the individual expense.
+    string description;
+    # Formatted transaction date string.
+    string txnDate;
+    # Reimbursement amount for the transaction.
+    decimal amount;
+    # Human-readable status label.
+    string status;
 |};

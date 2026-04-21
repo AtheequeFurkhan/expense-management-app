@@ -164,6 +164,56 @@ public type ExpenseClaimSummaryResponse record {|
     decimal trendAvgAmount;
 |};
 
+# Employee spending item returned in the all-employees list.
+public type EmployeeSpendingItem record {|
+    # Display name derived from employee email.
+    string name;
+    # Employee email.
+    string email;
+    # Total reimbursement amount.
+    decimal totalAmount;
+    # Number of claims submitted.
+    int claimCount;
+|};
+
+# Single category entry in an employee's spending breakdown.
+public type EmployeeCategoryItem record {|
+    # Expense category label.
+    string category;
+    # Total reimbursement amount for the category.
+    decimal total;
+    # Number of claims in this category.
+    int claimCount;
+    # Percentage of the employee's total spend.
+    decimal percentage;
+|};
+
+# Full spending breakdown response for a single employee.
+public type EmployeeSpendingBreakdownResponse record {|
+    # Display name derived from employee email.
+    string name;
+    # Employee email.
+    string email;
+    # Total reimbursement amount across all categories.
+    decimal totalAmount;
+    # Total number of claims.
+    int claimCount;
+    # Per-category breakdown.
+    EmployeeCategoryItem[] categories;
+|};
+
+# Individual transaction within an employee's expense category.
+public type EmployeeCategoryTransactionItem record {|
+    # Description of the expense (sub-type name).
+    string description;
+    # Formatted transaction date string.
+    string txnDate;
+    # Reimbursement amount for this transaction.
+    decimal amount;
+    # Human-readable status label.
+    string status;
+|};
+
 # Standard error payload returned to API clients.
 public type ErrorResponse record {|
     # Client-safe error message.

@@ -172,9 +172,9 @@ service http:InterceptableService / on new http:Listener(9090) {
         int effectiveMonth = month ?: civilTime.month;
 
         OpdClaimSummaryResponse|error summary = getOpdClaimSummary(
-            effectiveYear,
-            effectiveMonth,
-            months
+                effectiveYear,
+                effectiveMonth,
+                months
         );
         if summary is error {
             string customError = "Failed to build OPD claim summary.";
@@ -250,10 +250,10 @@ service http:InterceptableService / on new http:Listener(9090) {
         }
 
         ExpenseClaimSummaryResponse|error summary = getExpenseClaimSummary(
-            effectiveYear,
-            effectiveMonth,
-            months,
-            effectiveBusinessUnit
+                effectiveYear,
+                effectiveMonth,
+                months,
+                effectiveBusinessUnit
         );
         if summary is error {
             string customError = "Failed to build expense claim summary.";
@@ -266,6 +266,179 @@ service http:InterceptableService / on new http:Listener(9090) {
         }
 
         return summary;
+    }
+
+    # Get all employees ranked by total spending for the requested reporting period.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + year - Optional reporting year (defaults to current year)
+    # + month - Optional reporting month (defaults to current month)
+    # + months - Number of months included in the reporting window
+    # + businessUnit - Optional business unit filter
+    # + return - Employee spending list if successful, otherwise an HTTP error response
+    resource function get employee\-spending(http:RequestContext ctx, int? year = (), int? month = (),
+            int months = 1, string? businessUnit = ())
+        returns EmployeeSpendingItem[]|http:BadRequest|HttpInternalServerError {
+
+        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
+        if userInfo is error {
+            return <http:BadRequest>{body: {message: "User information header not found!"}};
+        }
+
+        time:Utc utcNow = time:utcNow();
+        time:Civil|error civilTime = time:utcToCivil(utcNow);
+        if civilTime is error {
+            string customError = "Failed to resolve the current date for employee spending defaults.";
+            log:printError(customError, civilTime);
+            return <HttpInternalServerError>{body: {message: customError}};
+        }
+
+        int effectiveYear = year ?: civilTime.year;
+        int effectiveMonth = month ?: civilTime.month;
+
+        string? effectiveBusinessUnit = businessUnit;
+        if effectiveBusinessUnit is string &&
+                (effectiveBusinessUnit.trim().length() == 0 ||
+                effectiveBusinessUnit == "All Business Units") {
+            effectiveBusinessUnit = ();
+        }
+
+        database:AllSpendingEmployeeRow[]|error rows = database:queryAllSpendingEmployees(
+                effectiveYear, effectiveMonth, months, effectiveBusinessUnit
+        );
+        if rows is error {
+            string customError = "Failed to fetch employee spending data.";
+            log:printError(customError, rows);
+            return <HttpInternalServerError>{body: {message: customError}};
+        }
+
+        return from database:AllSpendingEmployeeRow row in rows
+            select {
+                name: deriveDisplayName(row.employeeEmail),
+                email: row.employeeEmail,
+                totalAmount: row.total,
+                claimCount: row.claimCount
+            };
+    }
+
+    # Get the expense category breakdown for a specific employee.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + email - Employee email address
+    # + year - Optional reporting year (defaults to current year)
+    # + month - Optional reporting month (defaults to current month)
+    # + months - Number of months included in the reporting window
+    # + statusFilter - Optional status group filter: "Approved" or "Pending"
+    # + return - Employee spending breakdown if successful, otherwise an HTTP error response
+    resource function get employee\-spending\-breakdown(http:RequestContext ctx, string email,
+            int? year = (), int? month = (), int months = 1, string? statusFilter = ())
+        returns EmployeeSpendingBreakdownResponse|http:BadRequest|HttpInternalServerError {
+
+        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
+        if userInfo is error {
+            return <http:BadRequest>{body: {message: "User information header not found!"}};
+        }
+
+        if email.trim().length() == 0 {
+            return <http:BadRequest>{body: {message: "Employee email is required."}};
+        }
+
+        time:Utc utcNow = time:utcNow();
+        time:Civil|error civilTime = time:utcToCivil(utcNow);
+        if civilTime is error {
+            string customError = "Failed to resolve the current date.";
+            log:printError(customError, civilTime);
+            return <HttpInternalServerError>{body: {message: customError}};
+        }
+
+        int effectiveYear = year ?: civilTime.year;
+        int effectiveMonth = month ?: civilTime.month;
+        string? effectiveStatusFilter = (statusFilter is string && statusFilter.trim().length() == 0) ? () : statusFilter;
+
+        database:EmployeeCategoryRow[]|error catRows = database:queryEmployeeCategoryBreakdown(
+                email, effectiveYear, effectiveMonth, months, effectiveStatusFilter
+        );
+        if catRows is error {
+            string customError = "Failed to fetch employee category breakdown.";
+            log:printError(customError, catRows);
+            return <HttpInternalServerError>{body: {message: customError}};
+        }
+
+        decimal grandTotal = 0.0d;
+        int totalClaims = 0;
+        foreach database:EmployeeCategoryRow r in catRows {
+            grandTotal = grandTotal + r.total;
+            totalClaims = totalClaims + r.claimCount;
+        }
+
+        EmployeeCategoryItem[] categories = from database:EmployeeCategoryRow row in catRows
+            select {
+                category: row.category,
+                total: row.total,
+                claimCount: row.claimCount,
+                percentage: grandTotal > 0.0d ? (row.total / grandTotal) * 100.0d : 0.0d
+            };
+
+        return {
+            name: deriveDisplayName(email),
+            email: email,
+            totalAmount: grandTotal,
+            claimCount: totalClaims,
+            categories: categories
+        };
+    }
+
+    # Get individual transactions for a specific employee within an expense category.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + email - Employee email address
+    # + category - Expense category label
+    # + year - Optional reporting year (defaults to current year)
+    # + month - Optional reporting month (defaults to current month)
+    # + months - Number of months included in the reporting window
+    # + statusFilter - Optional status group filter: "Approved" or "Pending"
+    # + return - Transaction list if successful, otherwise an HTTP error response
+    resource function get employee\-category\-transactions(http:RequestContext ctx, string email,
+            string category, int? year = (), int? month = (), int months = 1, string? statusFilter = ())
+        returns EmployeeCategoryTransactionItem[]|http:BadRequest|HttpInternalServerError {
+
+        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
+        if userInfo is error {
+            return <http:BadRequest>{body: {message: "User information header not found!"}};
+        }
+
+        if email.trim().length() == 0 || category.trim().length() == 0 {
+            return <http:BadRequest>{body: {message: "Employee email and category are required."}};
+        }
+
+        time:Utc utcNow = time:utcNow();
+        time:Civil|error civilTime = time:utcToCivil(utcNow);
+        if civilTime is error {
+            string customError = "Failed to resolve the current date.";
+            log:printError(customError, civilTime);
+            return <HttpInternalServerError>{body: {message: customError}};
+        }
+
+        int effectiveYear = year ?: civilTime.year;
+        int effectiveMonth = month ?: civilTime.month;
+        string? effectiveStatusFilter = (statusFilter is string && statusFilter.trim().length() == 0) ? () : statusFilter;
+
+        database:EmployeeCategoryTransactionRow[]|error txnRows = database:queryEmployeeCategoryTransactions(
+                email, category, effectiveYear, effectiveMonth, months, effectiveStatusFilter
+        );
+        if txnRows is error {
+            string customError = "Failed to fetch employee category transactions.";
+            log:printError(customError, txnRows);
+            return <HttpInternalServerError>{body: {message: customError}};
+        }
+
+        return from database:EmployeeCategoryTransactionRow row in txnRows
+            select {
+                description: row.description,
+                txnDate: row.txnDate,
+                amount: row.amount,
+                status: row.status
+            };
     }
 
     # Get the health status of the service and its database dependency.
