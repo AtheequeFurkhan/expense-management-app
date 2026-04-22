@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import axios, {
   AxiosInstance,
   AxiosRequestConfig,
@@ -44,7 +43,7 @@ export class APIService {
 
   constructor(idToken: string, callback: () => Promise<{ accessToken: string }>) {
     APIService._instance = axios.create({
-      baseURL: ServiceBaseUrl, 
+      baseURL: ServiceBaseUrl,
     });
     rax.attach(APIService._instance);
 
@@ -151,11 +150,12 @@ export class APIService {
           typeof (config.headers as { set?: (k: string, v: string) => void }).set === "function"
         ) {
           (config.headers as { set: (k: string, v: string) => void }).set(
-            "x-jwt-assertion",
-            APIService._idToken,
+            "Authorization",
+            `Bearer ${APIService._idToken}`,
           );
         } else {
-          (config.headers as Record<string, string>)["x-jwt-assertion"] = APIService._idToken;
+          (config.headers as Record<string, string>)["Authorization"] =
+            `Bearer ${APIService._idToken}`;
         }
 
         const endpointKey = [
