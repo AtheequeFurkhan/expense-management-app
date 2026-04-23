@@ -131,7 +131,7 @@ function SubCategoryPanel({
             textAlign: "right",
           }}
         >
-          THIS PERIOD
+          {compareLabel.toUpperCase()}
         </Typography>
         <Typography
           sx={{
@@ -143,7 +143,7 @@ function SubCategoryPanel({
             textAlign: "right",
           }}
         >
-          {compareLabel.toUpperCase()}
+          THIS PERIOD
         </Typography>
       </Box>
 
@@ -194,18 +194,6 @@ function SubCategoryPanel({
               <Typography
                 sx={{
                   fontSize: 12,
-                  fontWeight: 700,
-                  color: cur > 0 ? "text.primary" : "text.disabled",
-                  minWidth: 100,
-                  textAlign: "right",
-                  flexShrink: 0,
-                }}
-              >
-                {cur > 0 ? fmtSym(cur) : "—"}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: 12,
                   fontWeight: 600,
                   color: cmp > 0 ? "text.secondary" : "text.disabled",
                   minWidth: 100,
@@ -214,6 +202,18 @@ function SubCategoryPanel({
                 }}
               >
                 {cmp > 0 ? fmtSym(cmp) : "—"}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: cur > 0 ? "text.primary" : "text.disabled",
+                  minWidth: 100,
+                  textAlign: "right",
+                  flexShrink: 0,
+                }}
+              >
+                {cur > 0 ? fmtSym(cur) : "—"}
               </Typography>
             </Box>
           );
@@ -306,50 +306,87 @@ function CategoryRow({
           {category}
         </Typography>
 
-        <Box sx={{ flex: 1, mx: 1.5 }}>
+        <Box sx={{ flex: 1, mx: 1.5, position: "relative", height: 10 }}>
           <Box
             sx={{
+              position: "absolute",
+              inset: 0,
               bgcolor: "action.hover",
-              borderRadius: 2,
-              overflow: "hidden",
+              borderRadius: 5,
             }}
-          >
-            <Box
-              sx={{
-                height: 6,
-                width: `${curBarW}%`,
-                bgcolor: color,
-                transition: "width 0.4s ease",
-                minWidth: curBarW > 0 ? 4 : 0,
-              }}
-            />
-            <Box sx={{ height: "1px", bgcolor: "background.paper", opacity: 0.6 }} />
-            <Box
-              sx={{
-                height: 4,
-                width: `${cmpBarW}%`,
-                bgcolor: color,
-                opacity: 0.38,
-                transition: "width 0.4s ease",
-                minWidth: cmpBarW > 0 ? 3 : 0,
-              }}
-            />
-          </Box>
+          />
+          <Box
+            sx={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              width: `${cmpBarW}%`,
+              bgcolor: color,
+              opacity: 0.3,
+              borderRadius: 5,
+              transition: "width 0.4s ease",
+            }}
+          />
+          <Box
+            sx={{
+              position: "absolute",
+              top: 2,
+              bottom: 2,
+              left: 0,
+              width: `${curBarW}%`,
+              bgcolor: color,
+              borderRadius: 5,
+              transition: "width 0.4s ease",
+            }}
+          />
         </Box>
 
-        <Box sx={{ textAlign: "right", flexShrink: 0, minWidth: 155 }}>
-          <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary" }}>
-            {fmtSym(total)}
-          </Typography>
-          <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
-            {claimCount} claims • {percentage.toFixed(1)}%
-          </Typography>
-          <Typography sx={{ fontSize: 12, fontWeight: 600, color: "text.secondary", mt: 0.3 }}>
-            {compTotal > 0 ? fmtSym(compTotal) : "—"}
-          </Typography>
-          <Typography sx={{ fontSize: 10, color: "text.disabled" }}>
-            {compClaimCount > 0 ? `${compClaimCount} claims` : ""} {compareLabel}
-          </Typography>
+        <Box sx={{ display: "flex", gap: 2, flexShrink: 0 }}>
+          <Box sx={{ textAlign: "right", minWidth: 110 }}>
+            <Typography
+              sx={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: "text.disabled",
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+              }}
+            >
+              {compareLabel}
+            </Typography>
+            <Typography
+              sx={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: compTotal > 0 ? "text.primary" : "text.disabled",
+              }}
+            >
+              {compTotal > 0 ? fmtSym(compTotal) : "—"}
+            </Typography>
+            <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
+              {compClaimCount > 0 ? `${compClaimCount} claims` : ""}
+            </Typography>
+          </Box>
+          <Box sx={{ textAlign: "right", minWidth: 110 }}>
+            <Typography
+              sx={{
+                fontSize: 10,
+                fontWeight: 700,
+                color: "text.disabled",
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+              }}
+            >
+              This Period
+            </Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary" }}>
+              {fmtSym(total)}
+            </Typography>
+            <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
+              {claimCount} claims • {percentage.toFixed(1)}%
+            </Typography>
+          </Box>
         </Box>
       </Box>
 
@@ -370,113 +407,207 @@ function CategoryRow({
 
 type CompareMode = "prevMonth" | "prevYear";
 
-interface SummaryBarProps {
-  current: EmployeeSpendingBreakdownResponse | null;
-  comparison: EmployeeSpendingBreakdownResponse | null;
-  compareMode: CompareMode;
+interface PeriodCardProps {
+  label: string;
+  periodTitle: string;
+  breakdown: EmployeeSpendingBreakdownResponse | null;
+  compBreakdown: EmployeeSpendingBreakdownResponse | null;
   loading: boolean;
-  compLoading: boolean;
   fmtSym: (v: number) => string;
+  dimmed?: boolean;
 }
 
-function SummaryBar({
-  current,
-  comparison,
-  compareMode,
+function PeriodCard({
+  label,
+  periodTitle,
+  breakdown,
+  compBreakdown,
   loading,
-  compLoading,
   fmtSym,
-}: SummaryBarProps) {
-  const curTotal = current?.totalAmount ?? 0;
-  const cmpTotal = comparison?.totalAmount ?? 0;
-  const pct = cmpTotal > 0 ? ((curTotal - cmpTotal) / cmpTotal) * 100 : null;
-  const cmpLabel = compareMode === "prevMonth" ? "Prev Month" : "Prev Year";
+  dimmed = false,
+}: PeriodCardProps) {
+  const total = breakdown?.totalAmount ?? 0;
+  const compTotal = compBreakdown?.totalAmount ?? 0;
+  const pct = compTotal > 0 ? ((total - compTotal) / compTotal) * 100 : null;
 
   return (
     <Box
       sx={{
-        display: "flex",
-        alignItems: "center",
-        gap: 2,
+        flex: 1,
         p: 2,
-        mb: 2,
         borderRadius: 2,
         border: "1px solid",
         borderColor: "divider",
-        bgcolor: "background.default",
+        bgcolor: dimmed ? "action.hover" : "background.paper",
+        minWidth: 0,
       }}
     >
-      <Box sx={{ flex: 1 }}>
-        <Typography
-          sx={{
-            fontSize: 10,
-            fontWeight: 700,
-            color: "text.disabled",
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-          }}
-        >
-          This Period
-        </Typography>
-        {loading ? (
-          <Skeleton variant="text" width={120} height={32} />
-        ) : (
-          <Typography sx={{ fontSize: 20, fontWeight: 800, color: "text.primary" }}>
-            {fmtSym(curTotal)}
-          </Typography>
-        )}
-        <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-          {current?.claimCount ?? 0} claims
-        </Typography>
-      </Box>
+      <Typography
+        sx={{
+          fontSize: 9,
+          fontWeight: 800,
+          color: "text.disabled",
+          textTransform: "uppercase",
+          letterSpacing: 1,
+          mb: 0.5,
+        }}
+      >
+        {label}
+      </Typography>
+      <Typography sx={{ fontSize: 14, fontWeight: 700, color: "text.primary", mb: 1 }}>
+        {periodTitle}
+      </Typography>
 
-      <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 60 }}>
-        {pct !== null && !loading && !compLoading ? (
-          <>
-            {pct > 0 ? (
-              <TrendingUp size={16} color="#e53935" />
-            ) : pct < 0 ? (
-              <TrendingDown size={16} color="#2e7d32" />
-            ) : null}
-            <Typography
-              sx={{
-                fontSize: 12,
-                fontWeight: 700,
-                color: pct > 0 ? "error.main" : pct < 0 ? "success.main" : "text.secondary",
-              }}
-            >
-              {pct > 0 ? "+" : ""}
-              {pct.toFixed(1)}%
-            </Typography>
-          </>
-        ) : (
-          <Typography sx={{ fontSize: 12, color: "text.disabled" }}>vs</Typography>
-        )}
-      </Box>
-
-      <Box sx={{ flex: 1, textAlign: "right" }}>
-        <Typography
-          sx={{
-            fontSize: 10,
-            fontWeight: 700,
-            color: "text.disabled",
-            textTransform: "uppercase",
-            letterSpacing: 0.6,
-          }}
-        >
-          {cmpLabel}
-        </Typography>
-        {compLoading ? (
-          <Skeleton variant="text" width={120} height={32} sx={{ ml: "auto" }} />
-        ) : (
-          <Typography sx={{ fontSize: 20, fontWeight: 800, color: "text.primary" }}>
-            {fmtSym(cmpTotal)}
+      {loading ? (
+        <Box>
+          <Skeleton variant="text" width={140} height={36} />
+          <Skeleton variant="text" width={80} height={20} />
+          <Skeleton variant="text" width={100} height={18} />
+        </Box>
+      ) : (
+        <>
+          <Typography
+            sx={{ fontSize: 22, fontWeight: 800, color: "text.primary", lineHeight: 1.1 }}
+          >
+            {fmtSym(total)}
           </Typography>
-        )}
-        <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
-          {comparison?.claimCount ?? 0} claims
-        </Typography>
-      </Box>
+          <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.3 }}>
+            {breakdown?.claimCount ?? 0} claims
+          </Typography>
+          {pct !== null && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.6 }}>
+              {pct > 0 ? (
+                <TrendingUp size={13} color="#e53935" />
+              ) : pct < 0 ? (
+                <TrendingDown size={13} color="#2e7d32" />
+              ) : null}
+              <Typography
+                sx={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: pct > 0 ? "error.main" : "success.main",
+                }}
+              >
+                {pct > 0 ? "+" : ""}
+                {pct.toFixed(1)}% vs prev
+              </Typography>
+            </Box>
+          )}
+        </>
+      )}
+    </Box>
+  );
+}
+
+interface PeriodComparisonProps {
+  thisMonthBreakdown: EmployeeSpendingBreakdownResponse | null;
+  lastMonthBreakdown: EmployeeSpendingBreakdownResponse | null;
+  ytdBreakdown: EmployeeSpendingBreakdownResponse | null;
+  lastYearBreakdown: EmployeeSpendingBreakdownResponse | null;
+  loadingThisMonth: boolean;
+  loadingLastMonth: boolean;
+  loadingYtd: boolean;
+  loadingLastYear: boolean;
+  fmtSym: (v: number) => string;
+  compareMode: CompareMode;
+}
+
+function PeriodComparison({
+  thisMonthBreakdown,
+  lastMonthBreakdown,
+  ytdBreakdown,
+  lastYearBreakdown,
+  loadingThisMonth,
+  loadingLastMonth,
+  loadingYtd,
+  loadingLastYear,
+  fmtSym,
+  compareMode,
+}: PeriodComparisonProps) {
+  const now = new Date();
+  const currentMonthLabel = now.toLocaleString("default", { month: "short", year: "numeric" });
+  const prevMonthLabel = new Date(now.getFullYear(), now.getMonth() - 1, 1).toLocaleString(
+    "default",
+    { month: "short", year: "numeric" },
+  );
+  const currentYearLabel = `${now.getFullYear()} (YTD)`;
+  const prevYearLabel = `${now.getFullYear() - 1}`;
+
+  return (
+    <Box sx={{ mb: 2 }}>
+      <Typography sx={{ fontSize: 15, fontWeight: 700, color: "text.primary", mb: 1.5 }}>
+        Period comparison
+      </Typography>
+
+      {compareMode === "prevMonth" ? (
+        <>
+          <Typography
+            sx={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: "text.disabled",
+              textTransform: "uppercase",
+              letterSpacing: 0.8,
+              mb: 0.8,
+            }}
+          >
+            Monthly
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1.5 }}>
+            <PeriodCard
+              label="Current Month"
+              periodTitle={currentMonthLabel}
+              breakdown={thisMonthBreakdown}
+              compBreakdown={lastMonthBreakdown}
+              loading={loadingThisMonth}
+              fmtSym={fmtSym}
+            />
+            <PeriodCard
+              label="Previous Month"
+              periodTitle={prevMonthLabel}
+              breakdown={lastMonthBreakdown}
+              compBreakdown={null}
+              loading={loadingLastMonth}
+              fmtSym={fmtSym}
+              dimmed
+            />
+          </Box>
+        </>
+      ) : (
+        <>
+          <Typography
+            sx={{
+              fontSize: 10,
+              fontWeight: 700,
+              color: "text.disabled",
+              textTransform: "uppercase",
+              letterSpacing: 0.8,
+              mb: 0.8,
+            }}
+          >
+            Yearly
+          </Typography>
+          <Box sx={{ display: "flex", gap: 1.5 }}>
+            <PeriodCard
+              label="Current Year"
+              periodTitle={currentYearLabel}
+              breakdown={ytdBreakdown}
+              compBreakdown={lastYearBreakdown}
+              loading={loadingYtd}
+              fmtSym={fmtSym}
+            />
+            <PeriodCard
+              label="Previous Year"
+              periodTitle={prevYearLabel}
+              breakdown={lastYearBreakdown}
+              compBreakdown={null}
+              loading={loadingLastYear}
+              fmtSym={fmtSym}
+              dimmed
+            />
+          </Box>
+        </>
+      )}
     </Box>
   );
 }
@@ -511,9 +642,30 @@ export default function EmployeeBreakdownModal({
   );
 
   const compDateRange = compareMode === "prevMonth" ? "Last Month" : "Last Year";
-  const { breakdown: compBreakdown, loading: compLoading } = useEmployeeBreakdown(
+  const { breakdown: compBreakdown } = useEmployeeBreakdown(
     open ? employeeEmail : null,
     compDateRange,
+    statusTab === "All" ? "" : statusTab,
+  );
+
+  const { breakdown: thisMonthBreakdown, loading: loadingThisMonth } = useEmployeeBreakdown(
+    open ? employeeEmail : null,
+    "This Month",
+    statusTab === "All" ? "" : statusTab,
+  );
+  const { breakdown: lastMonthBreakdown, loading: loadingLastMonth } = useEmployeeBreakdown(
+    open ? employeeEmail : null,
+    "Last Month",
+    statusTab === "All" ? "" : statusTab,
+  );
+  const { breakdown: ytdBreakdown, loading: loadingYtd } = useEmployeeBreakdown(
+    open ? employeeEmail : null,
+    "Year to Date",
+    statusTab === "All" ? "" : statusTab,
+  );
+  const { breakdown: lastYearBreakdown, loading: loadingLastYear } = useEmployeeBreakdown(
+    open ? employeeEmail : null,
+    "Last Year",
     statusTab === "All" ? "" : statusTab,
   );
 
@@ -625,13 +777,17 @@ export default function EmployeeBreakdownModal({
           ))}
         </Box>
 
-        <SummaryBar
-          current={breakdown}
-          comparison={compBreakdown}
-          compareMode={compareMode}
-          loading={loading}
-          compLoading={compLoading}
+        <PeriodComparison
+          thisMonthBreakdown={thisMonthBreakdown}
+          lastMonthBreakdown={lastMonthBreakdown}
+          ytdBreakdown={ytdBreakdown}
+          lastYearBreakdown={lastYearBreakdown}
+          loadingThisMonth={loadingThisMonth}
+          loadingLastMonth={loadingLastMonth}
+          loadingYtd={loadingYtd}
+          loadingLastYear={loadingLastYear}
           fmtSym={fmtSym}
+          compareMode={compareMode}
         />
 
         <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
