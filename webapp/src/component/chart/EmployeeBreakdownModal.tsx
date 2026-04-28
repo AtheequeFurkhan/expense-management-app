@@ -407,98 +407,6 @@ function CategoryRow({
 
 type CompareMode = "prevMonth" | "prevYear";
 
-interface PeriodCardProps {
-  label: string;
-  periodTitle: string;
-  breakdown: EmployeeSpendingBreakdownResponse | null;
-  compBreakdown: EmployeeSpendingBreakdownResponse | null;
-  loading: boolean;
-  fmtSym: (v: number) => string;
-  dimmed?: boolean;
-}
-
-function PeriodCard({
-  label,
-  periodTitle,
-  breakdown,
-  compBreakdown,
-  loading,
-  fmtSym,
-  dimmed = false,
-}: PeriodCardProps) {
-  const total = breakdown?.totalAmount ?? 0;
-  const compTotal = compBreakdown?.totalAmount ?? 0;
-  const pct = compTotal > 0 ? ((total - compTotal) / compTotal) * 100 : null;
-
-  return (
-    <Box
-      sx={{
-        flex: 1,
-        p: 2,
-        borderRadius: 2,
-        border: "1px solid",
-        borderColor: "divider",
-        bgcolor: dimmed ? "action.hover" : "background.paper",
-        minWidth: 0,
-      }}
-    >
-      <Typography
-        sx={{
-          fontSize: 9,
-          fontWeight: 800,
-          color: "text.disabled",
-          textTransform: "uppercase",
-          letterSpacing: 1,
-          mb: 0.5,
-        }}
-      >
-        {label}
-      </Typography>
-      <Typography sx={{ fontSize: 14, fontWeight: 700, color: "text.primary", mb: 1 }}>
-        {periodTitle}
-      </Typography>
-
-      {loading ? (
-        <Box>
-          <Skeleton variant="text" width={140} height={36} />
-          <Skeleton variant="text" width={80} height={20} />
-          <Skeleton variant="text" width={100} height={18} />
-        </Box>
-      ) : (
-        <>
-          <Typography
-            sx={{ fontSize: 22, fontWeight: 800, color: "text.primary", lineHeight: 1.1 }}
-          >
-            {fmtSym(total)}
-          </Typography>
-          <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.3 }}>
-            {breakdown?.claimCount ?? 0} claims
-          </Typography>
-          {pct !== null && (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mt: 0.6 }}>
-              {pct > 0 ? (
-                <TrendingUp size={13} color="#e53935" />
-              ) : pct < 0 ? (
-                <TrendingDown size={13} color="#2e7d32" />
-              ) : null}
-              <Typography
-                sx={{
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: pct > 0 ? "error.main" : "success.main",
-                }}
-              >
-                {pct > 0 ? "+" : ""}
-                {pct.toFixed(1)}% vs prev
-              </Typography>
-            </Box>
-          )}
-        </>
-      )}
-    </Box>
-  );
-}
-
 interface PeriodComparisonProps {
   thisMonthBreakdown: EmployeeSpendingBreakdownResponse | null;
   lastMonthBreakdown: EmployeeSpendingBreakdownResponse | null;
@@ -533,81 +441,168 @@ function PeriodComparison({
   const currentYearLabel = `${now.getFullYear()} (YTD)`;
   const prevYearLabel = `${now.getFullYear() - 1}`;
 
+  const current = compareMode === "prevMonth" ? thisMonthBreakdown : ytdBreakdown;
+  const previous = compareMode === "prevMonth" ? lastMonthBreakdown : lastYearBreakdown;
+  const loadingCurrent = compareMode === "prevMonth" ? loadingThisMonth : loadingYtd;
+  const loadingPrevious = compareMode === "prevMonth" ? loadingLastMonth : loadingLastYear;
+  const currentLabel = compareMode === "prevMonth" ? "Current Month" : "Current Year";
+  const previousLabel = compareMode === "prevMonth" ? "Previous Month" : "Previous Year";
+  const currentTitle = compareMode === "prevMonth" ? currentMonthLabel : currentYearLabel;
+  const previousTitle = compareMode === "prevMonth" ? prevMonthLabel : prevYearLabel;
+
+  const curTotal = current?.totalAmount ?? 0;
+  const prevTotal = previous?.totalAmount ?? 0;
+  const pct = prevTotal > 0 ? ((curTotal - prevTotal) / prevTotal) * 100 : null;
+  const maxVal = Math.max(curTotal, prevTotal, 1);
+  const curBarW = Math.round((curTotal / maxVal) * 100);
+  const prevBarW = Math.round((prevTotal / maxVal) * 100);
+
   return (
-    <Box sx={{ mb: 2 }}>
-      <Typography sx={{ fontSize: 15, fontWeight: 700, color: "text.primary", mb: 1.5 }}>
+    <Box sx={{ mb: 1.5 }}>
+      <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 0.75 }}>
         Period comparison
       </Typography>
 
-      {compareMode === "prevMonth" ? (
-        <>
+      <Box
+        sx={{
+          border: "1px solid",
+          borderColor: "divider",
+          borderRadius: 2,
+          bgcolor: "background.paper",
+          px: 2,
+          py: 1.25,
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+        }}
+      >
+        {/* Previous period — left */}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography
             sx={{
-              fontSize: 10,
-              fontWeight: 700,
+              fontSize: 9,
+              fontWeight: 800,
               color: "text.disabled",
               textTransform: "uppercase",
-              letterSpacing: 0.8,
-              mb: 0.8,
+              letterSpacing: 1,
             }}
           >
-            Monthly
+            {previousLabel}
           </Typography>
-          <Box sx={{ display: "flex", gap: 1.5 }}>
-            <PeriodCard
-              label="Current Month"
-              periodTitle={currentMonthLabel}
-              breakdown={thisMonthBreakdown}
-              compBreakdown={lastMonthBreakdown}
-              loading={loadingThisMonth}
-              fmtSym={fmtSym}
+          <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 0.25 }}>
+            {previousTitle}
+          </Typography>
+          {loadingPrevious ? (
+            <Skeleton variant="text" width={100} height={26} />
+          ) : (
+            <>
+              <Typography
+                sx={{ fontSize: 16, fontWeight: 800, color: "text.secondary", lineHeight: 1.2 }}
+              >
+                {fmtSym(prevTotal)}
+              </Typography>
+              <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.2 }}>
+                {previous?.claimCount ?? 0} claims
+              </Typography>
+            </>
+          )}
+        </Box>
+
+        {/* Center: proportional bars + delta */}
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            minWidth: 100,
+            gap: 0.5,
+          }}
+        >
+          {pct !== null && (
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
+              {pct > 0 ? (
+                <TrendingUp size={12} color="#e53935" />
+              ) : (
+                <TrendingDown size={12} color="#2e7d32" />
+              )}
+              <Typography
+                sx={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: pct > 0 ? "error.main" : "success.main",
+                }}
+              >
+                {pct > 0 ? "+" : ""}
+                {pct.toFixed(1)}%
+              </Typography>
+            </Box>
+          )}
+          <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 0.4 }}>
+            <Box
+              sx={{
+                height: 5,
+                bgcolor: "#64B5F6",
+                width: `${prevBarW}%`,
+                borderRadius: 2,
+                minWidth: 4,
+                transition: "width 0.4s ease",
+              }}
             />
-            <PeriodCard
-              label="Previous Month"
-              periodTitle={prevMonthLabel}
-              breakdown={lastMonthBreakdown}
-              compBreakdown={null}
-              loading={loadingLastMonth}
-              fmtSym={fmtSym}
-              dimmed
+            <Box
+              sx={{
+                height: 5,
+                bgcolor: "primary.main",
+                width: `${curBarW}%`,
+                borderRadius: 2,
+                minWidth: 4,
+                transition: "width 0.4s ease",
+              }}
             />
           </Box>
-        </>
-      ) : (
-        <>
           <Typography
             sx={{
-              fontSize: 10,
-              fontWeight: 700,
+              fontSize: 9,
               color: "text.disabled",
               textTransform: "uppercase",
-              letterSpacing: 0.8,
-              mb: 0.8,
+              letterSpacing: 0.5,
             }}
           >
-            Yearly
+            {compareMode === "prevMonth" ? "vs prev month" : "vs prev year"}
           </Typography>
-          <Box sx={{ display: "flex", gap: 1.5 }}>
-            <PeriodCard
-              label="Current Year"
-              periodTitle={currentYearLabel}
-              breakdown={ytdBreakdown}
-              compBreakdown={lastYearBreakdown}
-              loading={loadingYtd}
-              fmtSym={fmtSym}
-            />
-            <PeriodCard
-              label="Previous Year"
-              periodTitle={prevYearLabel}
-              breakdown={lastYearBreakdown}
-              compBreakdown={null}
-              loading={loadingLastYear}
-              fmtSym={fmtSym}
-              dimmed
-            />
-          </Box>
-        </>
-      )}
+        </Box>
+
+        {/* Current period — right */}
+        <Box sx={{ flex: 1, minWidth: 0, textAlign: "right" }}>
+          <Typography
+            sx={{
+              fontSize: 9,
+              fontWeight: 800,
+              color: "text.disabled",
+              textTransform: "uppercase",
+              letterSpacing: 1,
+            }}
+          >
+            {currentLabel}
+          </Typography>
+          <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 0.25 }}>
+            {currentTitle}
+          </Typography>
+          {loadingCurrent ? (
+            <Skeleton variant="text" width={100} height={26} sx={{ ml: "auto" }} />
+          ) : (
+            <>
+              <Typography
+                sx={{ fontSize: 16, fontWeight: 800, color: "text.primary", lineHeight: 1.2 }}
+              >
+                {fmtSym(curTotal)}
+              </Typography>
+              <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.2 }}>
+                {current?.claimCount ?? 0} claims
+              </Typography>
+            </>
+          )}
+        </Box>
+      </Box>
     </Box>
   );
 }
@@ -703,8 +698,8 @@ export default function EmployeeBreakdownModal({
       <Box
         sx={{
           px: 3,
-          pt: 2.5,
-          pb: 2,
+          pt: 1.5,
+          pb: 1.5,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "flex-start",
@@ -713,14 +708,14 @@ export default function EmployeeBreakdownModal({
         }}
       >
         <Box>
-          <Typography sx={{ fontSize: 22, fontWeight: 800, color: "text.primary" }}>
+          <Typography sx={{ fontSize: 18, fontWeight: 800, color: "text.primary" }}>
             {employeeName}
           </Typography>
-          <Typography sx={{ fontSize: 13, color: "text.disabled", mt: 0.3 }}>
+          <Typography sx={{ fontSize: 13, color: "text.disabled", mt: 0.2 }}>
             {employeeEmail}
           </Typography>
           {breakdown && (
-            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary", mt: 0.8 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary", mt: 0.4 }}>
               Total: {fmtSym(breakdown.totalAmount)}
             </Typography>
           )}
@@ -739,8 +734,8 @@ export default function EmployeeBreakdownModal({
         </Box>
       </Box>
 
-      <DialogContent sx={{ p: 3 }}>
-        <Typography sx={{ fontSize: 16, fontWeight: 700, color: "text.primary", mb: 2 }}>
+      <DialogContent sx={{ p: 2.5 }}>
+        <Typography sx={{ fontSize: 14, fontWeight: 700, color: "text.primary", mb: 1 }}>
           Expense breakdown by category
         </Typography>
 
@@ -748,7 +743,7 @@ export default function EmployeeBreakdownModal({
           sx={{
             display: "flex",
             gap: 0,
-            mb: 2,
+            mb: 1.5,
             border: "1px solid",
             borderColor: "divider",
             borderRadius: 1.5,
@@ -761,7 +756,7 @@ export default function EmployeeBreakdownModal({
               onClick={() => setStatusTab(tab)}
               sx={{
                 flex: 1,
-                py: 0.9,
+                py: 0.6,
                 textAlign: "center",
                 cursor: "pointer",
                 fontSize: 13,
@@ -790,7 +785,7 @@ export default function EmployeeBreakdownModal({
           compareMode={compareMode}
         />
 
-        <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
+        <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
           {(["prevMonth", "prevYear"] as const).map((mode) => (
             <Box
               key={mode}

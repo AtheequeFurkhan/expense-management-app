@@ -13,7 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Alert, Box, Button, Skeleton, Stack, Typography } from "@wso2/oxygen-ui";
+import { Alert, Box, Button, Skeleton, Stack } from "@wso2/oxygen-ui";
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -24,6 +24,7 @@ import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
 import DoughnutChart from "@component/chart/DoughnutChart";
 import EmployeeSpendingBreakdownPanel from "@component/chart/EmployeeSpendingBreakdownPanel";
 import HorizontalBarChart from "@component/chart/HorizontalBarChart";
+import LeadApprovalFrequencyPanel from "@component/chart/LeadApprovalFrequencyPanel";
 import CurrencySelector from "@component/common/CurrencySelector";
 import { MONTH_OPTIONS, OPD_SUMMARY_CARDS_CONFIG } from "@config/constant";
 import { resetExpenseClaims, useExpenseClaims } from "@slices/expenseSlice/useExpenseClaims";
@@ -75,16 +76,12 @@ export default function ExpenseClaims() {
   const {
     buExpenses,
     activeClaimStats: claimStats,
-    leadApprovalFrequency,
     topApprovingLeads: topLeads,
     recurringExpenseTypes: recurringExpenses,
   } = data;
 
   const buMaxValue = Math.max(...buExpenses.map((d) => d.value), 1);
   const claimStatsMaxValue = Math.max(...claimStats.map((d) => d.value), 1);
-  const leadApprovalFrequencyMaxValue = Math.max(...leadApprovalFrequency.map((d) => d.value), 1);
-  const topLeadsMaxValue = Math.max(...topLeads.map((d) => d.count), 1);
-  const isAllTimeLeadView = filters.dateRange === "All Time";
 
   const getRecurringCategory = (expenseName: string) => {
     const normalizedName = expenseName.trim();
@@ -387,72 +384,16 @@ export default function ExpenseClaims() {
         />
       </Box>
 
-      {/* Row 4: Top Approving Lead */}
-      <Box
-        sx={{
-          mt: 2,
-          display: "grid",
-          gridTemplateColumns: { xs: "1fr", lg: "1fr 1fr" },
-          gap: 2,
-        }}
-      >
-        <ChartCard
-          title={isAllTimeLeadView ? "Top Approving Leads" : "Lead Approval Frequency"}
-          subtitle={
-            isAllTimeLeadView
-              ? "Leads by total approved claims"
-              : "Lead-approved withdrawals across date windows"
-          }
-          action={
-            <ChartPeriodFilter
-              value={chartPeriod}
-              options={MONTH_OPTIONS}
-              onChange={handlePeriodChange}
-            />
-          }
-        >
-          {isAllTimeLeadView ? (
-            <HorizontalBarChart
-              data={topLeads.map((d) => ({
-                label: d.name,
-                sublabel: d.email,
-                value: d.count,
-              }))}
-              formatValue={(v) => `${v} claims`}
-              barColor="#AB7AE0"
-              barHoverColor="#9360cc"
-              maxValue={topLeadsMaxValue}
-              tooltipContent={(_item, index) => {
-                const lead = topLeads[index];
-                return (
-                  <Box sx={{ px: 0.5, py: 0.2 }}>
-                    <Typography sx={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>
-                      {lead.count} claims
-                    </Typography>
-                    <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)", mt: 0.3 }}>
-                      {lead.name}
-                    </Typography>
-                    <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
-                      {lead.email}
-                    </Typography>
-                    <Typography sx={{ fontSize: 10, color: "rgba(255,255,255,0.7)" }}>
-                      BU: {lead.bu}
-                    </Typography>
-                  </Box>
-                );
-              }}
-            />
-          ) : (
-            <BarChart
-              data={leadApprovalFrequency.map((d) => ({ label: d.label, value: d.value }))}
-              barWidth="68%"
-              yAxisLabel="Approved Count"
-              xAxisLabel="Date Window"
-              maxValue={leadApprovalFrequencyMaxValue}
-              formatValue={(v) => `${v}`}
-            />
-          )}
-        </ChartCard>
+      {/* Row 3.5: Lead Approval Frequency */}
+      <Box sx={{ mt: 2 }}>
+        <LeadApprovalFrequencyPanel
+          dateRange={filters.dateRange}
+          businessUnit={filters.businessUnit}
+          currency={currency}
+          chartPeriod={chartPeriod}
+          onPeriodChange={handlePeriodChange}
+          fallbackLeads={topLeads}
+        />
       </Box>
 
       {/* Row 5: Recurring Expense Types — scrollable horizontal bar chart */}
