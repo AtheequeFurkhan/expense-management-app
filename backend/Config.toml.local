@@ -1,19 +1,27 @@
+[expense_management]
+annualClaimLimit = 
+claimRangeStep = 
+lastYearClaimGracePeriodInDays = 
+
 [expense_management.authorization.authorizedRoles]
 employeeRole = 
 financeAdminRole =
 
 [expense_management.appConfig]
-sampleAppConfig = 
+claimLimit = 
+submissionsAllowedLocations = 
 
 [expense_management.database]
 connectTimeout = 
-[expense_management.database.databaseConfig]
+
+[expense_management.database.expenseDatabaseConfig]
 database = 
 host = 
 password = 
 port = 
 user = 
-[expense_management.database.databaseConfig.connectionPool]
+
+[expense_management.database.expenseDatabaseConfig.connectionPool]
 maxConnectionLifeTime = 
 maxOpenConnections = 
 minIdleConnections = 
@@ -24,8 +32,3 @@ hrEntityBaseUrl =
 clientId = 
 clientSecret = 
 tokenUrl = 
-[expense_management.entity.retryConfig]
-backOffFactor = 
-count = 
-interval = 
-maxWaitInterval = 
