@@ -14,7 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 import ballerina/http;
-import ballerina/oauth2;
 
 configurable string hrEntityBaseUrl = ?;
 configurable Oauth2Config oauthConfig = ?;
@@ -25,9 +24,5 @@ configurable Oauth2Config oauthConfig = ?;
     id: "hris/hr-entity-service"
 }
 final http:Client hrClient = check new (hrEntityBaseUrl, {
-    auth: <oauth2:ClientCredentialsGrantConfig>{
-        tokenUrl: oauthConfig.tokenUrl,
-        clientId: oauthConfig.clientId,
-        clientSecret: oauthConfig.clientSecret
-    }
+    auth: {...oauthConfig}
 });
