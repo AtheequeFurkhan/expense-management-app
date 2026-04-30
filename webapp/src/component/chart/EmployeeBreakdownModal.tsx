@@ -53,7 +53,6 @@ interface SubCategoryPanelProps {
   category: string;
   dateRange: string;
   compDateRange: string;
-  compareLabel: string;
   fmtSym: (v: number) => string;
   color: string;
 }
@@ -63,7 +62,6 @@ function SubCategoryPanel({
   category,
   dateRange,
   compDateRange,
-  compareLabel,
   fmtSym,
   color,
 }: SubCategoryPanelProps) {
@@ -100,53 +98,6 @@ function SubCategoryPanel({
         overflow: "hidden",
       }}
     >
-      <Box
-        sx={{
-          display: "flex",
-          px: 2,
-          py: 1,
-          borderBottom: "1px solid",
-          borderColor: "divider",
-          bgcolor: "action.hover",
-        }}
-      >
-        <Typography
-          sx={{
-            fontSize: 10,
-            fontWeight: 700,
-            color: "text.disabled",
-            letterSpacing: 0.8,
-            flex: 1,
-          }}
-        >
-          SUB-CATEGORY
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: 10,
-            fontWeight: 700,
-            color: "text.disabled",
-            letterSpacing: 0.8,
-            minWidth: 100,
-            textAlign: "right",
-          }}
-        >
-          {compareLabel.toUpperCase()}
-        </Typography>
-        <Typography
-          sx={{
-            fontSize: 10,
-            fontWeight: 700,
-            color: "text.disabled",
-            letterSpacing: 0.8,
-            minWidth: 100,
-            textAlign: "right",
-          }}
-        >
-          THIS PERIOD
-        </Typography>
-      </Box>
-
       {curLoading || cmpLoading ? (
         <Box sx={{ p: 2, display: "flex", justifyContent: "center" }}>
           <CircularProgress size={20} />
@@ -196,7 +147,7 @@ function SubCategoryPanel({
                   fontSize: 12,
                   fontWeight: 600,
                   color: cmp > 0 ? "text.secondary" : "text.disabled",
-                  minWidth: 100,
+                  minWidth: 110,
                   textAlign: "right",
                   flexShrink: 0,
                 }}
@@ -208,7 +159,7 @@ function SubCategoryPanel({
                   fontSize: 12,
                   fontWeight: 700,
                   color: cur > 0 ? "text.primary" : "text.disabled",
-                  minWidth: 100,
+                  minWidth: 110,
                   textAlign: "right",
                   flexShrink: 0,
                 }}
@@ -236,7 +187,6 @@ interface CategoryRowProps {
   email: string;
   dateRange: string;
   compDateRange: string;
-  compareLabel: string;
   fmtSym: (v: number) => string;
   isExpanded: boolean;
   onToggle: () => void;
@@ -255,7 +205,6 @@ function CategoryRow({
   email,
   dateRange,
   compDateRange,
-  compareLabel,
   fmtSym,
   isExpanded,
   onToggle,
@@ -346,17 +295,6 @@ function CategoryRow({
           <Box sx={{ textAlign: "right", minWidth: 110 }}>
             <Typography
               sx={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: "text.disabled",
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-              }}
-            >
-              {compareLabel}
-            </Typography>
-            <Typography
-              sx={{
                 fontSize: 13,
                 fontWeight: 700,
                 color: compTotal > 0 ? "text.primary" : "text.disabled",
@@ -369,17 +307,6 @@ function CategoryRow({
             </Typography>
           </Box>
           <Box sx={{ textAlign: "right", minWidth: 110 }}>
-            <Typography
-              sx={{
-                fontSize: 10,
-                fontWeight: 700,
-                color: "text.disabled",
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-              }}
-            >
-              This Period
-            </Typography>
             <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary" }}>
               {fmtSym(total)}
             </Typography>
@@ -396,7 +323,6 @@ function CategoryRow({
           category={category}
           dateRange={dateRange}
           compDateRange={compDateRange}
-          compareLabel={compareLabel}
           fmtSym={fmtSym}
           color={color}
         />
@@ -453,9 +379,6 @@ function PeriodComparison({
   const curTotal = current?.totalAmount ?? 0;
   const prevTotal = previous?.totalAmount ?? 0;
   const pct = prevTotal > 0 ? ((curTotal - prevTotal) / prevTotal) * 100 : null;
-  const maxVal = Math.max(curTotal, prevTotal, 1);
-  const curBarW = Math.round((curTotal / maxVal) * 100);
-  const prevBarW = Math.round((prevTotal / maxVal) * 100);
 
   return (
     <Box sx={{ mb: 1.5 }}>
@@ -518,7 +441,11 @@ function PeriodComparison({
             gap: 0.5,
           }}
         >
-          {pct !== null && (
+          {pct === null || pct === 0 ? (
+            <Typography sx={{ fontSize: 16, fontWeight: 800, color: "text.disabled" }}>
+              ＝
+            </Typography>
+          ) : (
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.4 }}>
               {pct > 0 ? (
                 <TrendingUp size={12} color="#e53935" />
@@ -537,28 +464,6 @@ function PeriodComparison({
               </Typography>
             </Box>
           )}
-          <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 0.4 }}>
-            <Box
-              sx={{
-                height: 5,
-                bgcolor: "#64B5F6",
-                width: `${prevBarW}%`,
-                borderRadius: 2,
-                minWidth: 4,
-                transition: "width 0.4s ease",
-              }}
-            />
-            <Box
-              sx={{
-                height: 5,
-                bgcolor: "primary.main",
-                width: `${curBarW}%`,
-                borderRadius: 2,
-                minWidth: 4,
-                transition: "width 0.4s ease",
-              }}
-            />
-          </Box>
           <Typography
             sx={{
               fontSize: 9,
@@ -805,7 +710,7 @@ export default function EmployeeBreakdownModal({
                 "&:hover": { borderColor: "primary.main" },
               }}
             >
-              {mode === "prevMonth" ? "vs Prev Month" : "vs Prev Year"}
+              {mode === "prevMonth" ? "Prev Month" : "Prev Year"}
             </Box>
           ))}
         </Box>
@@ -840,43 +745,84 @@ export default function EmployeeBreakdownModal({
             </Typography>
           </Box>
         ) : (
-          <Box
-            sx={{
-              maxHeight: 460,
-              overflowY: "auto",
-              pr: 0.5,
-              "&::-webkit-scrollbar": { width: 4 },
-              "&::-webkit-scrollbar-track": { bgcolor: "action.hover", borderRadius: 2 },
-              "&::-webkit-scrollbar-thumb": { bgcolor: "text.disabled", borderRadius: 2 },
-            }}
-          >
-            {breakdown.categories.map((cat, i) => {
-              const cmp = compMap.get(cat.category);
-              return (
-                <CategoryRow
-                  key={cat.category}
-                  category={cat.category}
-                  total={cat.total}
-                  claimCount={cat.claimCount}
-                  percentage={cat.percentage}
-                  color={SEGMENT_COLORS[i % SEGMENT_COLORS.length]}
-                  maxTotal={maxCurrent}
-                  compTotal={cmp?.total ?? 0}
-                  compClaimCount={cmp?.claimCount ?? 0}
-                  maxCompTotal={maxComp}
-                  email={employeeEmail ?? ""}
-                  dateRange={dateRange}
-                  compDateRange={compDateRange}
-                  compareLabel={compareMode === "prevMonth" ? "Prev Month" : "Prev Year"}
-                  fmtSym={fmtSym}
-                  isExpanded={expandedCategory === cat.category}
-                  onToggle={() =>
-                    setExpandedCategory((prev) => (prev === cat.category ? null : cat.category))
-                  }
-                />
-              );
-            })}
-          </Box>
+          <>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                pl: 1.5,
+                pr: 2,
+                pb: 0.5,
+                gap: 1.5,
+              }}
+            >
+              <Box sx={{ flex: 1 }} />
+              <Box sx={{ display: "flex", gap: 2, flexShrink: 0 }}>
+                <Typography
+                  sx={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "text.disabled",
+                    textTransform: "uppercase",
+                    letterSpacing: 0.5,
+                    minWidth: 110,
+                    textAlign: "right",
+                  }}
+                >
+                  {compareMode === "prevMonth" ? "Prev Month" : "Prev Year"}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontSize: 10,
+                    fontWeight: 700,
+                    color: "text.disabled",
+                    textTransform: "uppercase",
+                    letterSpacing: 0.5,
+                    minWidth: 110,
+                    textAlign: "right",
+                  }}
+                >
+                  This Period
+                </Typography>
+              </Box>
+            </Box>
+            <Box
+              sx={{
+                maxHeight: 460,
+                overflowY: "auto",
+                pr: 0.5,
+                "&::-webkit-scrollbar": { width: 4 },
+                "&::-webkit-scrollbar-track": { bgcolor: "action.hover", borderRadius: 2 },
+                "&::-webkit-scrollbar-thumb": { bgcolor: "text.disabled", borderRadius: 2 },
+              }}
+            >
+              {breakdown.categories.map((cat, i) => {
+                const cmp = compMap.get(cat.category);
+                return (
+                  <CategoryRow
+                    key={cat.category}
+                    category={cat.category}
+                    total={cat.total}
+                    claimCount={cat.claimCount}
+                    percentage={cat.percentage}
+                    color={SEGMENT_COLORS[i % SEGMENT_COLORS.length]}
+                    maxTotal={maxCurrent}
+                    compTotal={cmp?.total ?? 0}
+                    compClaimCount={cmp?.claimCount ?? 0}
+                    maxCompTotal={maxComp}
+                    email={employeeEmail ?? ""}
+                    dateRange={dateRange}
+                    compDateRange={compDateRange}
+                    fmtSym={fmtSym}
+                    isExpanded={expandedCategory === cat.category}
+                    onToggle={() =>
+                      setExpandedCategory((prev) => (prev === cat.category ? null : cat.category))
+                    }
+                  />
+                );
+              })}
+            </Box>
+          </>
         )}
       </DialogContent>
     </Dialog>

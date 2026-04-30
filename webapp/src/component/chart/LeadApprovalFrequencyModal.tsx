@@ -16,13 +16,12 @@
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import { Box, CircularProgress, Skeleton, Typography } from "@wso2/oxygen-ui";
-import { Clock, CreditCard, FileText, Search, Stethoscope, X } from "lucide-react";
+import { Clock, CreditCard, FileText, Stethoscope, X } from "lucide-react";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import {
   type LeadApprovedClaim,
-  type LeadClaimTypeBreakdown,
   calcDaysBetween,
   formatApprovalFrequency,
   useLeadApprovalDetail,
@@ -49,59 +48,6 @@ const CLAIM_TYPE_META: Record<string, { icon: React.ReactNode; color: string; bg
 
 function defaultTypeMeta(type: string) {
   return CLAIM_TYPE_META[type] ?? { icon: <FileText size={14} />, color: "#616161", bg: "#F5F5F5" };
-}
-
-function ClaimTypeCard({
-  breakdown,
-  fmtSym,
-}: {
-  breakdown: LeadClaimTypeBreakdown;
-  fmtSym: (v: number) => string;
-}) {
-  const meta = defaultTypeMeta(breakdown.type);
-  return (
-    <Box
-      sx={{
-        flex: 1,
-        p: 1.5,
-        borderRadius: 1.5,
-        border: "1px solid",
-        borderColor: "divider",
-        bgcolor: "background.paper",
-        minWidth: 0,
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.75 }}>
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 26,
-            height: 26,
-            borderRadius: 1,
-            bgcolor: meta.bg,
-            color: meta.color,
-            flexShrink: 0,
-          }}
-        >
-          {meta.icon}
-        </Box>
-        <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary" }}>
-          {breakdown.type}
-        </Typography>
-      </Box>
-      <Typography sx={{ fontSize: 18, fontWeight: 800, color: "text.primary", lineHeight: 1.2 }}>
-        {breakdown.count.toLocaleString()}
-      </Typography>
-      <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.25 }}>claims</Typography>
-      {breakdown.totalAmount > 0 && (
-        <Typography sx={{ fontSize: 12, fontWeight: 600, color: "text.secondary", mt: 0.5 }}>
-          {fmtSym(breakdown.totalAmount)}
-        </Typography>
-      )}
-    </Box>
-  );
 }
 
 function DelayChip({ days }: { days: number | null }) {
@@ -133,15 +79,16 @@ function StatusChip({ status }: { status: string }) {
         ? "#FFEBEE"
         : "#FFF8E1";
   return (
-    <Box sx={{ px: 0.75, py: 0.2, borderRadius: 1, bgcolor: bg }}>
-      <Typography sx={{ fontSize: 11, fontWeight: 700, color }}>{status}</Typography>
+    <Box sx={{ px: 0.75, py: 0.2, borderRadius: 1, bgcolor: bg, display: "inline-block" }}>
+      <Typography sx={{ fontSize: 11, fontWeight: 700, color, whiteSpace: "nowrap" }}>
+        {status}
+      </Typography>
     </Box>
   );
 }
 
 const TABLE_COLS = [
   { label: "Employee", flex: 1.4 },
-  { label: "Type", flex: 0.9 },
   { label: "Category", flex: 1 },
   { label: "Amount", flex: 0.9 },
   { label: "Submitted", flex: 0.9 },
@@ -157,54 +104,10 @@ function ClaimsTable({
   claims: LeadApprovedClaim[];
   fmtSym: (v: number) => string;
 }) {
-  const [search, setSearch] = useState("");
-
-  const filtered = search.trim()
-    ? claims.filter(
-        (c) =>
-          c.employeeName.toLowerCase().includes(search.toLowerCase()) ||
-          (c.claimId ?? "").toLowerCase().includes(search.toLowerCase()) ||
-          (c.category ?? "").toLowerCase().includes(search.toLowerCase()),
-      )
-    : claims;
+  const filtered = claims;
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 1,
-          px: 1.5,
-          py: 0.7,
-          borderRadius: 1.5,
-          border: "1px solid",
-          borderColor: "divider",
-          bgcolor: "background.default",
-          mb: 1,
-        }}
-      >
-        <Search
-          size={14}
-          style={{ color: "var(--mui-palette-text-disabled, #888)", flexShrink: 0 }}
-        />
-        <Box
-          component="input"
-          value={search}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-          placeholder="Filter by employee, claim ID, or category..."
-          sx={{
-            flex: 1,
-            border: "none",
-            outline: "none",
-            bgcolor: "transparent",
-            fontSize: 12,
-            color: "text.primary",
-            "::placeholder": { color: "text.disabled" },
-          }}
-        />
-      </Box>
-
       <Box
         sx={{
           border: "1px solid",
@@ -252,13 +155,10 @@ function ClaimsTable({
         >
           {filtered.length === 0 ? (
             <Box sx={{ py: 5, textAlign: "center" }}>
-              <Typography sx={{ fontSize: 13, color: "text.disabled" }}>
-                {search ? "No claims match your filter" : "No claims found"}
-              </Typography>
+              <Typography sx={{ fontSize: 13, color: "text.disabled" }}>No claims found</Typography>
             </Box>
           ) : (
             filtered.map((claim, idx) => {
-              const meta = defaultTypeMeta(claim.claimType);
               const delay = calcDaysBetween(claim.submittedDate, claim.approvedDate);
               const isLast = idx === filtered.length - 1;
               return (
@@ -293,26 +193,6 @@ function ClaimsTable({
                         {claim.claimId}
                       </Typography>
                     )}
-                  </Box>
-
-                  <Box sx={{ flex: 0.9 }}>
-                    <Box
-                      sx={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 0.4,
-                        px: 0.75,
-                        py: 0.2,
-                        borderRadius: 1,
-                        bgcolor: meta.bg,
-                        color: meta.color,
-                      }}
-                    >
-                      {meta.icon}
-                      <Typography sx={{ fontSize: 10, fontWeight: 700, color: meta.color }}>
-                        {claim.claimType}
-                      </Typography>
-                    </Box>
                   </Box>
 
                   <Typography
@@ -369,7 +249,6 @@ function ClaimsTable({
       {filtered.length > 0 && (
         <Typography sx={{ fontSize: 11, color: "text.disabled", mt: 0.75, textAlign: "right" }}>
           {filtered.length} claim{filtered.length !== 1 ? "s" : ""}
-          {search ? ` matching "${search}"` : ""}
         </Typography>
       )}
     </Box>
@@ -487,6 +366,37 @@ export default function LeadApprovalFrequencyModal({
                 Last approved: {lastDate}
               </Typography>
             )}
+            {detail?.claimTypeBreakdown.map((b) => {
+              const meta = defaultTypeMeta(b.type);
+              return (
+                <Box
+                  key={b.type}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    px: 1,
+                    py: 0.3,
+                    borderRadius: 1,
+                    bgcolor: meta.bg,
+                  }}
+                >
+                  <Box sx={{ color: meta.color, display: "flex", alignItems: "center" }}>
+                    {meta.icon}
+                  </Box>
+                  <Typography sx={{ fontSize: 12, fontWeight: 700, color: meta.color }}>
+                    {b.type}: {b.count.toLocaleString()}
+                  </Typography>
+                  {b.totalAmount > 0 && (
+                    <Typography
+                      sx={{ fontSize: 12, fontWeight: 600, color: meta.color, opacity: 0.85 }}
+                    >
+                      · {fmtSym(b.totalAmount)}
+                    </Typography>
+                  )}
+                </Box>
+              );
+            })}
           </Box>
         </Box>
         <Box
@@ -534,19 +444,6 @@ export default function LeadApprovalFrequencyModal({
           </Box>
         ) : (
           <>
-            {detail.claimTypeBreakdown.length > 0 && (
-              <Box sx={{ mb: 2 }}>
-                <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 1 }}>
-                  Claim type breakdown
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1.5 }}>
-                  {detail.claimTypeBreakdown.map((b) => (
-                    <ClaimTypeCard key={b.type} breakdown={b} fmtSym={fmtSym} />
-                  ))}
-                </Box>
-              </Box>
-            )}
-
             {employeeBreakdown.length > 0 && (
               <Box sx={{ mb: 2 }}>
                 <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 1 }}>
@@ -561,7 +458,6 @@ export default function LeadApprovalFrequencyModal({
                   }}
                 >
                   {employeeBreakdown.map((emp, idx) => {
-                    const pct = Math.min(100, (emp.count / employeeBreakdown[0].count) * 100);
                     const isLast = idx === employeeBreakdown.length - 1;
                     return (
                       <Box
@@ -590,25 +486,7 @@ export default function LeadApprovalFrequencyModal({
                         >
                           {emp.name}
                         </Typography>
-                        <Box
-                          sx={{
-                            flex: 1,
-                            height: 6,
-                            bgcolor: "action.hover",
-                            borderRadius: 2,
-                            overflow: "hidden",
-                          }}
-                        >
-                          <Box
-                            sx={{
-                              height: "100%",
-                              width: `${pct}%`,
-                              bgcolor: "primary.main",
-                              borderRadius: 2,
-                              transition: "width 0.4s ease",
-                            }}
-                          />
-                        </Box>
+                        <Box sx={{ flex: 1 }} />
                         <Typography
                           sx={{
                             fontSize: 13,

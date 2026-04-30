@@ -813,6 +813,17 @@ const MOCK_DETAILS: Record<string, LeadApprovalDetail> = {
   },
 };
 
+function toExpenseClaimsOnly(d: LeadApprovalDetail): LeadApprovalDetail {
+  const filteredClaims = d.claims.filter(
+    (c) => c.claimType !== "Credit Card" && c.claimType !== "OPD",
+  );
+  const filteredBreakdown = d.claimTypeBreakdown.filter(
+    (b) => b.type !== "Credit Card" && b.type !== "OPD",
+  );
+  const totalApproved = filteredClaims.length;
+  return { ...d, claims: filteredClaims, claimTypeBreakdown: filteredBreakdown, totalApproved };
+}
+
 export function calcDaysBetween(dateA: string | null, dateB: string | null): number | null {
   if (!dateA || !dateB) return null;
   const a = new Date(dateA).getTime();
@@ -907,20 +918,22 @@ export function useLeadApprovalDetail(email: string | null, dateRange: string) {
           const computedFreq =
             Number(d.avgFrequencyPerDay) ||
             computeFreq(Number(d.totalApproved), firstDate ?? "", d.lastApprovedDate ?? "");
-          setDetail({
-            ...d,
-            totalApproved: Number(d.totalApproved),
-            avgFrequencyPerDay: computedFreq,
-            claimTypeBreakdown: (d.claimTypeBreakdown ?? []).map((c) => ({
-              ...c,
-              count: Number(c.count),
-              totalAmount: Number(c.totalAmount),
-            })),
-            claims: (d.claims ?? []).map((c) => ({
-              ...c,
-              amount: Number(c.amount),
-            })),
-          });
+          setDetail(
+            toExpenseClaimsOnly({
+              ...d,
+              totalApproved: Number(d.totalApproved),
+              avgFrequencyPerDay: computedFreq,
+              claimTypeBreakdown: (d.claimTypeBreakdown ?? []).map((c) => ({
+                ...c,
+                count: Number(c.count),
+                totalAmount: Number(c.totalAmount),
+              })),
+              claims: (d.claims ?? []).map((c) => ({
+                ...c,
+                amount: Number(c.amount),
+              })),
+            }),
+          );
         }
       })
       .catch((err) => {
@@ -928,7 +941,7 @@ export function useLeadApprovalDetail(email: string | null, dateRange: string) {
         if (!cancelled && !axios.isCancel(err)) {
           const mock = email ? MOCK_DETAILS[email] : null;
           if (mock) {
-            setDetail(mock);
+            setDetail(toExpenseClaimsOnly(mock));
           } else {
             setError("Failed to load lead approval details.");
           }
