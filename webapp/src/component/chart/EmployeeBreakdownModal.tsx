@@ -16,7 +16,7 @@
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import { Box, CircularProgress, Skeleton, Typography } from "@wso2/oxygen-ui";
-import { ChevronDown, ChevronRight, TrendingDown, TrendingUp, X } from "lucide-react";
+import { ChevronDown, ChevronRight, Download, TrendingDown, TrendingUp, X } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
@@ -25,7 +25,8 @@ import {
   useEmployeeBreakdown,
   useEmployeeCategoryTransactions,
 } from "@slices/expenseSlice/useEmployeeSpending";
-import { type CurrencyCode, formatWithSymbol } from "@utils/currency";
+import { type CurrencyCode, CURRENCIES, formatWithSymbol } from "@utils/currency";
+import { exportEmployeeBreakdown } from "@utils/exportExcel";
 
 const SEGMENT_COLORS = [
   "#00B4D8",
@@ -583,17 +584,65 @@ export default function EmployeeBreakdownModal({
             </Typography>
           )}
         </Box>
-        <Box
-          onClick={onClose}
-          sx={{
-            cursor: "pointer",
-            color: "text.secondary",
-            p: 0.5,
-            borderRadius: 1,
-            "&:hover": { bgcolor: "action.hover", color: "text.primary" },
-          }}
-        >
-          <X size={20} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box
+            onClick={() => {
+              if (!breakdown) return;
+              exportEmployeeBreakdown({
+                name: employeeName,
+                email: employeeEmail ?? "",
+                dateRange,
+                statusTab,
+                currency: CURRENCIES[currency].code,
+                totalAmount: breakdown.totalAmount,
+                claimCount: breakdown.claimCount,
+                compareMode,
+                prevTotalAmount: compBreakdown?.totalAmount ?? 0,
+                prevClaimCount: compBreakdown?.claimCount ?? 0,
+                categories: breakdown.categories.map((cat) => {
+                  const cmp = compMap.get(cat.category);
+                  return {
+                    category: cat.category,
+                    total: cat.total,
+                    claimCount: cat.claimCount,
+                    percentage: cat.percentage,
+                    compTotal: cmp?.total ?? 0,
+                    compClaimCount: cmp?.claimCount ?? 0,
+                  };
+                }),
+              });
+            }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.6,
+              cursor: breakdown ? "pointer" : "not-allowed",
+              opacity: breakdown ? 1 : 0.4,
+              color: "primary.main",
+              px: 1.25,
+              py: 0.5,
+              borderRadius: 1,
+              border: "1px solid",
+              borderColor: "primary.main",
+              "&:hover": breakdown ? { bgcolor: "primary.main", color: "#fff" } : {},
+              transition: "all 0.2s",
+            }}
+          >
+            <Download size={14} />
+            <Typography sx={{ fontSize: 12, fontWeight: 700 }}>Export</Typography>
+          </Box>
+          <Box
+            onClick={onClose}
+            sx={{
+              cursor: "pointer",
+              color: "text.secondary",
+              p: 0.5,
+              borderRadius: 1,
+              "&:hover": { bgcolor: "action.hover", color: "text.primary" },
+            }}
+          >
+            <X size={20} />
+          </Box>
         </Box>
       </Box>
 

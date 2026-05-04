@@ -16,7 +16,7 @@
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
-import { Clock, CreditCard, FileText, Search, Stethoscope, X } from "lucide-react";
+import { Clock, CreditCard, Download, FileText, Search, Stethoscope, X } from "lucide-react";
 
 import { useMemo, useState } from "react";
 
@@ -28,7 +28,8 @@ import {
   getFrequencyColor,
   useLeadApprovalDetail,
 } from "@slices/expenseSlice/useLeadApprovalFrequency";
-import { type CurrencyCode, formatWithSymbol } from "@utils/currency";
+import { type CurrencyCode, CURRENCIES, formatWithSymbol } from "@utils/currency";
+import { exportLeadApprovals } from "@utils/exportExcel";
 
 const CLAIM_TYPE_META: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
   Expense: { icon: <FileText size={14} />, color: "#1976D2", bg: "#E3F2FD" },
@@ -406,17 +407,54 @@ export default function LeadApprovalFrequencyModal({
             )}
           </Box>
         </Box>
-        <Box
-          onClick={onClose}
-          sx={{
-            cursor: "pointer",
-            color: "text.secondary",
-            p: 0.5,
-            borderRadius: 1,
-            "&:hover": { bgcolor: "action.hover", color: "text.primary" },
-          }}
-        >
-          <X size={20} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box
+            onClick={() => {
+              if (!detail) return;
+              exportLeadApprovals({
+                name: leadName,
+                email: leadEmail ?? "",
+                dateRange,
+                currency: CURRENCIES[currency].code,
+                totalApproved: detail.totalApproved,
+                avgFrequencyPerDay: detail.avgFrequencyPerDay,
+                firstApprovedDate: null,
+                lastApprovedDate: detail.lastApprovedDate,
+                employeeBreakdown,
+                claims: detail.claims,
+              });
+            }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.6,
+              cursor: detail ? "pointer" : "not-allowed",
+              opacity: detail ? 1 : 0.4,
+              color: "primary.main",
+              px: 1.25,
+              py: 0.5,
+              borderRadius: 1,
+              border: "1px solid",
+              borderColor: "primary.main",
+              "&:hover": detail ? { bgcolor: "primary.main", color: "#fff" } : {},
+              transition: "all 0.2s",
+            }}
+          >
+            <Download size={14} />
+            <Typography sx={{ fontSize: 12, fontWeight: 700 }}>Export</Typography>
+          </Box>
+          <Box
+            onClick={onClose}
+            sx={{
+              cursor: "pointer",
+              color: "text.secondary",
+              p: 0.5,
+              borderRadius: 1,
+              "&:hover": { bgcolor: "action.hover", color: "text.primary" },
+            }}
+          >
+            <X size={20} />
+          </Box>
         </Box>
       </Box>
 
