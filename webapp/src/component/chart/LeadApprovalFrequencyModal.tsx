@@ -30,6 +30,7 @@ import {
 } from "@slices/expenseSlice/useLeadApprovalFrequency";
 import { type CurrencyCode, CURRENCIES, formatWithSymbol } from "@utils/currency";
 import { exportLeadApprovals } from "@utils/exportExcel";
+import { exportLeadApprovalsPdf } from "@utils/exportPdf";
 
 const CLAIM_TYPE_META: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
   Expense: { icon: <FileText size={14} />, color: "#1976D2", bg: "#E3F2FD" },
@@ -408,6 +409,43 @@ export default function LeadApprovalFrequencyModal({
           </Box>
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          {/* PDF Export */}
+          <Box
+            onClick={() => {
+              if (!detail) return;
+              exportLeadApprovalsPdf({
+                name: leadName,
+                email: leadEmail ?? "",
+                dateRange,
+                currency: CURRENCIES[currency].code,
+                totalApproved: detail.totalApproved,
+                avgFrequencyPerDay: detail.avgFrequencyPerDay,
+                firstApprovedDate: null,
+                lastApprovedDate: detail.lastApprovedDate,
+                employeeBreakdown,
+                claims: detail.claims,
+              });
+            }}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.6,
+              cursor: detail ? "pointer" : "not-allowed",
+              opacity: detail ? 1 : 0.4,
+              color: "#C62828",
+              px: 1.25,
+              py: 0.5,
+              borderRadius: 1,
+              border: "1px solid #C62828",
+              "&:hover": detail ? { bgcolor: "#C62828", color: "#fff" } : {},
+              transition: "all 0.2s",
+            }}
+          >
+            <Download size={14} />
+            <Typography sx={{ fontSize: 12, fontWeight: 700 }}>PDF</Typography>
+          </Box>
+
+          {/* Excel Export */}
           <Box
             onClick={() => {
               if (!detail) return;
