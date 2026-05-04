@@ -80,6 +80,7 @@ isolated function getMainCategory(string expenseType) returns string {
     return expenseType;
 }
 
+
 # Split a comma-separated email field into individual trimmed email addresses.
 # Handles the case where lead_email stores multiple approvers as "a@x.com,b@x.com".
 #

@@ -107,7 +107,7 @@ interface BackendExpenseClaimsData {
   rejectedClaims?: number;
   avgClaimAmount?: number;
   buExpenses?: BuExpenseItem[];
-  recurringExpenseTypes?: { name: string; amount: number }[];
+  recurringExpenseTypes?: { name: string; category?: string; amount: number }[];
   activeClaimStats?: ActiveClaimStatItem[];
   topSpendingEmployees?: TopEmployeeItem[];
   leadApprovalFrequency?: LeadApprovalFrequencyItem[];
@@ -188,8 +188,11 @@ const normalizeExpenseClaimsData = (
     data?.buExpenses?.map((b) => ({ label: b.label, value: Number(b.value) })) ??
     DEFAULT_EXPENSE_DATA.buExpenses,
   recurringExpenseTypes:
-    data?.recurringExpenseTypes?.map((r) => ({ name: r.name, amount: Number(r.amount) })) ??
-    DEFAULT_EXPENSE_DATA.recurringExpenseTypes,
+    data?.recurringExpenseTypes?.map((r) => ({
+      name: r.name,
+      category: r.category ?? "",
+      amount: Number(r.amount),
+    })) ?? DEFAULT_EXPENSE_DATA.recurringExpenseTypes,
   activeClaimStats: orderedClaimStats,
   topSpendingEmployees:
     data?.topSpendingEmployees?.map((e) => ({

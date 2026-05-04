@@ -84,7 +84,7 @@ export default function HorizontalBarChart({
             <Box sx={{ minWidth: labelWidth, maxWidth: labelWidth }}>
               <Typography
                 sx={{
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: 600,
                   color: "text.primary",
                   lineHeight: 1.3,
@@ -98,7 +98,7 @@ export default function HorizontalBarChart({
               {item.sublabel && (
                 <Typography
                   sx={{
-                    fontSize: 10,
+                    fontSize: 11,
                     color: "text.disabled",
                     lineHeight: 1.2,
                     overflow: "hidden",
@@ -150,7 +150,7 @@ export default function HorizontalBarChart({
 
             <Typography
               sx={{
-                fontSize: 12,
+                fontSize: 13,
                 fontWeight: 700,
                 color: "text.primary",
                 minWidth: 60,

@@ -120,6 +120,8 @@ public type LeadApprovalFrequencyItem record {|
 public type ExpenseTypeItem record {|
     # Expense type name.
     string name;
+    # High-level category this expense type belongs to.
+    string category;
     # Total reimbursement amount.
     decimal amount;
 |};

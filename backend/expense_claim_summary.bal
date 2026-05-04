@@ -29,7 +29,120 @@ isolated function calculateTrend(decimal current, decimal previous) returns deci
     return <decimal>(<int>(change * 10.0d)) / 10.0d;
 }
 
+# Map an expense type name to one of the standard high-level categories.
+#
+# + expenseType - Raw expense type label from the database
+# + return - One of the 9 standard category names
+isolated function mapExpenseCategory(string expenseType) returns string {
+    string et = expenseType.trim();
+    string lower = et.toLowerAscii();
 
+    if lower.startsWith("foreign travel") || lower.startsWith("local travel") ||
+            lower.startsWith("domestic air ticket") || lower.startsWith("foreign/local travel") ||
+            lower.startsWith("contingency travel") ||
+            lower == "car mileage" || lower == "sales boot camp" ||
+            lower == "sales meeting expenses" {
+        return "Travel";
+    }
+
+    if lower.startsWith("cos-") || lower.startsWith("clo-") ||
+            lower.startsWith("rnd-aws") || lower.startsWith("rnd-gcp") ||
+            lower.startsWith("rnd-aiven") ||
+            lower.startsWith("ms ea -") || lower.startsWith("ms premier support") ||
+            lower.startsWith("ballerina-central google cloud") ||
+            lower.startsWith("annual support renewal") {
+        return "Cloud Infrastructure";
+    }
+    if lower == "aiven" || lower == "cloud hosting" || lower == "identity cloud hosting" ||
+            lower == "dr site" || lower == "hosting" || lower == "wallarm node" ||
+            lower == "cdn for wso2" || lower == "admin+aws+iam@wso2.com" ||
+            lower == "secondary internet link for lk" {
+        return "Cloud Infrastructure";
+    }
+
+    if lower.startsWith("analyst relations") || lower.startsWith("content-") ||
+            lower.startsWith("developer marketing") || lower.startsWith("events travel") ||
+            lower.startsWith("events-") || lower.startsWith("industry partnerships") ||
+            lower.startsWith("marketing giveaways") || lower.startsWith("marketing events") ||
+            lower.startsWith("mkt-bal") || lower.startsWith("operations -") ||
+            lower.startsWith("promotions-") || lower.startsWith("public relations") ||
+            lower.startsWith("rockstar promotion") || lower.startsWith("shipping") ||
+            lower.startsWith("tools-") {
+        return "Marketing & Events";
+    }
+    if lower == "channel marketing" || lower == "digi ops other" ||
+            lower == "giveaways control a/c" || lower == "wso2 con - other expenses" {
+        return "Marketing & Events";
+    }
+
+    // ── Phone & Communication ─────────────────────────────────────────
+    if lower.startsWith("call/internet charges") || lower.startsWith("phone/internet") ||
+            lower.startsWith("alerts systems") {
+        return "Phone & Communication";
+    }
+
+    // ── Office & Facilities ───────────────────────────────────────────
+    if lower.startsWith("no allocation") || lower.startsWith("fixed assets-") ||
+            lower.startsWith("pre payments") {
+        return "Office & Facilities";
+    }
+    if lower == "electricity" || lower == "maintenance" || lower == "office supplies" ||
+            lower == "postage and courier charges" || lower == "printing & stationery" ||
+            lower == "rent" || lower == "telephone & fax" || lower == "water" {
+        return "Office & Facilities";
+    }
+
+    if lower.startsWith("professional fees") {
+        return "Professional Services";
+    }
+    if lower == "entertainment" || lower == "membership fees" {
+        return "Professional Services";
+    }
+
+    if lower == "bank charges" || lower == "due from employee" || lower == "other" ||
+            lower == "qbr meetings" || lower == "rbr meetings" {
+        return "Finance & Admin";
+    }
+
+    if lower.startsWith("meal allowances") || lower.startsWith("staff medical") {
+        return "HR & People";
+    }
+    if lower == "recruitment fees" || lower == "sports & leisure activities" ||
+            lower == "staff welfare" || lower == "training & learning expenses" ||
+            lower == "wfh internet allowance/ mobile reimbursement" {
+        return "HR & People";
+    }
+
+    if lower.startsWith("rnd-") || lower.startsWith("sa-") ||
+            lower.startsWith("docker") || lower.startsWith("software support expenses") ||
+            lower == "fixed assets : software" || lower == "iam ecosystem integrations" {
+        return "Software & Licenses";
+    }
+    string[] softwareExact = [
+        "adobe creative cloud", "algolia", "antivirus", "asana", "bitwarden",
+        "burp suite", "carta", "concur", "contract management tool",
+        "cs - license subscription", "demandbase", "discord", "docker desktop",
+        "docker-dvp", "docusign", "domain/ssl certs renewal", "drift",
+        "fortianalyzer", "github", "github - choreo", "gmail backup", "google apps",
+        "hotjar", "infra security", "insided (developer community platform)", "intercom",
+        "iso 27001 compliance cost", "iso 27018 compliance cost",
+        "license & support renewal", "lucidchart", "mdm solution", "mindstamp",
+        "mongodb", "moz+ahrefs", "muckrack", "netsuite", "office 365",
+        "onetrust cockypro", "pager duty", "passage technology  - rollup helper",
+        "people hr", "pingdom", "qase tool", "salesforce data backup tool",
+        "salesforce inc", "salesforce, inc - pardot", "sanction screening tools",
+        "sparktoro", "sprout social", "tableau", "thinkific (t&c platform)", "twilio",
+        "virtual events platforms (hopin, sessionize, livestorm)", "vyond - goanimate",
+        "winzip + ideals", "wistia", "zerobounce", "zoom"
+    ];
+    foreach string s in softwareExact {
+        if lower == s {
+            return "Software & Licenses";
+        }
+    }
+
+    return et;
+}
 
 # Build the expense claims summary used by the dashboard.
 #
@@ -62,7 +175,7 @@ public function getExpenseClaimSummary(int year, int month, int months,
         businessUnit
     );
     database:TopApprovingLeadRow[] topLeadRows = check database:queryTopApprovingLeads(year, month, months, 7, businessUnit);
-    database:RecurringExpenseTypeRow[] recurringRows = check database:queryRecurringExpenseTypes(year, month, months, 25, businessUnit);
+    database:RecurringExpenseTypeRow[] recurringRows = check database:queryRecurringExpenseTypes(year, month, months, 500, businessUnit);
 
     // Previous period data for trend calculation (skip for All Time where months=0)
     decimal prevTotalAmount = 0;
@@ -119,11 +232,14 @@ public function getExpenseClaimSummary(int year, int month, int months,
             count: row.count
         };
 
-    ExpenseTypeItem[] recurringExpenseTypes = from database:RecurringExpenseTypeRow row in recurringRows
-        select {
+    ExpenseTypeItem[] recurringExpenseTypes = [];
+    foreach database:RecurringExpenseTypeRow row in recurringRows {
+        recurringExpenseTypes.push({
             name: row.expenseType,
+            category: mapExpenseCategory(row.expenseType),
             amount: row.total
-        };
+        });
+    }
 
     return {
         totalClaimAmount: totalClaimAmount,

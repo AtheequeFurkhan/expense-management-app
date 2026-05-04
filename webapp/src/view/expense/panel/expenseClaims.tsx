@@ -83,30 +83,10 @@ export default function ExpenseClaims() {
   const buMaxValue = Math.max(...buExpenses.map((d) => d.value), 1);
   const claimStatsMaxValue = Math.max(...claimStats.map((d) => d.value), 1);
 
-  const CATEGORY_SEPS = [" - ", " – ", " — ", " : "];
-
-  const getRecurringCategory = (expenseName: string) => {
-    const normalizedName = expenseName.trim();
-    for (const sep of CATEGORY_SEPS) {
-      const idx = normalizedName.indexOf(sep);
-      if (idx > 0) return normalizedName.substring(0, idx).trim();
-    }
-    return normalizedName;
-  };
-
-  const getRecurringSubcategory = (expenseName: string) => {
-    const normalizedName = expenseName.trim();
-    for (const sep of CATEGORY_SEPS) {
-      const idx = normalizedName.indexOf(sep);
-      if (idx > 0) return normalizedName.substring(idx + sep.length).trim();
-    }
-    return normalizedName;
-  };
-
   const recurringExpenseGroups = recurringExpenses.reduce<
     Record<string, { total: number; items: { name: string; amount: number }[] }>
   >((acc, expense) => {
-    const category = getRecurringCategory(expense.name);
+    const category = expense.category || expense.name;
     const existingGroup = acc[category] ?? { total: 0, items: [] };
 
     existingGroup.total += expense.amount;
@@ -122,7 +102,7 @@ export default function ExpenseClaims() {
   const recurringCategoryKeys = recurringCategorySorted.map(([key]) => key);
 
   const recurringCategoryItems = recurringCategorySorted.map(([label, group]) => ({
-    label: getRecurringSubcategory(label),
+    label,
     value: group.total,
     sublabel: `${group.items.length} expense type${group.items.length === 1 ? "" : "s"}`,
   }));
@@ -130,8 +110,7 @@ export default function ExpenseClaims() {
   const recurringDetailItems = selectedRecurringCategory
     ? (recurringExpenseGroups[selectedRecurringCategory]?.items ?? [])
         .map((expense) => ({
-          label: getRecurringSubcategory(expense.name),
-          sublabel: getRecurringCategory(selectedRecurringCategory),
+          label: expense.name,
           value: expense.amount,
         }))
         .sort((a, b) => b.value - a.value)

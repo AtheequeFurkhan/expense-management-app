@@ -20,6 +20,7 @@ export interface BuExpenseItem {
 
 export interface ExpenseTypeItem {
   name: string;
+  category: string;
   amount: number;
 }
 
