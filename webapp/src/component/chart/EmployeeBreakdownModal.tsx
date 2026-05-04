@@ -334,50 +334,29 @@ function CategoryRow({
 type CompareMode = "prevMonth" | "prevYear";
 
 interface PeriodComparisonProps {
-  thisMonthBreakdown: EmployeeSpendingBreakdownResponse | null;
-  lastMonthBreakdown: EmployeeSpendingBreakdownResponse | null;
-  ytdBreakdown: EmployeeSpendingBreakdownResponse | null;
-  lastYearBreakdown: EmployeeSpendingBreakdownResponse | null;
-  loadingThisMonth: boolean;
-  loadingLastMonth: boolean;
-  loadingYtd: boolean;
-  loadingLastYear: boolean;
+  currentBreakdown: EmployeeSpendingBreakdownResponse | null;
+  prevBreakdown: EmployeeSpendingBreakdownResponse | null;
+  loadingCurrent: boolean;
+  loadingPrev: boolean;
   fmtSym: (v: number) => string;
+  dateRange: string;
   compareMode: CompareMode;
 }
 
 function PeriodComparison({
-  thisMonthBreakdown,
-  lastMonthBreakdown,
-  ytdBreakdown,
-  lastYearBreakdown,
-  loadingThisMonth,
-  loadingLastMonth,
-  loadingYtd,
-  loadingLastYear,
+  currentBreakdown,
+  prevBreakdown,
+  loadingCurrent,
+  loadingPrev,
   fmtSym,
+  dateRange,
   compareMode,
 }: PeriodComparisonProps) {
-  const now = new Date();
-  const currentMonthLabel = now.toLocaleString("default", { month: "short", year: "numeric" });
-  const prevMonthLabel = new Date(now.getFullYear(), now.getMonth() - 1, 1).toLocaleString(
-    "default",
-    { month: "short", year: "numeric" },
-  );
-  const currentYearLabel = `${now.getFullYear()} (YTD)`;
-  const prevYearLabel = `${now.getFullYear() - 1}`;
+  const prevLabel = compareMode === "prevMonth" ? "Last Month" : "Last Year";
+  const prevTitle = compareMode === "prevMonth" ? "Previous Month" : "Previous Year";
 
-  const current = compareMode === "prevMonth" ? thisMonthBreakdown : ytdBreakdown;
-  const previous = compareMode === "prevMonth" ? lastMonthBreakdown : lastYearBreakdown;
-  const loadingCurrent = compareMode === "prevMonth" ? loadingThisMonth : loadingYtd;
-  const loadingPrevious = compareMode === "prevMonth" ? loadingLastMonth : loadingLastYear;
-  const currentLabel = compareMode === "prevMonth" ? "Current Month" : "Current Year";
-  const previousLabel = compareMode === "prevMonth" ? "Previous Month" : "Previous Year";
-  const currentTitle = compareMode === "prevMonth" ? currentMonthLabel : currentYearLabel;
-  const previousTitle = compareMode === "prevMonth" ? prevMonthLabel : prevYearLabel;
-
-  const curTotal = current?.totalAmount ?? 0;
-  const prevTotal = previous?.totalAmount ?? 0;
+  const curTotal = currentBreakdown?.totalAmount ?? 0;
+  const prevTotal = prevBreakdown?.totalAmount ?? 0;
   const pct = prevTotal > 0 ? ((curTotal - prevTotal) / prevTotal) * 100 : null;
 
   return (
@@ -410,12 +389,12 @@ function PeriodComparison({
               letterSpacing: 1,
             }}
           >
-            {previousLabel}
+            {prevTitle}
           </Typography>
           <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 0.25 }}>
-            {previousTitle}
+            {prevLabel}
           </Typography>
-          {loadingPrevious ? (
+          {loadingPrev ? (
             <Skeleton variant="text" width={100} height={26} />
           ) : (
             <>
@@ -425,7 +404,7 @@ function PeriodComparison({
                 {fmtSym(prevTotal)}
               </Typography>
               <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.2 }}>
-                {previous?.claimCount ?? 0} claims
+                {prevBreakdown?.claimCount ?? 0} claims
               </Typography>
             </>
           )}
@@ -472,7 +451,7 @@ function PeriodComparison({
               letterSpacing: 0.5,
             }}
           >
-            {compareMode === "prevMonth" ? "vs prev month" : "vs prev year"}
+            {compareMode === "prevMonth" ? "vs last month" : "vs last year"}
           </Typography>
         </Box>
 
@@ -487,10 +466,10 @@ function PeriodComparison({
               letterSpacing: 1,
             }}
           >
-            {currentLabel}
+            Current Period
           </Typography>
           <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 0.25 }}>
-            {currentTitle}
+            {dateRange}
           </Typography>
           {loadingCurrent ? (
             <Skeleton variant="text" width={100} height={26} sx={{ ml: "auto" }} />
@@ -502,7 +481,7 @@ function PeriodComparison({
                 {fmtSym(curTotal)}
               </Typography>
               <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.2 }}>
-                {current?.claimCount ?? 0} claims
+                {currentBreakdown?.claimCount ?? 0} claims
               </Typography>
             </>
           )}
@@ -542,30 +521,9 @@ export default function EmployeeBreakdownModal({
   );
 
   const compDateRange = compareMode === "prevMonth" ? "Last Month" : "Last Year";
-  const { breakdown: compBreakdown } = useEmployeeBreakdown(
+  const { breakdown: compBreakdown, loading: loadingComp } = useEmployeeBreakdown(
     open ? employeeEmail : null,
     compDateRange,
-    statusTab === "All" ? "" : statusTab,
-  );
-
-  const { breakdown: thisMonthBreakdown, loading: loadingThisMonth } = useEmployeeBreakdown(
-    open ? employeeEmail : null,
-    "This Month",
-    statusTab === "All" ? "" : statusTab,
-  );
-  const { breakdown: lastMonthBreakdown, loading: loadingLastMonth } = useEmployeeBreakdown(
-    open ? employeeEmail : null,
-    "Last Month",
-    statusTab === "All" ? "" : statusTab,
-  );
-  const { breakdown: ytdBreakdown, loading: loadingYtd } = useEmployeeBreakdown(
-    open ? employeeEmail : null,
-    "Year to Date",
-    statusTab === "All" ? "" : statusTab,
-  );
-  const { breakdown: lastYearBreakdown, loading: loadingLastYear } = useEmployeeBreakdown(
-    open ? employeeEmail : null,
-    "Last Year",
     statusTab === "All" ? "" : statusTab,
   );
 
@@ -678,15 +636,12 @@ export default function EmployeeBreakdownModal({
         </Box>
 
         <PeriodComparison
-          thisMonthBreakdown={thisMonthBreakdown}
-          lastMonthBreakdown={lastMonthBreakdown}
-          ytdBreakdown={ytdBreakdown}
-          lastYearBreakdown={lastYearBreakdown}
-          loadingThisMonth={loadingThisMonth}
-          loadingLastMonth={loadingLastMonth}
-          loadingYtd={loadingYtd}
-          loadingLastYear={loadingLastYear}
+          currentBreakdown={breakdown}
+          prevBreakdown={compBreakdown}
+          loadingCurrent={loading}
+          loadingPrev={loadingComp}
           fmtSym={fmtSym}
+          dateRange={dateRange}
           compareMode={compareMode}
         />
 

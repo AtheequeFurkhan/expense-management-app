@@ -86,7 +86,7 @@ function ClaimsTable({
   }, [claims, search]);
 
   return (
-    <Box>
+    <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <Box
         sx={{
           display: "flex",
@@ -99,6 +99,7 @@ function ClaimsTable({
           borderColor: "divider",
           borderRadius: 1.5,
           bgcolor: "background.paper",
+          flexShrink: 0,
         }}
       >
         <Search size={14} style={{ color: "var(--mui-palette-text-disabled, #888)", flexShrink: 0 }} />
@@ -119,12 +120,17 @@ function ClaimsTable({
 
       <Box
         sx={{
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
           border: "1px solid",
           borderColor: "divider",
           borderRadius: 1.5,
           overflow: "hidden",
         }}
       >
+        {/* Fixed header */}
         <Box
           sx={{
             display: "flex",
@@ -133,6 +139,7 @@ function ClaimsTable({
             bgcolor: "action.hover",
             borderBottom: "1px solid",
             borderColor: "divider",
+            flexShrink: 0,
           }}
         >
           {TABLE_COLS.map((col) => (
@@ -153,7 +160,16 @@ function ClaimsTable({
           ))}
         </Box>
 
-        <Box>
+        {/* Scrollable rows */}
+        <Box
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            "&::-webkit-scrollbar": { width: 4 },
+            "&::-webkit-scrollbar-track": { bgcolor: "action.hover", borderRadius: 2 },
+            "&::-webkit-scrollbar-thumb": { bgcolor: "text.disabled", borderRadius: 2 },
+          }}
+        >
           {filtered.length === 0 ? (
             <Box sx={{ py: 5, textAlign: "center" }}>
               <Typography sx={{ fontSize: 13, color: "text.disabled" }}>No claims found</Typography>
@@ -231,9 +247,7 @@ function ClaimsTable({
                     {claim.category ?? "—"}
                   </Typography>
 
-                  <Typography
-                    sx={{ flex: 0.9, fontSize: 13, fontWeight: 700, color: "text.primary" }}
-                  >
+                  <Typography sx={{ flex: 0.9, fontSize: 13, fontWeight: 700, color: "text.primary" }}>
                     {fmtSym(claim.amount)}
                   </Typography>
 
@@ -258,7 +272,6 @@ function ClaimsTable({
                   <Box sx={{ flex: 0.65 }}>
                     <DelayChip days={delay} />
                   </Box>
-
                 </Box>
               );
             })
@@ -267,7 +280,7 @@ function ClaimsTable({
       </Box>
 
       {filtered.length > 0 && (
-        <Typography sx={{ fontSize: 11, color: "text.disabled", mt: 0.75, textAlign: "right" }}>
+        <Typography sx={{ fontSize: 11, color: "text.disabled", mt: 0.75, textAlign: "right", flexShrink: 0 }}>
           {filtered.length} claim{filtered.length !== 1 ? "s" : ""}
         </Typography>
       )}
@@ -407,50 +420,47 @@ export default function LeadApprovalFrequencyModal({
         </Box>
       </Box>
 
-      <DialogContent sx={{ p: 2.5, flex: 1, overflowY: "auto", "&::-webkit-scrollbar": { width: 4 }, "&::-webkit-scrollbar-track": { bgcolor: "action.hover", borderRadius: 2 }, "&::-webkit-scrollbar-thumb": { bgcolor: "text.disabled", borderRadius: 2 } }}>
+      <DialogContent sx={{ p: 2.5, flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {loading ? (
-          <Box>
-            <Box sx={{ display: "flex", gap: 1.5, mb: 2 }}>
-              {[0, 1, 2].map((i) => (
-                <Skeleton key={i} variant="rectangular" height={90} sx={{ flex: 1, borderRadius: 1.5 }} />
-              ))}
-            </Box>
+          <Box sx={{ flex: 1 }}>
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              {[...Array(5)].map((_, i) => (
+              {[...Array(8)].map((_, i) => (
                 <Skeleton key={i} variant="rectangular" height={44} sx={{ borderRadius: 1 }} />
               ))}
             </Box>
           </Box>
         ) : error ? (
-          <Box sx={{ py: 8, textAlign: "center" }}>
+          <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Typography sx={{ color: "error.main", fontSize: 14 }}>{error}</Typography>
           </Box>
         ) : !detail ? (
-          <Box sx={{ py: 8, textAlign: "center" }}>
+          <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Typography sx={{ color: "text.disabled", fontSize: 14 }}>
               No approval data found for this period
             </Typography>
           </Box>
         ) : (
-          <>
-            {/* Approvals by employee */}
+          <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, gap: 1.5 }}>
+            {/* Approvals by employee — fixed height, internal scroll */}
             {employeeBreakdown.length > 0 && (
-              <Box sx={{ mb: 2.5 }}>
-                <Typography
-                  sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 1 }}
-                >
+              <Box sx={{ flexShrink: 0 }}>
+                <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 0.75 }}>
                   Approvals by employee
                 </Typography>
-                <Box>
+                <Box
+                  sx={{
+                    maxHeight: 192,
+                    overflowY: "auto",
+                    pr: 0.5,
+                    "&::-webkit-scrollbar": { width: 4 },
+                    "&::-webkit-scrollbar-track": { bgcolor: "action.hover", borderRadius: 2 },
+                    "&::-webkit-scrollbar-thumb": { bgcolor: "text.disabled", borderRadius: 2 },
+                  }}
+                >
                   {employeeBreakdown.map((emp) => (
                     <Box
                       key={emp.name}
-                      sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 1.5,
-                        py: 0.85,
-                      }}
+                      sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 0.75 }}
                     >
                       <Typography
                         sx={{
@@ -458,6 +468,7 @@ export default function LeadApprovalFrequencyModal({
                           fontWeight: 600,
                           color: "text.primary",
                           minWidth: 160,
+                          maxWidth: 160,
                           overflow: "hidden",
                           textOverflow: "ellipsis",
                           whiteSpace: "nowrap",
@@ -465,15 +476,7 @@ export default function LeadApprovalFrequencyModal({
                       >
                         {emp.name}
                       </Typography>
-                      <Box
-                        sx={{
-                          flex: 1,
-                          height: 6,
-                          bgcolor: "action.hover",
-                          borderRadius: 3,
-                          overflow: "hidden",
-                        }}
-                      >
+                      <Box sx={{ flex: 1, height: 6, bgcolor: "action.hover", borderRadius: 3, overflow: "hidden" }}>
                         <Box
                           sx={{
                             width: `${(emp.count / maxCount) * 100}%`,
@@ -483,28 +486,13 @@ export default function LeadApprovalFrequencyModal({
                           }}
                         />
                       </Box>
-                      <Typography
-                        sx={{
-                          fontSize: 13,
-                          fontWeight: 700,
-                          color: "text.primary",
-                          minWidth: 20,
-                          textAlign: "right",
-                        }}
-                      >
+                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary", minWidth: 24, textAlign: "right" }}>
                         {emp.count}
                       </Typography>
-                      <Typography sx={{ fontSize: 11, color: "text.disabled", minWidth: 40 }}>
+                      <Typography sx={{ fontSize: 11, color: "text.disabled", minWidth: 36 }}>
                         {emp.count === 1 ? "claim" : "claims"}
                       </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: 12,
-                          color: "text.secondary",
-                          minWidth: 90,
-                          textAlign: "right",
-                        }}
-                      >
+                      <Typography sx={{ fontSize: 12, color: "text.secondary", minWidth: 88, textAlign: "right" }}>
                         {fmtSym(emp.amount)}
                       </Typography>
                     </Box>
@@ -513,16 +501,18 @@ export default function LeadApprovalFrequencyModal({
               </Box>
             )}
 
-            {/* Approved claims */}
-            <Box>
-              <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 1 }}>
+            {/* Approved claims — fills remaining space with internal scroll */}
+            <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+              <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 0.75 }}>
                 Approved claims
               </Typography>
               {detail.claims.length === 0 ? (
                 <Box
                   sx={{
-                    py: 5,
-                    textAlign: "center",
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                     border: "1px solid",
                     borderColor: "divider",
                     borderRadius: 1.5,
@@ -536,7 +526,7 @@ export default function LeadApprovalFrequencyModal({
                 <ClaimsTable claims={detail.claims} fmtSym={fmtSym} />
               )}
             </Box>
-          </>
+          </Box>
         )}
       </DialogContent>
     </Dialog>

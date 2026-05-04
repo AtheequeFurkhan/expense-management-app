@@ -395,11 +395,11 @@ export default function ExpenseClaims() {
       {/* Row 5: Recurring Expense Types — scrollable horizontal bar chart */}
       <Box sx={{ mt: 2 }}>
         <ChartCard
-          title="Recurring Expense"
+          title="Expense Category Breakdown"
           subtitle={
             selectedRecurringCategory
-              ? `${selectedRecurringCategory} sub-expenses by recurring spend`
-              : "Grouped expense categories by recurring spend"
+              ? `${selectedRecurringCategory} sub-expenses`
+              : "Grouped expense categories"
           }
           minHeight={520}
           action={
