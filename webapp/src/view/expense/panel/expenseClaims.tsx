@@ -83,30 +83,23 @@ export default function ExpenseClaims() {
   const buMaxValue = Math.max(...buExpenses.map((d) => d.value), 1);
   const claimStatsMaxValue = Math.max(...claimStats.map((d) => d.value), 1);
 
+  const CATEGORY_SEPS = [" - ", " – ", " — ", " : "];
+
   const getRecurringCategory = (expenseName: string) => {
     const normalizedName = expenseName.trim();
-    const separators = [" - ", " : "];
-
-    for (const separator of separators) {
-      const separatorIndex = normalizedName.indexOf(separator);
-      if (separatorIndex > 0) {
-        return normalizedName.substring(0, separatorIndex).trim();
-      }
+    for (const sep of CATEGORY_SEPS) {
+      const idx = normalizedName.indexOf(sep);
+      if (idx > 0) return normalizedName.substring(0, idx).trim();
     }
-
     return normalizedName;
   };
 
-  const getRecurringSubcategory = (expenseName: string, category: string) => {
+  const getRecurringSubcategory = (expenseName: string) => {
     const normalizedName = expenseName.trim();
-    const prefixPatterns = [`${category} - `, `${category} : `];
-
-    for (const prefix of prefixPatterns) {
-      if (normalizedName.startsWith(prefix)) {
-        return normalizedName.substring(prefix.length).trim();
-      }
+    for (const sep of CATEGORY_SEPS) {
+      const idx = normalizedName.indexOf(sep);
+      if (idx > 0) return normalizedName.substring(idx + sep.length).trim();
     }
-
     return normalizedName;
   };
 
@@ -123,19 +116,22 @@ export default function ExpenseClaims() {
     return acc;
   }, {});
 
-  const recurringCategoryItems = Object.entries(recurringExpenseGroups)
-    .map(([label, group]) => ({
-      label,
-      value: group.total,
-      sublabel: `${group.items.length} expense type${group.items.length === 1 ? "" : "s"}`,
-    }))
-    .sort((a, b) => b.value - a.value);
+  const recurringCategorySorted = Object.entries(recurringExpenseGroups)
+    .sort(([, a], [, b]) => b.total - a.total);
+
+  const recurringCategoryKeys = recurringCategorySorted.map(([key]) => key);
+
+  const recurringCategoryItems = recurringCategorySorted.map(([label, group]) => ({
+    label: getRecurringSubcategory(label),
+    value: group.total,
+    sublabel: `${group.items.length} expense type${group.items.length === 1 ? "" : "s"}`,
+  }));
 
   const recurringDetailItems = selectedRecurringCategory
     ? (recurringExpenseGroups[selectedRecurringCategory]?.items ?? [])
         .map((expense) => ({
-          label: getRecurringSubcategory(expense.name, selectedRecurringCategory),
-          sublabel: selectedRecurringCategory,
+          label: getRecurringSubcategory(expense.name),
+          sublabel: getRecurringCategory(selectedRecurringCategory),
           value: expense.amount,
         }))
         .sort((a, b) => b.value - a.value)
@@ -449,8 +445,8 @@ export default function ExpenseClaims() {
                 barColor="#2E8B57"
                 barHoverColor="#246d45"
                 maxValue={recurringMaxValue}
-                onItemClick={(item) => {
-                  setSelectedRecurringCategory(item.label);
+                onItemClick={(_, index) => {
+                  setSelectedRecurringCategory(recurringCategoryKeys[index] ?? null);
                 }}
                 showRank={false}
                 barHeight={24}

@@ -34,13 +34,19 @@ public isolated service class JwtInterceptor {
 
         string|error idToken = req.getHeader(JWT_ASSERTION_HEADER);
         if idToken is error {
-            string errorMsg = "Missing invoker info header!";
-            log:printError(errorMsg, idToken);
-            return <http:InternalServerError>{
-                body: {
-                    message: errorMsg
-                }
-            };
+            // TODO: LOCAL DEV ONLY - DO NOT PUSH. Fallback to Authorization: Bearer when x-jwt-assertion is absent (no Choreo gateway locally).
+            string|error authHeader = req.getHeader("Authorization");
+            if authHeader is string && authHeader.startsWith("Bearer ") {
+                idToken = authHeader.substring(7);
+            } else {
+                string errorMsg = "Missing invoker info header!";
+                log:printError(errorMsg, idToken);
+                return <http:InternalServerError>{
+                    body: {
+                        message: errorMsg
+                    }
+                };
+            }
         }
 
         [jwt:Header, jwt:Payload]|jwt:Error result = jwt:decode(idToken);

@@ -16,7 +16,7 @@
 import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
 import { Search } from "lucide-react";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 import ChartCard from "@component/chart/ChartCard";
 import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
@@ -44,8 +44,11 @@ export default function EmployeeSpendingBreakdownPanel({
   onPeriodChange,
 }: EmployeeSpendingBreakdownPanelProps) {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeSpendingItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  const PAGE_SIZE = 7;
 
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
 
@@ -58,6 +61,11 @@ export default function EmployeeSpendingBreakdownPanel({
       (e) => e.name.toLowerCase().includes(q) || e.email.toLowerCase().includes(q),
     );
   }, [employees, search]);
+
+  useEffect(() => { setPage(0); }, [search]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const handleEmployeeClick = (emp: EmployeeSpendingItem) => {
     setSelectedEmployee(emp);
@@ -110,22 +118,10 @@ export default function EmployeeSpendingBreakdownPanel({
           />
         </Box>
 
-        <Box
-          sx={{
-            maxHeight: 500,
-            overflowY: "auto",
-            "&::-webkit-scrollbar": { width: 6 },
-            "&::-webkit-scrollbar-track": { bgcolor: "action.hover", borderRadius: 3 },
-            "&::-webkit-scrollbar-thumb": {
-              bgcolor: "text.disabled",
-              borderRadius: 3,
-              "&:hover": { bgcolor: "text.secondary" },
-            },
-          }}
-        >
+        <Box>
           {loading ? (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              {[...Array(8)].map((_, i) => (
+              {[...Array(7)].map((_, i) => (
                 <Skeleton key={i} variant="rectangular" height={62} sx={{ borderRadius: 1.5 }} />
               ))}
             </Box>
@@ -140,64 +136,135 @@ export default function EmployeeSpendingBreakdownPanel({
               </Typography>
             </Box>
           ) : (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              {filtered.map((emp) => (
+            <>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                {[...Array(PAGE_SIZE)].map((_, i) => {
+                  const emp = paginated[i];
+                  if (!emp) {
+                    return (
+                      <Box
+                        key={`placeholder-${i}`}
+                        sx={{ height: 62, borderRadius: 1.5, border: "1px solid transparent" }}
+                      />
+                    );
+                  }
+                  return (
+                    <Box
+                      key={emp.email}
+                      onClick={() => handleEmployeeClick(emp)}
+                      sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        px: 2,
+                        py: 1.2,
+                        borderRadius: 1.5,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        cursor: "pointer",
+                        "&:hover": {
+                          bgcolor: "action.hover",
+                          borderColor: "primary.main",
+                        },
+                        transition: "all 0.15s ease",
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography
+                          sx={{
+                            fontSize: 14,
+                            fontWeight: 600,
+                            color: "text.primary",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {emp.name}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: 12,
+                            color: "text.disabled",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {emp.email}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ textAlign: "right", flexShrink: 0, ml: 2 }}>
+                        <Typography sx={{ fontSize: 14, fontWeight: 700, color: "text.primary" }}>
+                          {fmtSym(emp.totalAmount)}
+                        </Typography>
+                        <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
+                          {emp.claimCount.toLocaleString()} claims
+                        </Typography>
+                      </Box>
+                    </Box>
+                  );
+                })}
+              </Box>
+
+              {totalPages > 1 && (
                 <Box
-                  key={emp.email}
-                  onClick={() => handleEmployeeClick(emp)}
                   sx={{
                     display: "flex",
-                    justifyContent: "space-between",
                     alignItems: "center",
-                    px: 2,
-                    py: 1.2,
-                    borderRadius: 1.5,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    cursor: "pointer",
-                    "&:hover": {
-                      bgcolor: "action.hover",
-                      borderColor: "primary.main",
-                    },
-                    transition: "all 0.15s ease",
+                    justifyContent: "space-between",
+                    mt: 1.5,
+                    px: 0.5,
                   }}
                 >
-                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                    <Typography
-                      sx={{
-                        fontSize: 14,
-                        fontWeight: 600,
-                        color: "text.primary",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {emp.name}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        fontSize: 12,
-                        color: "text.disabled",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {emp.email}
-                    </Typography>
+                  <Box
+                    component="button"
+                    disabled={page === 0}
+                    onClick={() => setPage((p) => p - 1)}
+                    sx={{
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      bgcolor: "background.paper",
+                      cursor: page === 0 ? "default" : "pointer",
+                      opacity: page === 0 ? 0.4 : 1,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "text.primary",
+                      "&:hover:not(:disabled)": { bgcolor: "action.hover" },
+                    }}
+                  >
+                    ← Prev
                   </Box>
-                  <Box sx={{ textAlign: "right", flexShrink: 0, ml: 2 }}>
-                    <Typography sx={{ fontSize: 14, fontWeight: 700, color: "text.primary" }}>
-                      {fmtSym(emp.totalAmount)}
-                    </Typography>
-                    <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
-                      {emp.claimCount.toLocaleString()} claims
-                    </Typography>
+                  <Typography sx={{ fontSize: 12, color: "text.disabled" }}>
+                    {page + 1} / {totalPages}
+                  </Typography>
+                  <Box
+                    component="button"
+                    disabled={page >= totalPages - 1}
+                    onClick={() => setPage((p) => p + 1)}
+                    sx={{
+                      px: 1.5,
+                      py: 0.5,
+                      borderRadius: 1,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      bgcolor: "background.paper",
+                      cursor: page >= totalPages - 1 ? "default" : "pointer",
+                      opacity: page >= totalPages - 1 ? 0.4 : 1,
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: "text.primary",
+                      "&:hover:not(:disabled)": { bgcolor: "action.hover" },
+                    }}
+                  >
+                    Next →
                   </Box>
                 </Box>
-              ))}
-            </Box>
+              )}
+            </>
           )}
         </Box>
       </ChartCard>

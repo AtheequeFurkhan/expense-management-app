@@ -106,13 +106,22 @@ export function useEmployeeSpendingList(dateRange: string, businessUnit: string)
       .get<EmployeeSpendingItem[]>("/employee-spending", { params })
       .then((res) => {
         if (!cancelled) {
-          setEmployees(
-            (res.data ?? []).map((e) => ({
-              ...e,
-              totalAmount: Number(e.totalAmount),
-              claimCount: Number(e.claimCount),
-            })),
-          );
+          const mapped = (res.data ?? []).map((e) => ({
+            ...e,
+            totalAmount: Number(e.totalAmount),
+            claimCount: Number(e.claimCount),
+          }));
+          const deduped = new Map<string, EmployeeSpendingItem>();
+          for (const e of mapped) {
+            const existing = deduped.get(e.email);
+            if (existing) {
+              existing.totalAmount += e.totalAmount;
+              existing.claimCount += e.claimCount;
+            } else {
+              deduped.set(e.email, { ...e });
+            }
+          }
+          setEmployees([...deduped.values()]);
         }
       })
       .catch((err) => {

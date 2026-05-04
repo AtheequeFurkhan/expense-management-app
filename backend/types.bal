@@ -17,16 +17,12 @@ import ballerina/http;
 
 # Represents the response structure for retrieving user information.
 public type UserInfoResponse record {|
-    # Id of the employee
-    string employeeId;
     # Email of the employee
     string workEmail;
     # First name of the employee
     string firstName;
     # Last name of the employee
     string lastName;
-    # Job role
-    string jobRole;
     # Thumbnail of the employee
     string? employeeThumbnail;
     # User privileges
@@ -212,6 +208,74 @@ public type EmployeeCategoryTransactionItem record {|
     decimal amount;
     # Human-readable status label.
     string status;
+|};
+
+# Response item for a single lead in the approval frequency list.
+public type LeadFrequencyItemResponse record {|
+    # Display name of the lead.
+    string name;
+    # Lead email.
+    string email;
+    # Business unit (empty string when not applicable).
+    string bu;
+    # Total number of claims approved.
+    int totalApproved;
+    # Average approval frequency in claims per day.
+    decimal avgFrequencyPerDay;
+    # Date of the first approval in the range (YYYY-MM-DD), or null.
+    string? firstApprovedDate;
+    # Date of the most recent approval in the range (YYYY-MM-DD), or null.
+    string? lastApprovedDate;
+|};
+
+# Claim type breakdown entry in a lead's approval detail.
+public type LeadClaimTypeBreakdownItem record {|
+    # Expense type label.
+    string 'type;
+    # Number of claims of this type approved by the lead.
+    int count;
+    # Total reimbursement amount for this type.
+    decimal totalAmount;
+|};
+
+# Individual approved claim in a lead's approval detail.
+public type LeadApprovedClaimItem record {|
+    # Expense claim sequence number or ID.
+    string claimId;
+    # Display name of the employee who submitted the claim.
+    string employeeName;
+    # Main expense category label.
+    string claimType;
+    # Reimbursement amount.
+    decimal amount;
+    # Main expense category, or null.
+    string? category;
+    # Formatted submission date (YYYY-MM-DD), or null.
+    string? submittedDate;
+    # Formatted lead approval date (YYYY-MM-DD), or null.
+    string? approvedDate;
+    # Human-readable approval status.
+    string status;
+|};
+
+# Full approval detail response for a single lead.
+public type LeadApprovalDetailResponse record {|
+    # Display name of the lead.
+    string name;
+    # Lead email.
+    string email;
+    # Total number of claims approved in the range.
+    int totalApproved;
+    # Average approval frequency in claims per day (0 means caller should compute from dates).
+    decimal avgFrequencyPerDay;
+    # Date of the first approval (YYYY-MM-DD), or null.
+    string? firstApprovedDate;
+    # Date of the most recent approval (YYYY-MM-DD), or null.
+    string? lastApprovedDate;
+    # Breakdown of approved claims by expense category.
+    LeadClaimTypeBreakdownItem[] claimTypeBreakdown;
+    # Individual approved claims.
+    LeadApprovedClaimItem[] claims;
 |};
 
 # Standard error payload returned to API clients.

@@ -14,71 +14,18 @@
 // specific language governing permissions and limitations
 // under the License.
 
-# [Configurable] OAuth2 entity application configuration.
-type Oauth2Config record {|
-    # OAuth2 token endpoint
-    string tokenUrl;
-    # OAuth2 client ID
-    string clientId;
-    # OAuth2 client secret
-    string clientSecret;
-|};
-
-# Retry config for the graphql client.
-public type GraphQlRetryConfig record {|
-    # Retry count
-    int count = RETRY_COUNT;
-    # Retry interval
-    decimal interval = RETRY_INTERVAL;
-    # Retry backOff factor
-    float backOffFactor = RETRY_BACKOFF_FACTOR;
-    # Retry max interval
-    decimal maxWaitInterval = RETRY_MAX_INTERVAL;
-|};
-
-// Get employee graphQL service Responses.
-# Employee.
+# Employee basic information returned by the HR entity service.
 public type Employee record {|
-    # Id of the employee
-    string employeeId;
-    # Email of the employee
-    string workEmail;
     # First name of the employee
     string firstName;
     # Last name of the employee
     string lastName;
-    # Job role
-    string jobRole;
-    # Thumbnail of the employee
+    # Thumbnail URL of the employee
     string? employeeThumbnail;
 |};
 
-# Employee data.
-type EmployeeData record {
-    # Employee
-    Employee employee;
-};
-
-# Employee response.
-type EmployeeResponse record {
-    # Employee data
-    EmployeeData data;
-};
-
-# Employee email.
-public type EmployeeEmail record {|
-    # Email of the employee
-    string workEmail;
-|};
-
-# Employees data.
-type EmployeesData record {|
-    # Employees
-    EmployeeEmail[] employees;
-|};
-
-# Employees response.
-type EmployeesResponse record {|
-    # Employees data
-    EmployeesData data;
+# Search filter payload sent to the HR entity service.
+type EmployeeSearchFilter record {|
+    # Work email address to look up
+    string email;
 |};

@@ -235,6 +235,42 @@ public function queryEmployeeCategoryBreakdown(string email, int year, int month
         select row;
 }
 
+# Query the list of leads with their approval counts and date span.
+#
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + businessUnit - Optional business unit filter
+# + return - Lead frequency rows if the query succeeds, otherwise an error
+public function queryLeadFrequencyList(int year, int month, int months,
+        string? businessUnit = ()) returns LeadFrequencyRow[]|error {
+    stream<LeadFrequencyRow, sql:Error?> resultStream =
+        expenseDbClient->query(
+            getLeadFrequencyListQuery(year, month, months, businessUnit),
+            LeadFrequencyRow
+        );
+    return check from LeadFrequencyRow row in resultStream
+        select row;
+}
+
+# Query individual approved claims for a specific lead.
+#
+# + leadEmail - Lead email to filter on
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + return - Lead approval detail rows if the query succeeds, otherwise an error
+public function queryLeadApprovalDetail(string leadEmail, int year, int month, int months)
+        returns LeadApprovalDetailRow[]|error {
+    stream<LeadApprovalDetailRow, sql:Error?> resultStream =
+        expenseDbClient->query(
+            getLeadApprovalDetailQuery(leadEmail, year, month, months),
+            LeadApprovalDetailRow
+        );
+    return check from LeadApprovalDetailRow row in resultStream
+        select row;
+}
+
 # Query individual transactions for an employee within a specific expense category.
 #
 # + email - Employee email to filter on

@@ -259,7 +259,7 @@ isolated function getLeadApprovalFrequencyQuery(int year, int month, int months,
 
     sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
-    query = sql:queryConcat(query, ` AND ec.status = '2'`);
+    query = sql:queryConcat(query, ` AND ec.status IN ('2', '3')`);
 
     if businessUnit is string {
         query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
@@ -284,7 +284,6 @@ isolated function getTopSpendingEmployeesQuery(int year, int month, int months,
 
     sql:ParameterizedQuery baseQuery = `
         SELECT ec.employee_email AS employeeEmail,
-               COALESCE(ec.business_unit, '') AS businessUnit,
                COALESCE(SUM(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS total
         FROM expense_claims ec
         WHERE `;
@@ -299,7 +298,7 @@ isolated function getTopSpendingEmployeesQuery(int year, int month, int months,
     return sql:queryConcat(query,
             ` AND ec.employee_email IS NOT NULL
           AND ec.employee_email <> ''
-          GROUP BY ec.employee_email, ec.business_unit
+          GROUP BY ec.employee_email
           ORDER BY total DESC
           LIMIT ${'limit}`
     );
@@ -317,7 +316,7 @@ isolated function getTopApprovingLeadsQuery(int year, int month, int months,
         int 'limit = 7, string? businessUnit = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
-        SELECT ec.lead_email AS leadEmail,
+        SELECT TRIM(SUBSTRING_INDEX(ec.lead_email, ',', 1)) AS leadEmail,
                COALESCE(ec.business_unit, '') AS businessUnit,
                COUNT(*) AS count
         FROM expense_claims ec
@@ -325,7 +324,7 @@ isolated function getTopApprovingLeadsQuery(int year, int month, int months,
 
     sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
-    query = sql:queryConcat(query, ` AND ec.lead_approved_date IS NOT NULL`);
+    query = sql:queryConcat(query, ` AND ec.lead_approved_date IS NOT NULL AND ec.status IN ('2', '3')`);
 
     if businessUnit is string {
         query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
@@ -334,7 +333,7 @@ isolated function getTopApprovingLeadsQuery(int year, int month, int months,
     return sql:queryConcat(query,
             ` AND ec.lead_email IS NOT NULL
           AND ec.lead_email <> ''
-          GROUP BY ec.lead_email, ec.business_unit
+          GROUP BY TRIM(SUBSTRING_INDEX(ec.lead_email, ',', 1)), ec.business_unit
           ORDER BY count DESC
           LIMIT ${'limit}`
     );
@@ -386,7 +385,6 @@ isolated function getAllSpendingEmployeesQuery(int year, int month, int months,
 
     sql:ParameterizedQuery baseQuery = `
         SELECT ec.employee_email AS employeeEmail,
-               COALESCE(ec.business_unit, '') AS businessUnit,
                COALESCE(SUM(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS total,
                COUNT(*) AS claimCount
         FROM expense_claims ec
@@ -402,7 +400,7 @@ isolated function getAllSpendingEmployeesQuery(int year, int month, int months,
     return sql:queryConcat(query,
             ` AND ec.employee_email IS NOT NULL
           AND ec.employee_email <> ''
-          GROUP BY ec.employee_email, ec.business_unit
+          GROUP BY ec.employee_email
           ORDER BY total DESC`
     );
 }
@@ -442,6 +440,75 @@ isolated function getEmployeeCategoryBreakdownQuery(string email, int year, int 
             ` AND ec.expense_type_id IS NOT NULL
           GROUP BY category
           ORDER BY total DESC`
+    );
+}
+
+# Build the query to list all leads with their approval counts and date range.
+#
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + businessUnit - Optional business unit filter
+# + return - Parameterized SQL query
+isolated function getLeadFrequencyListQuery(int year, int month, int months,
+        string? businessUnit = ()) returns sql:ParameterizedQuery {
+
+    sql:ParameterizedQuery baseQuery = `
+        SELECT TRIM(SUBSTRING_INDEX(ec.lead_email, ',', 1)) AS leadEmail,
+               COUNT(*) AS totalApproved,
+               DATE_FORMAT(MIN(ec.lead_approved_date), '%Y-%m-%d') AS firstApprovedDate,
+               DATE_FORMAT(MAX(ec.lead_approved_date), '%Y-%m-%d') AS lastApprovedDate,
+               GREATEST(1, DATEDIFF(MAX(ec.lead_approved_date), MIN(ec.lead_approved_date))) AS daySpan
+        FROM expense_claims ec
+        WHERE `;
+
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
+
+    if businessUnit is string {
+        query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
+    }
+
+    return sql:queryConcat(query,
+            ` AND ec.lead_email IS NOT NULL
+          AND ec.lead_email <> ''
+          AND ec.lead_approved_date IS NOT NULL
+          AND ec.status IN ('2', '3')
+          GROUP BY TRIM(SUBSTRING_INDEX(ec.lead_email, ',', 1))
+          ORDER BY totalApproved DESC`
+    );
+}
+
+# Build the query for individual approved claims under a specific lead.
+#
+# + leadEmail - Lead email to filter on
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + return - Parameterized SQL query
+isolated function getLeadApprovalDetailQuery(string leadEmail, int year, int month, int months)
+        returns sql:ParameterizedQuery {
+
+    sql:ParameterizedQuery baseQuery = `
+        SELECT COALESCE(ec.report_seq_number, '') AS claimId,
+               COALESCE(ec.employee_email, '') AS employeeEmail,
+               COALESCE(et.expense_type, 'Unknown') AS expenseType,
+               COALESCE(CAST(ec.reimbursement_amount AS DECIMAL(10,2)), 0) AS amount,
+               DATE_FORMAT(ec.txn_date, '%Y-%m-%d') AS submittedDate,
+               DATE_FORMAT(ec.lead_approved_date, '%Y-%m-%d') AS approvedDate,
+               'Lead Approved' AS status
+        FROM expense_claims ec
+        LEFT JOIN expense_type et ON et.id = ec.expense_type_id
+        WHERE `;
+
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
+    query = sql:queryConcat(query, ` AND FIND_IN_SET(${leadEmail}, ec.lead_email) > 0`);
+
+    return sql:queryConcat(query,
+            ` AND ec.status IN ('2', '3')
+          AND ec.lead_approved_date IS NOT NULL
+          ORDER BY ec.lead_approved_date DESC`
     );
 }
 

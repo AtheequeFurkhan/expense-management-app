@@ -103,8 +103,6 @@ public type ClaimStatusRow record {|
 public type TopSpendingEmployeeRow record {|
     # Employee email.
     string employeeEmail;
-    # Business unit associated with the employee's claims.
-    string businessUnit;
     # Total reimbursement amount.
     decimal total;
 |};
@@ -143,8 +141,6 @@ public type RecurringExpenseTypeRow record {|
 public type AllSpendingEmployeeRow record {|
     # Employee email.
     string employeeEmail;
-    # Business unit associated with the employee's claims.
-    string businessUnit;
     # Total reimbursement amount.
     decimal total;
     # Number of claims submitted.
@@ -159,6 +155,38 @@ public type EmployeeCategoryRow record {|
     decimal total;
     # Number of claims in this category.
     int claimCount;
+|};
+
+# Query result for lead approval frequency list (per lead aggregation).
+public type LeadFrequencyRow record {|
+    # Lead email address.
+    string leadEmail;
+    # Total number of claims approved by this lead.
+    int totalApproved;
+    # Date of the first approval (YYYY-MM-DD).
+    string? firstApprovedDate;
+    # Date of the most recent approval (YYYY-MM-DD).
+    string? lastApprovedDate;
+    # Number of days between first and last approval (minimum 1).
+    int daySpan;
+|};
+
+# Query result for individual approved claims under a specific lead.
+public type LeadApprovalDetailRow record {|
+    # Expense claim sequence number.
+    string claimId;
+    # Email of the employee who submitted the claim.
+    string employeeEmail;
+    # Full expense type label.
+    string expenseType;
+    # Reimbursement amount.
+    decimal amount;
+    # Formatted transaction date (YYYY-MM-DD).
+    string? submittedDate;
+    # Formatted lead approval date (YYYY-MM-DD).
+    string? approvedDate;
+    # Human-readable approval status.
+    string status;
 |};
 
 # Query result for individual transactions within an employee's expense category.

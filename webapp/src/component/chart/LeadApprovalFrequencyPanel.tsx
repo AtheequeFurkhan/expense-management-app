@@ -16,7 +16,7 @@
 import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
 import { Search } from "lucide-react";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import ChartCard from "@component/chart/ChartCard";
 import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
@@ -54,39 +54,11 @@ interface LeadApprovalFrequencyPanelProps {
   fallbackLeads?: TopLeadItem[];
 }
 
-function FrequencyBar({ value, max, color }: { value: number; max: number; color: string }) {
-  const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
-  return (
-    <Box
-      sx={{
-        width: 80,
-        height: 4,
-        bgcolor: "action.hover",
-        borderRadius: 2,
-        overflow: "hidden",
-        flexShrink: 0,
-      }}
-    >
-      <Box
-        sx={{
-          height: "100%",
-          width: `${pct}%`,
-          bgcolor: color,
-          borderRadius: 2,
-          transition: "width 0.4s ease",
-        }}
-      />
-    </Box>
-  );
-}
-
 function LeadRow({
   lead,
-  maxFreq,
   onClick,
 }: {
   lead: LeadFrequencyItem;
-  maxFreq: number;
   onClick: () => void;
 }) {
   const freqColor = getFrequencyColor(lead.avgFrequencyPerDay);
@@ -147,10 +119,6 @@ function LeadRow({
       </Box>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, flexShrink: 0 }}>
-        {lead.avgFrequencyPerDay > 0 && (
-          <FrequencyBar value={lead.avgFrequencyPerDay} max={maxFreq} color={freqColor} />
-        )}
-
         <Box
           sx={{
             px: 1,
@@ -173,12 +141,12 @@ function LeadRow({
           </Typography>
         </Box>
 
-        <Box sx={{ textAlign: "right", minWidth: 64 }}>
+        <Box sx={{ textAlign: "right", minWidth: 80 }}>
           <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary" }}>
-            {lead.totalApproved.toLocaleString()}
+            {lead.totalApproved.toLocaleString()} <Typography component="span" sx={{ fontSize: 11, fontWeight: 400, color: "text.disabled" }}>claims</Typography>
           </Typography>
           <Typography sx={{ fontSize: 10, color: "text.disabled" }}>
-            {lastDate ? `Last: ${lastDate}` : "claims"}
+            {lastDate ? `Last: ${lastDate}` : ""}
           </Typography>
         </Box>
       </Box>
@@ -195,8 +163,11 @@ export default function LeadApprovalFrequencyPanel({
   fallbackLeads = [],
 }: LeadApprovalFrequencyPanelProps) {
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
   const [selectedLead, setSelectedLead] = useState<LeadFrequencyItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  const PAGE_SIZE = 7;
 
   const { leads: apiLeads, loading, error } = useLeadFrequencyList(dateRange, businessUnit);
 
@@ -221,10 +192,10 @@ export default function LeadApprovalFrequencyPanel({
     );
   }, [sorted, search]);
 
-  const maxFreq = useMemo(
-    () => Math.max(...sorted.map((l) => l.avgFrequencyPerDay), 0.0001),
-    [sorted],
-  );
+  useEffect(() => { setPage(0); }, [search]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   const handleLeadClick = (lead: LeadFrequencyItem) => {
     setSelectedLead(lead);
@@ -280,22 +251,10 @@ export default function LeadApprovalFrequencyPanel({
           />
         </Box>
 
-        <Box
-          sx={{
-            maxHeight: 500,
-            overflowY: "auto",
-            "&::-webkit-scrollbar": { width: 6 },
-            "&::-webkit-scrollbar-track": { bgcolor: "action.hover", borderRadius: 3 },
-            "&::-webkit-scrollbar-thumb": {
-              bgcolor: "text.disabled",
-              borderRadius: 3,
-              "&:hover": { bgcolor: "text.secondary" },
-            },
-          }}
-        >
+        <Box>
           {loading ? (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              {[...Array(7)].map((_, i) => (
+              {[...Array(PAGE_SIZE)].map((_, i) => (
                 <Skeleton key={i} variant="rectangular" height={58} sx={{ borderRadius: 1.5 }} />
               ))}
             </Box>
@@ -310,16 +269,85 @@ export default function LeadApprovalFrequencyPanel({
               </Typography>
             </Box>
           ) : (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              {filtered.map((lead) => (
-                <LeadRow
-                  key={lead.email}
-                  lead={lead}
-                  maxFreq={maxFreq}
-                  onClick={() => handleLeadClick(lead)}
-                />
-              ))}
-            </Box>
+            <>
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                {[...Array(PAGE_SIZE)].map((_, i) => {
+                  const lead = paginated[i];
+                  if (!lead) {
+                    return (
+                      <Box
+                        key={`placeholder-${i}`}
+                        sx={{ height: 58, borderRadius: 1.5, border: "1px solid transparent" }}
+                      />
+                    );
+                  }
+                  return (
+                    <LeadRow
+                      key={lead.email}
+                      lead={lead}
+                      onClick={() => handleLeadClick(lead)}
+                    />
+                  );
+                })}
+              </Box>
+
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mt: 1.5,
+                }}
+              >
+                <Box
+                  component="button"
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => p - 1)}
+                  sx={{
+                    px: 2,
+                    py: 0.6,
+                    borderRadius: "999px",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                    cursor: page === 0 ? "default" : "pointer",
+                    opacity: page === 0 ? 0.35 : 1,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "text.primary",
+                    transition: "background 0.12s",
+                    "&:hover:not(:disabled)": { bgcolor: "action.hover" },
+                  }}
+                >
+                  ← Prev
+                </Box>
+                <Typography sx={{ fontSize: 13, color: "text.disabled", fontWeight: 500 }}>
+                  {page + 1} / {totalPages}
+                </Typography>
+                <Box
+                  component="button"
+                  disabled={page >= totalPages - 1}
+                  onClick={() => setPage((p) => p + 1)}
+                  sx={{
+                    px: 2,
+                    py: 0.6,
+                    borderRadius: "999px",
+                    border: "1px solid",
+                    borderColor: "divider",
+                    bgcolor: "background.paper",
+                    cursor: page >= totalPages - 1 ? "default" : "pointer",
+                    opacity: page >= totalPages - 1 ? 0.35 : 1,
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "text.primary",
+                    transition: "background 0.12s",
+                    "&:hover:not(:disabled)": { bgcolor: "action.hover" },
+                  }}
+                >
+                  Next →
+                </Box>
+              </Box>
+            </>
           )}
         </Box>
       </ChartCard>

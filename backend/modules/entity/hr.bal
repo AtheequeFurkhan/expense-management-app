@@ -21,108 +21,44 @@ import ballerina/http;
 # + workEmail - Work email address of the employee to look up
 # + return - Employee details if the HR entity lookup succeeds, otherwise an error
 public isolated function fetchEmployeesBasicInfo(string workEmail) returns Employee|error {
-    string document = string `
-        query employeeQuery ($workEmail: String!) {
-            employee(email: $workEmail) {
-                employeeId,
-                workEmail,
-                firstName,
-                lastName,
-                jobRole,
-                employeeThumbnail
-            }
-        }
-    `;
-
-    json requestPayload = {
-        query: document,
-        variables: {
-            workEmail: workEmail
-        }
-    };
+    json requestPayload = {"email": workEmail};
 
     http:Request request = new;
     request.setJsonPayload(requestPayload);
 
-    http:Response response = check hrClient->post("", request);
-    int statusCode = response.statusCode;
-    if statusCode < 200 || statusCode >= 300 {
-        string responseBody = "";
-        string|error textPayload = response.getTextPayload();
-        if textPayload is string {
-            responseBody = textPayload;
-        }
-        return error(string `HR service request failed with status ${statusCode}: ${responseBody}`);
+    http:Response response = check hrClient->post("/employee-basic-search", request);
+
+    if response.statusCode == 404 {
+        return error(string `Employee not found for email: ${workEmail}`);
+    }
+    if response.statusCode < 200 || response.statusCode >= 300 {
+        string responseBody = check response.getTextPayload();
+        return error(string `HR service request failed with status ${response.statusCode}: ${responseBody}`);
     }
 
     json payload = check response.getJsonPayload();
-
-    if payload is map<json> {
-        json? errorsNode = payload["errors"];
-        if errorsNode is json[] && errorsNode.length() > 0 {
-            return error(errorsNode.toJsonString());
-        }
+    Employee|error employee = payload.cloneWithType();
+    if employee is error {
+        return employee;
     }
-
-    EmployeeResponse|error parsed = payload.cloneWithType(EmployeeResponse);
-    if parsed is error {
-        return parsed;
-    }
-
-    return parsed.data.employee;
+    return employee;
 }
 
-# Fetch work email addresses of active employees in Sri Lanka from the HR entity service.
+# Fetch a map of lowercase work email → full name for the given list of emails.
 #
-# + return - Normalized employee work email addresses if the HR entity lookup succeeds, otherwise an error
-public isolated function fetchActiveSriLankaEmployeeEmails() returns string[]|error {
-    string document = string `
-        query activeEmployees {
-            employees(location: "Sri Lanka", status: "Active") {
-                workEmail
-            }
+# + emails - Work email addresses to resolve
+# + return - Map of email to "firstName lastName" if successful, otherwise an error
+public isolated function fetchEmployeeNameMap(string[] emails) returns map<string>|error {
+    map<string> nameMap = {};
+    foreach string email in emails {
+        string lower = email.trim().toLowerAscii();
+        if lower == "" || nameMap.hasKey(lower) {
+            continue;
         }
-    `;
-
-    json requestPayload = {
-        query: document
-    };
-
-    http:Request request = new;
-    request.setJsonPayload(requestPayload);
-
-    http:Response response = check hrClient->post("", request);
-    int statusCode = response.statusCode;
-    if statusCode < 200 || statusCode >= 300 {
-        string responseBody = "";
-        string|error textPayload = response.getTextPayload();
-        if textPayload is string {
-            responseBody = textPayload;
-        }
-        return error(string `HR service request failed with status ${statusCode}: ${responseBody}`);
-    }
-
-    json payload = check response.getJsonPayload();
-
-    if payload is map<json> {
-        json? errorsNode = payload["errors"];
-        if errorsNode is json[] && errorsNode.length() > 0 {
-            return error(errorsNode.toJsonString());
+        Employee|error emp = fetchEmployeesBasicInfo(email);
+        if emp is Employee {
+            nameMap[lower] = emp.firstName + " " + emp.lastName;
         }
     }
-
-    EmployeesResponse|error parsed = payload.cloneWithType(EmployeesResponse);
-    if parsed is error {
-        return parsed;
-    }
-
-    string[] employeeEmails = [];
-    foreach EmployeeEmail employee in parsed.data.employees {
-        string email = employee.workEmail.trim();
-        if email != "" {
-            employeeEmails.push(email.toLowerAscii());
-        }
-    }
-
-    return employeeEmails;
+    return nameMap;
 }

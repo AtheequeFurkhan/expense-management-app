@@ -56,12 +56,10 @@ export interface UserState {
 }
 
 export interface UserInfoInterface {
-  employeeId: string;
   firstName: string;
   lastName: string;
   workEmail: string;
   employeeThumbnail: string | null;
-  jobRole: string;
   avatar?: string;
   privileges: number[];
 }

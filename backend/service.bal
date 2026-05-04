@@ -112,7 +112,13 @@ service http:InterceptableService / on new http:Listener(9090) {
             privileges.push(authorization:FINANCE_ADMIN_PRIVILEGE);
         }
 
-        UserInfoResponse userInfoResponse = {...loggedInUser, privileges};
+        UserInfoResponse userInfoResponse = {
+            workEmail: userInfo.email,
+            firstName: loggedInUser.firstName,
+            lastName: loggedInUser.lastName,
+            employeeThumbnail: loggedInUser.employeeThumbnail,
+            privileges
+        };
 
         error? cacheError = cache.put(userInfo.email, userInfoResponse);
         if cacheError is error {
@@ -312,9 +318,16 @@ service http:InterceptableService / on new http:Listener(9090) {
             return <HttpInternalServerError>{body: {message: customError}};
         }
 
+        string[] employeeEmails = from database:AllSpendingEmployeeRow row in rows select row.employeeEmail;
+        map<string> nameMap = {};
+        map<string>|error hrNames = entity:fetchEmployeeNameMap(employeeEmails);
+        if hrNames is map<string> {
+            nameMap = hrNames;
+        }
+
         return from database:AllSpendingEmployeeRow row in rows
             select {
-                name: deriveDisplayName(row.employeeEmail),
+                name: nameMap[row.employeeEmail.toLowerAscii()] ?: deriveDisplayName(row.employeeEmail),
                 email: row.employeeEmail,
                 totalAmount: row.total,
                 claimCount: row.claimCount
@@ -379,8 +392,14 @@ service http:InterceptableService / on new http:Listener(9090) {
                 percentage: grandTotal > 0.0d ? (row.total / grandTotal) * 100.0d : 0.0d
             };
 
+        string empName = deriveDisplayName(email);
+        entity:Employee|error empEmployee = entity:fetchEmployeesBasicInfo(email);
+        if empEmployee is entity:Employee {
+            empName = empEmployee.firstName + " " + empEmployee.lastName;
+        }
+
         return {
-            name: deriveDisplayName(email),
+            name: empName,
             email: email,
             totalAmount: grandTotal,
             claimCount: totalClaims,
@@ -439,6 +458,189 @@ service http:InterceptableService / on new http:Listener(9090) {
                 amount: row.amount,
                 status: row.status
             };
+    }
+
+    # Get the lead approval frequency list for the requested reporting period.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + year - Optional reporting year (defaults to current year)
+    # + month - Optional reporting month (defaults to current month)
+    # + months - Number of months included in the reporting window
+    # + businessUnit - Optional business unit filter
+    # + return - Lead frequency list if successful, otherwise an HTTP error response
+    resource function get lead\-approval\-frequency(http:RequestContext ctx, int? year = (), int? month = (),
+            int months = 1, string? businessUnit = ())
+        returns LeadFrequencyItemResponse[]|http:BadRequest|HttpInternalServerError {
+
+        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
+        if userInfo is error {
+            return <http:BadRequest>{body: {message: "User information header not found!"}};
+        }
+
+        time:Utc utcNow = time:utcNow();
+        time:Civil|error civilTime = time:utcToCivil(utcNow);
+        if civilTime is error {
+            string customError = "Failed to resolve the current date for lead approval frequency defaults.";
+            log:printError(customError, civilTime);
+            return <HttpInternalServerError>{body: {message: customError}};
+        }
+
+        int effectiveYear = year ?: civilTime.year;
+        int effectiveMonth = month ?: civilTime.month;
+
+        string? effectiveBusinessUnit = businessUnit;
+        if effectiveBusinessUnit is string &&
+                (effectiveBusinessUnit.trim().length() == 0 ||
+                effectiveBusinessUnit == "All Business Units") {
+            effectiveBusinessUnit = ();
+        }
+
+        database:LeadFrequencyRow[]|error rows = database:queryLeadFrequencyList(
+                effectiveYear, effectiveMonth, months, effectiveBusinessUnit
+        );
+        if rows is error {
+            string customError = "Failed to fetch lead approval frequency list.";
+            log:printError(customError, rows);
+            return <HttpInternalServerError>{body: {message: customError}};
+        }
+
+        string[] leadEmails = from database:LeadFrequencyRow row in rows select row.leadEmail;
+        map<string> nameMap = {};
+        map<string>|error hrNames = entity:fetchEmployeeNameMap(leadEmails);
+        if hrNames is map<string> {
+            nameMap = hrNames;
+        }
+
+        LeadFrequencyItemResponse[] result = [];
+        foreach database:LeadFrequencyRow row in rows {
+            string lowerEmail = row.leadEmail.toLowerAscii();
+            string leadName = nameMap[lowerEmail] ?: deriveDisplayName(row.leadEmail);
+            decimal avgFreq = row.daySpan > 0 ? <decimal>row.totalApproved / <decimal>row.daySpan : 0.0d;
+            result.push({
+                name: leadName,
+                email: row.leadEmail,
+                bu: "",
+                totalApproved: row.totalApproved,
+                avgFrequencyPerDay: avgFreq,
+                firstApprovedDate: row.firstApprovedDate,
+                lastApprovedDate: row.lastApprovedDate
+            });
+        }
+        return result;
+    }
+
+    # Get the approval detail for a specific lead.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + email - Lead email address
+    # + year - Optional reporting year (defaults to current year)
+    # + month - Optional reporting month (defaults to current month)
+    # + months - Number of months included in the reporting window
+    # + return - Lead approval detail if successful, otherwise an HTTP error response
+    resource function get lead\-approval\-detail(http:RequestContext ctx, string email,
+            int? year = (), int? month = (), int months = 1)
+        returns LeadApprovalDetailResponse|http:BadRequest|HttpInternalServerError {
+
+        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
+        if userInfo is error {
+            return <http:BadRequest>{body: {message: "User information header not found!"}};
+        }
+
+        if email.trim().length() == 0 {
+            return <http:BadRequest>{body: {message: "Lead email is required."}};
+        }
+
+        time:Utc utcNow = time:utcNow();
+        time:Civil|error civilTime = time:utcToCivil(utcNow);
+        if civilTime is error {
+            string customError = "Failed to resolve the current date.";
+            log:printError(customError, civilTime);
+            return <HttpInternalServerError>{body: {message: customError}};
+        }
+
+        int effectiveYear = year ?: civilTime.year;
+        int effectiveMonth = month ?: civilTime.month;
+
+        database:LeadApprovalDetailRow[]|error rows = database:queryLeadApprovalDetail(
+                email, effectiveYear, effectiveMonth, months
+        );
+        if rows is error {
+            string customError = "Failed to fetch lead approval detail.";
+            log:printError(customError, rows);
+            return <HttpInternalServerError>{body: {message: customError}};
+        }
+
+        string[] allEmails = splitEmails(email);
+        foreach database:LeadApprovalDetailRow detailRow in rows {
+            foreach string e in splitEmails(detailRow.employeeEmail) {
+                allEmails.push(e);
+            }
+        }
+        map<string> nameMap = {};
+        map<string>|error hrNames = entity:fetchEmployeeNameMap(allEmails);
+        if hrNames is map<string> {
+            nameMap = hrNames;
+        }
+
+        string lowerLeadEmail = email.toLowerAscii();
+        string leadName = nameMap[lowerLeadEmail] ?: deriveDisplayName(email);
+
+        map<LeadClaimTypeBreakdownItem> breakdownMap = {};
+        string firstDate = "";
+        string lastDate = "";
+
+        foreach database:LeadApprovalDetailRow row in rows {
+            string mainCat = getMainCategory(row.expenseType);
+            LeadClaimTypeBreakdownItem? existing = breakdownMap[mainCat];
+            if existing is LeadClaimTypeBreakdownItem {
+                breakdownMap[mainCat] = {
+                    'type: existing.'type,
+                    count: existing.count + 1,
+                    totalAmount: existing.totalAmount + row.amount
+                };
+            } else {
+                breakdownMap[mainCat] = {'type: mainCat, count: 1, totalAmount: row.amount};
+            }
+
+            string rowApprovedDate = row.approvedDate ?: "";
+            if rowApprovedDate != "" {
+                if firstDate == "" || rowApprovedDate < firstDate {
+                    firstDate = rowApprovedDate;
+                }
+                if lastDate == "" || rowApprovedDate > lastDate {
+                    lastDate = rowApprovedDate;
+                }
+            }
+        }
+
+        LeadClaimTypeBreakdownItem[] claimTypeBreakdown = breakdownMap.toArray();
+
+        LeadApprovedClaimItem[] claims = [];
+        foreach database:LeadApprovalDetailRow row in rows {
+            string mainCat = getMainCategory(row.expenseType);
+            string lowerEmpEmail = row.employeeEmail.toLowerAscii();
+            claims.push({
+                claimId: row.claimId,
+                employeeName: nameMap[lowerEmpEmail] ?: deriveDisplayName(row.employeeEmail),
+                claimType: mainCat,
+                amount: row.amount,
+                category: mainCat,
+                submittedDate: row.submittedDate,
+                approvedDate: row.approvedDate,
+                status: row.status
+            });
+        }
+
+        return {
+            name: leadName,
+            email: email,
+            totalApproved: rows.length(),
+            avgFrequencyPerDay: 0.0d,
+            firstApprovedDate: firstDate == "" ? () : firstDate,
+            lastApprovedDate: lastDate == "" ? () : lastDate,
+            claimTypeBreakdown: claimTypeBreakdown,
+            claims: claims
+        };
     }
 
     # Get the health status of the service and its database dependency.

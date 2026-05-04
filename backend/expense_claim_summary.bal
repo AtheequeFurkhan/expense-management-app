@@ -15,61 +15,6 @@
 // under the License.
 import expense_management.database;
 
-# Derive a human-readable display name from an email address.
-#
-# + email - Email address to derive a name from
-# + return - Capitalized name derived from the email prefix
-isolated function deriveDisplayName(string email) returns string {
-    string prefix = email;
-    int? atIndex = email.indexOf("@");
-    if atIndex is int {
-        prefix = email.substring(0, atIndex);
-    }
-
-    // Split by common separators (dot, underscore, dash)
-    string[] parts = [];
-    string current = "";
-    foreach string:Char ch in prefix {
-        if ch == "." || ch == "_" || ch == "-" {
-            if current.length() > 0 {
-                parts.push(current);
-            }
-            current = "";
-        } else {
-            current = current + ch;
-        }
-    }
-    if current.length() > 0 {
-        parts.push(current);
-    }
-
-    // Capitalize each part and join with space
-    string result = "";
-    foreach int i in 0 ..< parts.length() {
-        if i > 0 {
-            result = result + " ";
-        }
-        result = result + capitalizeWord(parts[i]);
-    }
-
-    return result;
-}
-
-# Capitalize the first letter of a word.
-#
-# + word - Word to capitalize
-# + return - Capitalized word
-isolated function capitalizeWord(string word) returns string {
-    if word.length() == 0 {
-        return word;
-    }
-    string first = word.substring(0, 1).toUpperAscii();
-    if word.length() == 1 {
-        return first;
-    }
-    return first + word.substring(1);
-}
-
 # Calculate the trend percentage between a current and previous value.
 #
 # + current - Current period value
@@ -83,6 +28,8 @@ isolated function calculateTrend(decimal current, decimal previous) returns deci
     // Round to 1 decimal
     return <decimal>(<int>(change * 10.0d)) / 10.0d;
 }
+
+
 
 # Build the expense claims summary used by the dashboard.
 #
@@ -154,7 +101,7 @@ public function getExpenseClaimSummary(int year, int month, int months,
         select {
             name: deriveDisplayName(row.employeeEmail),
             email: row.employeeEmail,
-            bu: row.businessUnit,
+            bu: "",
             amount: row.total
         };
 
