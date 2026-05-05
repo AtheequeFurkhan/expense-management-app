@@ -47,13 +47,11 @@ isolated function mapExpenseCategory(string expenseType) returns string {
 
     if lower.startsWith("cos-") || lower.startsWith("clo-") ||
             lower.startsWith("rnd-aws") || lower.startsWith("rnd-gcp") ||
-            lower.startsWith("rnd-aiven") ||
-            lower.startsWith("ms ea -") || lower.startsWith("ms premier support") ||
+            lower.startsWith("rnd-aiven") || lower.startsWith("ms ea -") ||
+            lower.startsWith("ms premier support") ||
             lower.startsWith("ballerina-central google cloud") ||
-            lower.startsWith("annual support renewal") {
-        return "Cloud Infrastructure";
-    }
-    if lower == "aiven" || lower == "cloud hosting" || lower == "identity cloud hosting" ||
+            lower.startsWith("annual support renewal") ||
+            lower == "aiven" || lower == "cloud hosting" || lower == "identity cloud hosting" ||
             lower == "dr site" || lower == "hosting" || lower == "wallarm node" ||
             lower == "cdn for wso2" || lower == "admin+aws+iam@wso2.com" ||
             lower == "secondary internet link for lk" {
@@ -67,35 +65,27 @@ isolated function mapExpenseCategory(string expenseType) returns string {
             lower.startsWith("mkt-bal") || lower.startsWith("operations -") ||
             lower.startsWith("promotions-") || lower.startsWith("public relations") ||
             lower.startsWith("rockstar promotion") || lower.startsWith("shipping") ||
-            lower.startsWith("tools-") {
-        return "Marketing & Events";
-    }
-    if lower == "channel marketing" || lower == "digi ops other" ||
+            lower.startsWith("tools-") ||
+            lower == "channel marketing" || lower == "digi ops other" ||
             lower == "giveaways control a/c" || lower == "wso2 con - other expenses" {
         return "Marketing & Events";
     }
 
-    // ── Phone & Communication ─────────────────────────────────────────
     if lower.startsWith("call/internet charges") || lower.startsWith("phone/internet") ||
             lower.startsWith("alerts systems") {
         return "Phone & Communication";
     }
 
-    // ── Office & Facilities ───────────────────────────────────────────
     if lower.startsWith("no allocation") || lower.startsWith("fixed assets-") ||
-            lower.startsWith("pre payments") {
-        return "Office & Facilities";
-    }
-    if lower == "electricity" || lower == "maintenance" || lower == "office supplies" ||
+            lower.startsWith("pre payments") ||
+            lower == "electricity" || lower == "maintenance" || lower == "office supplies" ||
             lower == "postage and courier charges" || lower == "printing & stationery" ||
             lower == "rent" || lower == "telephone & fax" || lower == "water" {
         return "Office & Facilities";
     }
 
-    if lower.startsWith("professional fees") {
-        return "Professional Services";
-    }
-    if lower == "entertainment" || lower == "membership fees" {
+    if lower.startsWith("professional fees") ||
+            lower == "entertainment" || lower == "membership fees" {
         return "Professional Services";
     }
 
@@ -104,20 +94,13 @@ isolated function mapExpenseCategory(string expenseType) returns string {
         return "Finance & Admin";
     }
 
-    if lower.startsWith("meal allowances") || lower.startsWith("staff medical") {
-        return "HR & People";
-    }
-    if lower == "recruitment fees" || lower == "sports & leisure activities" ||
+    if lower.startsWith("meal allowances") || lower.startsWith("staff medical") ||
+            lower == "recruitment fees" || lower == "sports & leisure activities" ||
             lower == "staff welfare" || lower == "training & learning expenses" ||
             lower == "wfh internet allowance/ mobile reimbursement" {
         return "HR & People";
     }
 
-    if lower.startsWith("rnd-") || lower.startsWith("sa-") ||
-            lower.startsWith("docker") || lower.startsWith("software support expenses") ||
-            lower == "fixed assets : software" || lower == "iam ecosystem integrations" {
-        return "Software & Licenses";
-    }
     string[] softwareExact = [
         "adobe creative cloud", "algolia", "antivirus", "asana", "bitwarden",
         "burp suite", "carta", "concur", "contract management tool",
@@ -135,10 +118,11 @@ isolated function mapExpenseCategory(string expenseType) returns string {
         "virtual events platforms (hopin, sessionize, livestorm)", "vyond - goanimate",
         "winzip + ideals", "wistia", "zerobounce", "zoom"
     ];
-    foreach string s in softwareExact {
-        if lower == s {
-            return "Software & Licenses";
-        }
+    if lower.startsWith("rnd-") || lower.startsWith("sa-") ||
+            lower.startsWith("docker") || lower.startsWith("software support expenses") ||
+            lower == "fixed assets : software" || lower == "iam ecosystem integrations" ||
+            softwareExact.indexOf(lower) != () {
+        return "Software & Licenses";
     }
 
     return et;
@@ -232,14 +216,8 @@ public function getExpenseClaimSummary(int year, int month, int months,
             count: row.count
         };
 
-    ExpenseTypeItem[] recurringExpenseTypes = [];
-    foreach database:RecurringExpenseTypeRow row in recurringRows {
-        recurringExpenseTypes.push({
-            name: row.expenseType,
-            category: mapExpenseCategory(row.expenseType),
-            amount: row.total
-        });
-    }
+    ExpenseTypeItem[] recurringExpenseTypes = from database:RecurringExpenseTypeRow row in recurringRows
+        select {name: row.expenseType, category: mapExpenseCategory(row.expenseType), amount: row.total};
 
     return {
         totalClaimAmount: totalClaimAmount,
