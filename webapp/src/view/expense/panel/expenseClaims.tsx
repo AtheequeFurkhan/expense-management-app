@@ -34,6 +34,7 @@ import {
   PAGE_SIZE_RECURRING,
   PERIOD_TO_DATE_RANGE,
 } from "@config/constant";
+import PaginationBar from "@component/common/PaginationBar";
 import { resetExpenseClaims, useExpenseClaims } from "@slices/expenseSlice/useExpenseClaims";
 import { useAppDispatch } from "@slices/store";
 import {
@@ -415,71 +416,11 @@ export default function ExpenseClaims() {
                 labelWidth={220}
               />
 
-              {/* Pagination bar */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  mt: 2,
-                  pt: 1.5,
-                  borderTop: "1px solid",
-                  borderColor: "divider",
-                }}
-              >
-                <Box
-                  onClick={() => setRecurringPage((p) => Math.max(0, p - 1))}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                    px: 1.5,
-                    py: 0.6,
-                    borderRadius: 1,
-                    border: "1px solid",
-                    borderColor: recurringPage === 0 ? "transparent" : "divider",
-                    color: recurringPage === 0 ? "text.disabled" : "text.secondary",
-                    cursor: recurringPage === 0 ? "default" : "pointer",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    userSelect: "none",
-                    "&:hover": recurringPage > 0 ? { bgcolor: "action.hover" } : {},
-                    transition: "all 0.15s",
-                  }}
-                >
-                  ← Prev
-                </Box>
-
-                <Box sx={{ fontSize: 13, color: "text.secondary" }}>
-                  <Box component="span" sx={{ fontWeight: 700, color: "text.primary" }}>
-                    {recurringPage + 1}
-                  </Box>
-                  {" / "}{recurringTotalPages}
-                </Box>
-
-                <Box
-                  onClick={() => setRecurringPage((p) => Math.min(recurringTotalPages - 1, p + 1))}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                    px: 1.5,
-                    py: 0.6,
-                    borderRadius: 1,
-                    border: "1px solid",
-                    borderColor: recurringPage === recurringTotalPages - 1 ? "transparent" : "divider",
-                    color: recurringPage === recurringTotalPages - 1 ? "text.disabled" : "text.secondary",
-                    cursor: recurringPage === recurringTotalPages - 1 ? "default" : "pointer",
-                    fontSize: 13,
-                    fontWeight: 600,
-                    userSelect: "none",
-                    "&:hover": recurringPage < recurringTotalPages - 1 ? { bgcolor: "action.hover" } : {},
-                    transition: "all 0.15s",
-                  }}
-                >
-                  Next →
-                </Box>
-              </Box>
+              <PaginationBar
+                page={recurringPage}
+                totalPages={recurringTotalPages}
+                onPageChange={setRecurringPage}
+              />
             </Box>
           ) : (
             <DoughnutChart

@@ -25,9 +25,11 @@ import {
   ACTIVE_CLAIM_STATUS_LABEL_MAP,
   ACTIVE_CLAIM_STATUS_ORDER,
 } from "@config/constant";
+import { resolveDateRangeParams } from "@slices/expenseSlice/useEmployeeSpending";
 import {
   type ActiveClaimStatItem,
   type BuExpenseItem,
+  
   type ExpenseFilters,
   type ExpenseTypeItem,
   INITIAL_FILTERS,
@@ -106,44 +108,6 @@ interface BackendExpenseClaimsData {
   trendApproved?: number;
   trendAvgAmount?: number;
 }
-
-const resolveDateRangeParams = (
-  dateRange: string,
-): { year: string; month: string; months: string } => {
-  const now = new Date();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1;
-
-  switch (dateRange) {
-    case "All Time":
-      return { year: String(currentYear), month: String(currentMonth), months: "0" };
-    case "This Month":
-      return { year: String(currentYear), month: String(currentMonth), months: "1" };
-    case "Last Month": {
-      const m = currentMonth === 1 ? 12 : currentMonth - 1;
-      const y = currentMonth === 1 ? currentYear - 1 : currentYear;
-      return { year: String(y), month: String(m), months: "1" };
-    }
-    case "Last 3 Months":
-      return { year: String(currentYear), month: String(currentMonth), months: "3" };
-    case "Last 6 Months":
-      return { year: String(currentYear), month: String(currentMonth), months: "6" };
-    case "Year to Date":
-      return {
-        year: String(currentYear),
-        month: String(currentMonth),
-        months: String(currentMonth),
-      };
-    case "Last Year":
-      return { year: String(currentYear - 1), month: "12", months: "12" };
-    default:
-      return {
-        year: String(currentYear),
-        month: String(currentMonth),
-        months: "0",
-      };
-  }
-};
 
 const normalizeExpenseClaimsData = (
   data?: Partial<BackendExpenseClaimsData> | null,

@@ -33,6 +33,36 @@ final cache:Cache cache = new ({
     cleanupInterval: CACHE_CLEANUP_INTERVAL
 });
 
+isolated function extractUserInfo(http:RequestContext ctx) returns authorization:CustomJwtPayload|http:BadRequest {
+    authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
+    if userInfo is error {
+        return <http:BadRequest>{body: {message: "User information header not found!"}};
+    }
+    return userInfo;
+}
+
+isolated function resolveEffectiveDate(int? year, int? month) returns [int, int]|HttpInternalServerError {
+    time:Civil|error civilTime = time:utcToCivil(time:utcNow());
+    if civilTime is error {
+        log:printError("Failed to resolve current date.", civilTime);
+        return <HttpInternalServerError>{body: {message: "Failed to resolve the current date."}};
+    }
+    return [year ?: civilTime.year, month ?: civilTime.month];
+}
+
+isolated function normalizeBusinessUnit(string? businessUnit) returns string? {
+    if businessUnit is string &&
+            (businessUnit.trim().length() == 0 || businessUnit == "All Business Units") {
+        return ();
+    }
+    return businessUnit;
+}
+
+isolated function fetchNameMap(string[] emails) returns map<string> {
+    map<string>|error hrNames = entity:fetchEmployeeNameMap(emails);
+    return hrNames is map<string> ? hrNames : {};
+}
+
 service class ErrorInterceptor {
     *http:ResponseErrorInterceptor;
 
@@ -137,45 +167,25 @@ service http:InterceptableService / on new http:Listener(9090) {
     resource function get opd\-claims(http:RequestContext ctx, int? year = (), int? month = (), int months = 1)
         returns OpdClaimSummaryResponse|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
-        if userInfo is error {
-            return <http:BadRequest>{
-                body: {
-                    message: "User information header not found!"
-                }
-            };
+        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
         }
 
         if year is int && year <= 0 {
-            return <http:BadRequest>{
-                body: {
-                    message: "Invalid year. Expected a positive value."
-                }
-            };
+            return <http:BadRequest>{body: {message: "Invalid year. Expected a positive value."}};
         }
 
         if month is int && (month < 1 || month > 12) {
-            return <http:BadRequest>{
-                body: {
-                    message: "Invalid month. Expected a value between 1 and 12."
-                }
-            };
+            return <http:BadRequest>{body: {message: "Invalid month. Expected a value between 1 and 12."}};
         }
 
-        time:Utc utcNow = time:utcNow();
-        time:Civil|error civilTime = time:utcToCivil(utcNow);
-        if civilTime is error {
-            string customError = "Failed to resolve the current date for OPD claim summary defaults.";
-            log:printError(customError, civilTime);
-            return <HttpInternalServerError>{
-                body: {
-                    message: customError
-                }
-            };
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
         }
-
-        int effectiveYear = year ?: civilTime.year;
-        int effectiveMonth = month ?: civilTime.month;
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
 
         OpdClaimSummaryResponse|error summary = getOpdClaimSummary(
                 effectiveYear,
@@ -207,53 +217,27 @@ service http:InterceptableService / on new http:Listener(9090) {
             int months = 1, string? businessUnit = ())
         returns ExpenseClaimSummaryResponse|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
-        if userInfo is error {
-            return <http:BadRequest>{
-                body: {
-                    message: "User information header not found!"
-                }
-            };
+        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
         }
 
         if year is int && year <= 0 {
-            return <http:BadRequest>{
-                body: {
-                    message: "Invalid year. Expected a positive value."
-                }
-            };
+            return <http:BadRequest>{body: {message: "Invalid year. Expected a positive value."}};
         }
 
         if month is int && (month < 1 || month > 12) {
-            return <http:BadRequest>{
-                body: {
-                    message: "Invalid month. Expected a value between 1 and 12."
-                }
-            };
+            return <http:BadRequest>{body: {message: "Invalid month. Expected a value between 1 and 12."}};
         }
 
-        time:Utc utcNow = time:utcNow();
-        time:Civil|error civilTime = time:utcToCivil(utcNow);
-        if civilTime is error {
-            string customError = "Failed to resolve the current date for expense claim summary defaults.";
-            log:printError(customError, civilTime);
-            return <HttpInternalServerError>{
-                body: {
-                    message: customError
-                }
-            };
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
         }
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
 
-        int effectiveYear = year ?: civilTime.year;
-        int effectiveMonth = month ?: civilTime.month;
-
-        // Normalize businessUnit: treat empty string or "All Business Units" as no filter
-        string? effectiveBusinessUnit = businessUnit;
-        if effectiveBusinessUnit is string &&
-                (effectiveBusinessUnit.trim().length() == 0 ||
-                effectiveBusinessUnit == "All Business Units") {
-            effectiveBusinessUnit = ();
-        }
+        string? effectiveBusinessUnit = normalizeBusinessUnit(businessUnit);
 
         ExpenseClaimSummaryResponse|error summary = getExpenseClaimSummary(
                 effectiveYear,
@@ -286,28 +270,19 @@ service http:InterceptableService / on new http:Listener(9090) {
             int months = 1, string? businessUnit = ())
         returns EmployeeSpendingItem[]|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
-        if userInfo is error {
-            return <http:BadRequest>{body: {message: "User information header not found!"}};
+        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
         }
 
-        time:Utc utcNow = time:utcNow();
-        time:Civil|error civilTime = time:utcToCivil(utcNow);
-        if civilTime is error {
-            string customError = "Failed to resolve the current date for employee spending defaults.";
-            log:printError(customError, civilTime);
-            return <HttpInternalServerError>{body: {message: customError}};
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
         }
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
 
-        int effectiveYear = year ?: civilTime.year;
-        int effectiveMonth = month ?: civilTime.month;
-
-        string? effectiveBusinessUnit = businessUnit;
-        if effectiveBusinessUnit is string &&
-                (effectiveBusinessUnit.trim().length() == 0 ||
-                effectiveBusinessUnit == "All Business Units") {
-            effectiveBusinessUnit = ();
-        }
+        string? effectiveBusinessUnit = normalizeBusinessUnit(businessUnit);
 
         database:AllSpendingEmployeeRow[]|error rows = database:queryAllSpendingEmployees(
                 effectiveYear, effectiveMonth, months, effectiveBusinessUnit
@@ -319,11 +294,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         }
 
         string[] employeeEmails = from database:AllSpendingEmployeeRow row in rows select row.employeeEmail;
-        map<string> nameMap = {};
-        map<string>|error hrNames = entity:fetchEmployeeNameMap(employeeEmails);
-        if hrNames is map<string> {
-            nameMap = hrNames;
-        }
+        map<string> nameMap = fetchNameMap(employeeEmails);
 
         return from database:AllSpendingEmployeeRow row in rows
             select {
@@ -347,25 +318,21 @@ service http:InterceptableService / on new http:Listener(9090) {
             int? year = (), int? month = (), int months = 1, string? statusFilter = ())
         returns EmployeeSpendingBreakdownResponse|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
-        if userInfo is error {
-            return <http:BadRequest>{body: {message: "User information header not found!"}};
+        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
         }
 
         if email.trim().length() == 0 {
             return <http:BadRequest>{body: {message: "Employee email is required."}};
         }
 
-        time:Utc utcNow = time:utcNow();
-        time:Civil|error civilTime = time:utcToCivil(utcNow);
-        if civilTime is error {
-            string customError = "Failed to resolve the current date.";
-            log:printError(customError, civilTime);
-            return <HttpInternalServerError>{body: {message: customError}};
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
         }
-
-        int effectiveYear = year ?: civilTime.year;
-        int effectiveMonth = month ?: civilTime.month;
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
         string? effectiveStatusFilter = (statusFilter is string && statusFilter.trim().length() == 0) ? () : statusFilter;
 
         database:EmployeeCategoryRow[]|error catRows = database:queryEmployeeCategoryBreakdown(
@@ -421,25 +388,21 @@ service http:InterceptableService / on new http:Listener(9090) {
             string category, int? year = (), int? month = (), int months = 1, string? statusFilter = ())
         returns EmployeeCategoryTransactionItem[]|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
-        if userInfo is error {
-            return <http:BadRequest>{body: {message: "User information header not found!"}};
+        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
         }
 
         if email.trim().length() == 0 || category.trim().length() == 0 {
             return <http:BadRequest>{body: {message: "Employee email and category are required."}};
         }
 
-        time:Utc utcNow = time:utcNow();
-        time:Civil|error civilTime = time:utcToCivil(utcNow);
-        if civilTime is error {
-            string customError = "Failed to resolve the current date.";
-            log:printError(customError, civilTime);
-            return <HttpInternalServerError>{body: {message: customError}};
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
         }
-
-        int effectiveYear = year ?: civilTime.year;
-        int effectiveMonth = month ?: civilTime.month;
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
         string? effectiveStatusFilter = (statusFilter is string && statusFilter.trim().length() == 0) ? () : statusFilter;
 
         database:EmployeeCategoryTransactionRow[]|error txnRows = database:queryEmployeeCategoryTransactions(
@@ -472,28 +435,19 @@ service http:InterceptableService / on new http:Listener(9090) {
             int months = 1, string? businessUnit = ())
         returns LeadFrequencyItemResponse[]|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
-        if userInfo is error {
-            return <http:BadRequest>{body: {message: "User information header not found!"}};
+        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
         }
 
-        time:Utc utcNow = time:utcNow();
-        time:Civil|error civilTime = time:utcToCivil(utcNow);
-        if civilTime is error {
-            string customError = "Failed to resolve the current date for lead approval frequency defaults.";
-            log:printError(customError, civilTime);
-            return <HttpInternalServerError>{body: {message: customError}};
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
         }
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
 
-        int effectiveYear = year ?: civilTime.year;
-        int effectiveMonth = month ?: civilTime.month;
-
-        string? effectiveBusinessUnit = businessUnit;
-        if effectiveBusinessUnit is string &&
-                (effectiveBusinessUnit.trim().length() == 0 ||
-                effectiveBusinessUnit == "All Business Units") {
-            effectiveBusinessUnit = ();
-        }
+        string? effectiveBusinessUnit = normalizeBusinessUnit(businessUnit);
 
         database:LeadFrequencyRow[]|error rows = database:queryLeadFrequencyList(
                 effectiveYear, effectiveMonth, months, effectiveBusinessUnit
@@ -505,11 +459,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         }
 
         string[] leadEmails = from database:LeadFrequencyRow row in rows select row.leadEmail;
-        map<string> nameMap = {};
-        map<string>|error hrNames = entity:fetchEmployeeNameMap(leadEmails);
-        if hrNames is map<string> {
-            nameMap = hrNames;
-        }
+        map<string> nameMap = fetchNameMap(leadEmails);
 
         LeadFrequencyItemResponse[] result = [];
         foreach database:LeadFrequencyRow row in rows {
@@ -541,25 +491,21 @@ service http:InterceptableService / on new http:Listener(9090) {
             int? year = (), int? month = (), int months = 1)
         returns LeadApprovalDetailResponse|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
-        if userInfo is error {
-            return <http:BadRequest>{body: {message: "User information header not found!"}};
+        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
         }
 
         if email.trim().length() == 0 {
             return <http:BadRequest>{body: {message: "Lead email is required."}};
         }
 
-        time:Utc utcNow = time:utcNow();
-        time:Civil|error civilTime = time:utcToCivil(utcNow);
-        if civilTime is error {
-            string customError = "Failed to resolve the current date.";
-            log:printError(customError, civilTime);
-            return <HttpInternalServerError>{body: {message: customError}};
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
         }
-
-        int effectiveYear = year ?: civilTime.year;
-        int effectiveMonth = month ?: civilTime.month;
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
 
         database:LeadApprovalDetailRow[]|error rows = database:queryLeadApprovalDetail(
                 email, effectiveYear, effectiveMonth, months
@@ -576,11 +522,7 @@ service http:InterceptableService / on new http:Listener(9090) {
                 allEmails.push(e);
             }
         }
-        map<string> nameMap = {};
-        map<string>|error hrNames = entity:fetchEmployeeNameMap(allEmails);
-        if hrNames is map<string> {
-            nameMap = hrNames;
-        }
+        map<string> nameMap = fetchNameMap(allEmails);
 
         string lowerLeadEmail = email.toLowerAscii();
         string leadName = nameMap[lowerLeadEmail] ?: deriveDisplayName(email);

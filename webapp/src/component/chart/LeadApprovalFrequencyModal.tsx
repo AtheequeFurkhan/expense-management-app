@@ -24,8 +24,7 @@ import {
   type LeadApprovedClaim,
   calcDaysBetween,
   formatApprovalFrequency,
-  getFrequencyBgColor,
-  getFrequencyColor,
+  getFrequencyStyle,
   useLeadApprovalDetail,
 } from "@slices/expenseSlice/useLeadApprovalFrequency";
 import { type CurrencyCode, CURRENCIES, formatWithSymbol } from "@utils/currency";
@@ -324,8 +323,7 @@ export default function LeadApprovalFrequencyModal({
 
   const maxCount = employeeBreakdown.length > 0 ? employeeBreakdown[0].count : 1;
 
-  const freqColor = detail ? getFrequencyColor(detail.avgFrequencyPerDay) : "#9E9E9E";
-  const freqBg = detail ? getFrequencyBgColor(detail.avgFrequencyPerDay) : "#F5F5F5";
+  const { color: freqColor, bg: freqBg } = getFrequencyStyle(detail?.avgFrequencyPerDay ?? 0);
   const freqLabel = detail ? formatApprovalFrequency(detail.avgFrequencyPerDay) : null;
 
   const lastDate = detail?.lastApprovedDate

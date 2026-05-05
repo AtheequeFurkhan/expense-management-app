@@ -14,9 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-// ---------------------------------------------------------------------------
-// Claim status codes (as stored in the database)
-// ---------------------------------------------------------------------------
 public const string STATUS_REJECTED = "-1";
 public const string STATUS_DRAFT = "0";
 public const string STATUS_SUBMITTED = "1";
@@ -28,16 +25,10 @@ public final string[] & readonly PENDING_STATUSES = [STATUS_DRAFT, STATUS_SUBMIT
 public final string[] & readonly APPROVED_STATUSES = [STATUS_LEAD_APPROVED, STATUS_FINANCE_APPROVED];
 public final string[] & readonly REJECTED_STATUSES = [STATUS_REJECTED];
 
-// ---------------------------------------------------------------------------
-// Summary query limits
-// ---------------------------------------------------------------------------
 public const int TOP_EMPLOYEES_LIMIT = 7;
 public const int TOP_LEADS_LIMIT = 7;
 public const int EXPENSE_TYPES_FETCH_LIMIT = 500;
 
-// ---------------------------------------------------------------------------
-// User-info cache configuration
-// ---------------------------------------------------------------------------
 public const int CACHE_CAPACITY = 2000;
 public const decimal CACHE_DEFAULT_MAX_AGE = 1800.0d;   // 30 minutes
 public const decimal CACHE_CLEANUP_INTERVAL = 900.0d;   // 15 minutes

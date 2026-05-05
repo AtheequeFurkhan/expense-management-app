@@ -98,22 +98,13 @@ export const MONTH_OPTIONS = [
   { value: "pastTwelve", label: "Past 12 Months" },
 ];
 
-// ---------------------------------------------------------------------------
-// Pagination
-// ---------------------------------------------------------------------------
 export const PAGE_SIZE_EMPLOYEES = 7;
 export const PAGE_SIZE_LEADS = 7;
 export const PAGE_SIZE_RECURRING = 8;
 
-// ---------------------------------------------------------------------------
-// Time helpers
-// ---------------------------------------------------------------------------
 export const MS_PER_DAY = 86_400_000;
 export const DAYS_PER_MONTH = 30;
 
-// ---------------------------------------------------------------------------
-// Lead approval frequency thresholds (claims per day)
-// ---------------------------------------------------------------------------
 export const HIGH_FREQ_THRESHOLD = 1 / 7;
 export const MED_FREQ_THRESHOLD = 1 / 30;
 
@@ -124,14 +115,8 @@ export const FREQ_HIGH_BG = "#E8F5E9";
 export const FREQ_MED_BG = "#FFF8E1";
 export const FREQ_LOW_BG = "#F5F5F5";
 
-// ---------------------------------------------------------------------------
-// Currency
-// ---------------------------------------------------------------------------
 export const DEFAULT_CURRENCY = "LKR";
 
-// ---------------------------------------------------------------------------
-// Claim status display config
-// ---------------------------------------------------------------------------
 export const ACTIVE_CLAIM_STATUS_LABEL_MAP: Record<string, string> = {
   Draft: "Claims Submitted",
   Submitted: "Claims Submitted",
@@ -147,9 +132,6 @@ export const ACTIVE_CLAIM_STATUS_ORDER = [
   "Rejected",
 ] as const;
 
-// ---------------------------------------------------------------------------
-// Period ↔ Date range mappings (chart period filter ↔ main filter)
-// ---------------------------------------------------------------------------
 export const PERIOD_TO_DATE_RANGE: Record<string, string> = {
   all: "All Time",
   current: "This Month",

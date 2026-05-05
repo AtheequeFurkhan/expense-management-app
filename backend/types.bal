@@ -64,10 +64,6 @@ public type OpdClaimSummaryResponse record {|
     OpdClaimBucket[] activeClaimsChart;
 |};
 
-// ---------------------------------------------------------------------------
-// Expense Claims response types
-// ---------------------------------------------------------------------------
-
 # Business unit expense item in the summary response.
 public type BuExpenseItem record {|
     # Business unit label.

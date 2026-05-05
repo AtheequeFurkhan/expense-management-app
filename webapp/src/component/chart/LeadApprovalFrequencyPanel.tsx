@@ -14,18 +14,18 @@
 // specific language governing permissions and limitations
 // under the License.
 import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
-import { Search } from "lucide-react";
 
 import { useEffect, useMemo, useState } from "react";
 
 import ChartCard from "@component/chart/ChartCard";
 import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
+import PaginationBar from "@component/common/PaginationBar";
+import SearchBox from "@component/common/SearchBox";
 import { MONTH_OPTIONS, PAGE_SIZE_LEADS } from "@config/constant";
 import {
   type LeadFrequencyItem,
   formatApprovalFrequency,
-  getFrequencyBgColor,
-  getFrequencyColor,
+  getFrequencyStyle,
   useLeadFrequencyList,
 } from "@slices/expenseSlice/useLeadApprovalFrequency";
 import { type CurrencyCode } from "@utils/currency";
@@ -61,8 +61,7 @@ function LeadRow({
   lead: LeadFrequencyItem;
   onClick: () => void;
 }) {
-  const freqColor = getFrequencyColor(lead.avgFrequencyPerDay);
-  const freqBg = getFrequencyBgColor(lead.avgFrequencyPerDay);
+  const { color: freqColor, bg: freqBg } = getFrequencyStyle(lead.avgFrequencyPerDay);
   const freqLabel = formatApprovalFrequency(lead.avgFrequencyPerDay);
 
   const lastDate = lead.lastApprovedDate
@@ -214,40 +213,11 @@ export default function LeadApprovalFrequencyPanel({
           />
         }
       >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            gap: 1,
-            px: 1.5,
-            py: 0.8,
-            borderRadius: 1.5,
-            border: "1px solid",
-            borderColor: "divider",
-            bgcolor: "background.default",
-            mb: 1.5,
-          }}
-        >
-          <Search
-            size={16}
-            style={{ color: "var(--mui-palette-text-disabled, #888)", flexShrink: 0 }}
-          />
-          <Box
-            component="input"
-            value={search}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
-            placeholder="Search leads by name or email..."
-            sx={{
-              flex: 1,
-              border: "none",
-              outline: "none",
-              bgcolor: "transparent",
-              fontSize: 13,
-              color: "text.primary",
-              "::placeholder": { color: "text.disabled" },
-            }}
-          />
-        </Box>
+        <SearchBox
+          value={search}
+          onChange={setSearch}
+          placeholder="Search leads by name or email..."
+        />
 
         <Box>
           {loading ? (
@@ -289,62 +259,7 @@ export default function LeadApprovalFrequencyPanel({
                 })}
               </Box>
 
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  mt: 1.5,
-                }}
-              >
-                <Box
-                  component="button"
-                  disabled={page === 0}
-                  onClick={() => setPage((p) => p - 1)}
-                  sx={{
-                    px: 2,
-                    py: 0.6,
-                    borderRadius: "999px",
-                    border: "1px solid",
-                    borderColor: "divider",
-                    bgcolor: "background.paper",
-                    cursor: page === 0 ? "default" : "pointer",
-                    opacity: page === 0 ? 0.35 : 1,
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: "text.primary",
-                    transition: "background 0.12s",
-                    "&:hover:not(:disabled)": { bgcolor: "action.hover" },
-                  }}
-                >
-                  ← Prev
-                </Box>
-                <Typography sx={{ fontSize: 13, color: "text.disabled", fontWeight: 500 }}>
-                  {page + 1} / {totalPages}
-                </Typography>
-                <Box
-                  component="button"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => setPage((p) => p + 1)}
-                  sx={{
-                    px: 2,
-                    py: 0.6,
-                    borderRadius: "999px",
-                    border: "1px solid",
-                    borderColor: "divider",
-                    bgcolor: "background.paper",
-                    cursor: page >= totalPages - 1 ? "default" : "pointer",
-                    opacity: page >= totalPages - 1 ? 0.35 : 1,
-                    fontSize: 13,
-                    fontWeight: 500,
-                    color: "text.primary",
-                    transition: "background 0.12s",
-                    "&:hover:not(:disabled)": { bgcolor: "action.hover" },
-                  }}
-                >
-                  Next →
-                </Box>
-              </Box>
+              <PaginationBar page={page} totalPages={totalPages} onPageChange={setPage} />
             </>
           )}
         </Box>

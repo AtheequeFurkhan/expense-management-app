@@ -21,6 +21,16 @@ import ballerina/sql;
 # + month - Ending month of the reporting range
 # + months - Number of months included in the reporting range
 # + return - Parameterized SQL fragment for the date range filter
+isolated function appendStatusFilterClause(sql:ParameterizedQuery query, string? statusFilter)
+        returns sql:ParameterizedQuery {
+    if statusFilter == "Approved" {
+        return sql:queryConcat(query, ` AND ec.status IN ('2', '3')`);
+    } else if statusFilter == "Pending" {
+        return sql:queryConcat(query, ` AND ec.status IN ('0', '1')`);
+    }
+    return query;
+}
+
 isolated function getExpenseDateRangeClause(int year, int month, int months)
     returns sql:ParameterizedQuery {
     // months=0 means "All Time" — skip date filtering
@@ -427,14 +437,7 @@ isolated function getEmployeeCategoryBreakdownQuery(string email, int year, int 
     sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
     query = sql:queryConcat(query, ` AND ec.employee_email = ${email}`);
-
-    if statusFilter is string {
-        if statusFilter == "Approved" {
-            query = sql:queryConcat(query, ` AND ec.status IN ('2', '3')`);
-        } else if statusFilter == "Pending" {
-            query = sql:queryConcat(query, ` AND ec.status IN ('0', '1')`);
-        }
-    }
+    query = appendStatusFilterClause(query, statusFilter);
 
     return sql:queryConcat(query,
             ` AND ec.expense_type_id IS NOT NULL
@@ -546,14 +549,7 @@ isolated function getEmployeeCategoryTransactionsQuery(string email, string cate
     query = sql:queryConcat(query,
             ` AND SUBSTRING_INDEX(et.expense_type, ' - ', 1) = ${category}`
     );
-
-    if statusFilter is string {
-        if statusFilter == "Approved" {
-            query = sql:queryConcat(query, ` AND ec.status IN ('2', '3')`);
-        } else if statusFilter == "Pending" {
-            query = sql:queryConcat(query, ` AND ec.status IN ('0', '1')`);
-        }
-    }
+    query = appendStatusFilterClause(query, statusFilter);
 
     return sql:queryConcat(query,
             ` AND ec.expense_type_id IS NOT NULL

@@ -75,16 +75,10 @@ export function formatApprovalFrequency(claimsPerDay: number): string {
   return `${(claimsPerDay * DAYS_PER_MONTH).toFixed(1)} claims/month`;
 }
 
-export function getFrequencyColor(claimsPerDay: number): string {
-  if (claimsPerDay >= HIGH_FREQ_THRESHOLD) return FREQ_HIGH_COLOR;
-  if (claimsPerDay >= MED_FREQ_THRESHOLD) return FREQ_MED_COLOR;
-  return FREQ_LOW_COLOR;
-}
-
-export function getFrequencyBgColor(claimsPerDay: number): string {
-  if (claimsPerDay >= HIGH_FREQ_THRESHOLD) return FREQ_HIGH_BG;
-  if (claimsPerDay >= MED_FREQ_THRESHOLD) return FREQ_MED_BG;
-  return FREQ_LOW_BG;
+export function getFrequencyStyle(claimsPerDay: number): { color: string; bg: string } {
+  if (claimsPerDay >= HIGH_FREQ_THRESHOLD) return { color: FREQ_HIGH_COLOR, bg: FREQ_HIGH_BG };
+  if (claimsPerDay >= MED_FREQ_THRESHOLD) return { color: FREQ_MED_COLOR, bg: FREQ_MED_BG };
+  return { color: FREQ_LOW_COLOR, bg: FREQ_LOW_BG };
 }
 
 function computeFreq(total: number, first: string, last: string): number {
