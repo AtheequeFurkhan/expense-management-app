@@ -56,6 +56,7 @@ export interface LeadApprovedClaim {
   claimId: string;
   employeeName: string;
   claimType: string;
+  subCategory: string;
   amount: number;
   category: string | null;
   submittedDate: string | null;
@@ -198,7 +199,11 @@ export function useLeadApprovalDetail(email: string | null, dateRange: string) {
           const computedFreq =
             Number(d.avgFrequencyPerDay) ||
             computeFreq(Number(d.totalApproved), firstDate ?? "", d.lastApprovedDate ?? "");
-          const mappedClaims = (d.claims ?? []).map((c) => ({ ...c, amount: Number(c.amount) }));
+          const mappedClaims = (d.claims ?? []).map((c) => ({
+              ...c,
+              amount: Number(c.amount),
+              subCategory: c.subCategory ?? c.claimType,
+            }));
           const delays = mappedClaims
             .map((c) => calcDaysBetween(c.submittedDate, c.approvedDate))
             .filter((v): v is number => v !== null);

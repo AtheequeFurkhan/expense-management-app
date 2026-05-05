@@ -15,81 +15,18 @@
 // under the License.
 import ballerina/sql;
 
-# Query the total reimbursement amount for the given date range.
+# Query all aggregate statistics for the given date range in one database round-trip.
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
 # + months - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
-# + return - Total reimbursement amount if the query succeeds, otherwise an error
-public function queryExpenseTotalAmount(int year, int month, int months,
-        string? businessUnit = ()) returns decimal|error {
-    ExpenseAmountRow result = check expenseDbClient->queryRow(
-        getExpenseTotalAmountQuery(year, month, months, businessUnit), ExpenseAmountRow
+# + return - Expense summary stats if the query succeeds, otherwise an error
+public function queryExpenseSummaryStats(int year, int month, int months,
+        string? businessUnit = ()) returns ExpenseSummaryStatsRow|error {
+    return check expenseDbClient->queryRow(
+        getExpenseSummaryStatsQuery(year, month, months, businessUnit), ExpenseSummaryStatsRow
     );
-    return result.total;
-}
-
-# Query the total number of expense claims for the given date range.
-#
-# + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
-# + businessUnit - Optional business unit filter
-# + return - Claim count if the query succeeds, otherwise an error
-public function queryExpenseClaimCount(int year, int month, int months,
-        string? businessUnit = ()) returns int|error {
-    ExpenseCountRow result = check expenseDbClient->queryRow(
-        getExpenseClaimCountQuery(year, month, months, businessUnit), ExpenseCountRow
-    );
-    return result.count;
-}
-
-# Query the average reimbursement amount for the given date range.
-#
-# + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
-# + businessUnit - Optional business unit filter
-# + return - Average reimbursement amount if the query succeeds, otherwise an error
-public function queryExpenseAvgAmount(int year, int month, int months,
-        string? businessUnit = ()) returns decimal|error {
-    ExpenseAvgRow result = check expenseDbClient->queryRow(
-        getExpenseAvgAmountQuery(year, month, months, businessUnit), ExpenseAvgRow
-    );
-    return result.avg;
-}
-
-# Query the number of expense claims with a specific status.
-#
-# + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
-# + status - Claim status to count
-# + businessUnit - Optional business unit filter
-# + return - Claim count for the given status if the query succeeds, otherwise an error
-public function queryExpenseCountByStatus(int year, int month, int months,
-        string status, string? businessUnit = ()) returns int|error {
-    ExpenseCountRow result = check expenseDbClient->queryRow(
-        getExpenseCountByStatusQuery(year, month, months, status, businessUnit), ExpenseCountRow
-    );
-    return result.count;
-}
-
-# Query the number of expense claims matching any of the given status codes.
-#
-# + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
-# + statuses - Status codes to match
-# + businessUnit - Optional business unit filter
-# + return - Claim count if the query succeeds, otherwise an error
-public function queryExpenseCountByStatuses(int year, int month, int months,
-        string[] statuses, string? businessUnit = ()) returns int|error {
-    ExpenseCountRow result = check expenseDbClient->queryRow(
-        getExpenseCountByStatusesQuery(year, month, months, statuses, businessUnit), ExpenseCountRow
-    );
-    return result.count;
 }
 
 # Query expense amounts grouped by business unit for the given date range.
@@ -141,22 +78,23 @@ public function queryLeadApprovalFrequency(int year, int month, int months,
         select row;
 }
 
-# Query the top spending employees for the given date range.
+# Query spending employees ordered by reimbursement amount.
+# Pass a limit to get the top-N employees, or omit it to fetch all employees.
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
 # + months - Number of months included in the reporting range
-# + 'limit - Maximum number of results to return
 # + businessUnit - Optional business unit filter
-# + return - Top spending employee rows if the query succeeds, otherwise an error
-public function queryTopSpendingEmployees(int year, int month, int months,
-        int 'limit = 7, string? businessUnit = ()) returns TopSpendingEmployeeRow[]|error {
-    stream<TopSpendingEmployeeRow, sql:Error?> resultStream =
+# + 'limit - Optional maximum number of results to return
+# + return - Spending employee rows if the query succeeds, otherwise an error
+public function querySpendingEmployees(int year, int month, int months,
+        string? businessUnit = (), int? 'limit = ()) returns AllSpendingEmployeeRow[]|error {
+    stream<AllSpendingEmployeeRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getTopSpendingEmployeesQuery(year, month, months, 'limit, businessUnit),
-            TopSpendingEmployeeRow
+            getSpendingEmployeesQuery(year, month, months, businessUnit, 'limit),
+            AllSpendingEmployeeRow
         );
-    return check from TopSpendingEmployeeRow row in resultStream
+    return check from AllSpendingEmployeeRow row in resultStream
         select row;
 }
 
@@ -195,24 +133,6 @@ public function queryRecurringExpenseTypes(int year, int month, int months,
             RecurringExpenseTypeRow
         );
     return check from RecurringExpenseTypeRow row in resultStream
-        select row;
-}
-
-# Query all spending employees with their total amount and claim count.
-#
-# + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
-# + businessUnit - Optional business unit filter
-# + return - All spending employee rows if the query succeeds, otherwise an error
-public function queryAllSpendingEmployees(int year, int month, int months,
-        string? businessUnit = ()) returns AllSpendingEmployeeRow[]|error {
-    stream<AllSpendingEmployeeRow, sql:Error?> resultStream =
-        expenseDbClient->query(
-            getAllSpendingEmployeesQuery(year, month, months, businessUnit),
-            AllSpendingEmployeeRow
-        );
-    return check from AllSpendingEmployeeRow row in resultStream
         select row;
 }
 

@@ -15,12 +15,11 @@
 // under the License.
 import ballerina/sql;
 
-# Build the date-range WHERE clause fragment used by all expense claim queries.
+# Append an optional status group filter clause to an existing query.
 #
-# + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
-# + return - Parameterized SQL fragment for the date range filter
+# + query - Base parameterized query to extend
+# + statusFilter - "Approved", "Pending", or null to skip filtering
+# + return - Query extended with the status filter, or the original query unchanged
 isolated function appendStatusFilterClause(sql:ParameterizedQuery query, string? statusFilter)
         returns sql:ParameterizedQuery {
     if statusFilter == "Approved" {
@@ -31,6 +30,12 @@ isolated function appendStatusFilterClause(sql:ParameterizedQuery query, string?
     return query;
 }
 
+# Build the date-range WHERE clause fragment used by all expense claim queries.
+#
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + months - Number of months included in the reporting range
+# + return - Parameterized SQL fragment for the date range filter
 isolated function getExpenseDateRangeClause(int year, int month, int months)
     returns sql:ParameterizedQuery {
     // months=0 means "All Time" — skip date filtering
@@ -47,100 +52,28 @@ isolated function getExpenseDateRangeClause(int year, int month, int months)
         )`;
 }
 
-# Build the query for total reimbursement amount within a date range.
+# Build the consolidated query for all aggregate statistics in one database round-trip.
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
 # + months - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + return - Parameterized SQL query
-isolated function getExpenseTotalAmountQuery(int year, int month, int months,
+isolated function getExpenseSummaryStatsQuery(int year, int month, int months,
         string? businessUnit = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
-        SELECT COALESCE(SUM(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS total
+        SELECT COALESCE(SUM(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS totalAmount,
+               COUNT(*) AS totalCount,
+               COALESCE(AVG(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS avgAmount,
+               SUM(CASE WHEN ec.status = '-1'        THEN 1 ELSE 0 END) AS rejectedCount,
+               SUM(CASE WHEN ec.status IN ('0', '1') THEN 1 ELSE 0 END) AS pendingCount,
+               SUM(CASE WHEN ec.status IN ('2', '3') THEN 1 ELSE 0 END) AS approvedCount
         FROM expense_claims ec
         WHERE `;
 
     sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
-
-    if businessUnit is string {
-        query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
-    }
-
-    return query;
-}
-
-# Build the query for total claim count within a date range.
-#
-# + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
-# + businessUnit - Optional business unit filter
-# + return - Parameterized SQL query
-isolated function getExpenseClaimCountQuery(int year, int month, int months,
-        string? businessUnit = ()) returns sql:ParameterizedQuery {
-
-    sql:ParameterizedQuery baseQuery = `
-        SELECT COUNT(*) AS count
-        FROM expense_claims ec
-        WHERE `;
-
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
-    sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
-
-    if businessUnit is string {
-        query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
-    }
-
-    return query;
-}
-
-# Build the query for average reimbursement amount within a date range.
-#
-# + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
-# + businessUnit - Optional business unit filter
-# + return - Parameterized SQL query
-isolated function getExpenseAvgAmountQuery(int year, int month, int months,
-        string? businessUnit = ()) returns sql:ParameterizedQuery {
-
-    sql:ParameterizedQuery baseQuery = `
-        SELECT COALESCE(AVG(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS avg
-        FROM expense_claims ec
-        WHERE `;
-
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
-    sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
-
-    if businessUnit is string {
-        query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
-    }
-
-    return query;
-}
-
-# Build the query for claim count filtered by a specific status.
-#
-# + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
-# + status - Status value to filter on
-# + businessUnit - Optional business unit filter
-# + return - Parameterized SQL query
-isolated function getExpenseCountByStatusQuery(int year, int month, int months,
-        string status, string? businessUnit = ()) returns sql:ParameterizedQuery {
-
-    sql:ParameterizedQuery baseQuery = `
-        SELECT COUNT(*) AS count
-        FROM expense_claims ec
-        WHERE `;
-
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
-    sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
-    query = sql:queryConcat(query, ` AND ec.status = ${status}`);
 
     if businessUnit is string {
         query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
@@ -173,42 +106,6 @@ isolated function getExpenseByBuQuery(int year, int month, int months)
           GROUP BY ec.business_unit
           ORDER BY total DESC`
     );
-}
-
-# Build the query for claim count matching any of the given status codes.
-#
-# + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
-# + statuses - One or more status codes to match
-# + businessUnit - Optional business unit filter
-# + return - Parameterized SQL query
-isolated function getExpenseCountByStatusesQuery(int year, int month, int months,
-        string[] statuses, string? businessUnit = ()) returns sql:ParameterizedQuery {
-
-    sql:ParameterizedQuery baseQuery = `
-        SELECT COUNT(*) AS count
-        FROM expense_claims ec
-        WHERE `;
-
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
-    sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
-
-    // Build IN clause: AND ec.status IN (val1, val2, ...)
-    query = sql:queryConcat(query, ` AND ec.status IN (`);
-    foreach int i in 0 ..< statuses.length() {
-        if i > 0 {
-            query = sql:queryConcat(query, `, `);
-        }
-        query = sql:queryConcat(query, `${statuses[i]}`);
-    }
-    query = sql:queryConcat(query, `)`);
-
-    if businessUnit is string {
-        query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
-    }
-
-    return query;
 }
 
 # Build the query for claim counts grouped by status with readable labels.
@@ -281,20 +178,22 @@ isolated function getLeadApprovalFrequencyQuery(int year, int month, int months,
     );
 }
 
-# Build the query for top spending employees by reimbursement amount.
+# Build the query for spending employees ordered by reimbursement amount.
+# Omit 'limit to fetch all employees, or pass a value to cap at top-N.
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
 # + months - Number of months included in the reporting range
-# + 'limit - Maximum number of results to return
 # + businessUnit - Optional business unit filter
+# + 'limit - Optional maximum number of results to return
 # + return - Parameterized SQL query
-isolated function getTopSpendingEmployeesQuery(int year, int month, int months,
-        int 'limit = 7, string? businessUnit = ()) returns sql:ParameterizedQuery {
+isolated function getSpendingEmployeesQuery(int year, int month, int months,
+        string? businessUnit = (), int? 'limit = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
         SELECT ec.employee_email AS employeeEmail,
-               COALESCE(SUM(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS total
+               COALESCE(SUM(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS total,
+               COUNT(*) AS claimCount
         FROM expense_claims ec
         WHERE `;
 
@@ -305,13 +204,18 @@ isolated function getTopSpendingEmployeesQuery(int year, int month, int months,
         query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
     }
 
-    return sql:queryConcat(query,
+    query = sql:queryConcat(query,
             ` AND ec.employee_email IS NOT NULL
           AND ec.employee_email <> ''
           GROUP BY ec.employee_email
-          ORDER BY total DESC
-          LIMIT ${'limit}`
+          ORDER BY total DESC`
     );
+
+    if 'limit is int {
+        query = sql:queryConcat(query, ` LIMIT ${'limit}`);
+    }
+
+    return query;
 }
 
 # Build the query for top approving leads by number of approved claims.
@@ -380,38 +284,6 @@ isolated function getRecurringExpenseTypesQuery(int year, int month, int months,
           GROUP BY et.expense_type
           ORDER BY total DESC
           LIMIT ${'limit}`
-    );
-}
-
-# Build the query for all spending employees with their claim count (no LIMIT).
-#
-# + year - Ending year of the reporting range
-# + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
-# + businessUnit - Optional business unit filter
-# + return - Parameterized SQL query
-isolated function getAllSpendingEmployeesQuery(int year, int month, int months,
-        string? businessUnit = ()) returns sql:ParameterizedQuery {
-
-    sql:ParameterizedQuery baseQuery = `
-        SELECT ec.employee_email AS employeeEmail,
-               COALESCE(SUM(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS total,
-               COUNT(*) AS claimCount
-        FROM expense_claims ec
-        WHERE `;
-
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
-    sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
-
-    if businessUnit is string {
-        query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);
-    }
-
-    return sql:queryConcat(query,
-            ` AND ec.employee_email IS NOT NULL
-          AND ec.employee_email <> ''
-          GROUP BY ec.employee_email
-          ORDER BY total DESC`
     );
 }
 

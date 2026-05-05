@@ -191,6 +191,22 @@ public type LeadApprovalDetailRow record {|
     string status;
 |};
 
+# Consolidated query result for all expense claim aggregate statistics in one pass.
+public type ExpenseSummaryStatsRow record {|
+    # Total reimbursement amount.
+    decimal totalAmount;
+    # Total number of claims.
+    int totalCount;
+    # Average reimbursement amount.
+    decimal avgAmount;
+    # Number of rejected claims (status = '-1').
+    int rejectedCount;
+    # Number of pending claims (status in '0', '1').
+    int pendingCount;
+    # Number of approved claims (status in '2', '3').
+    int approvedCount;
+|};
+
 # Query result for individual transactions within an employee's expense category.
 public type EmployeeCategoryTransactionRow record {|
     # Description of the individual expense.

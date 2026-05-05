@@ -138,20 +138,13 @@ isolated function mapExpenseCategory(string expenseType) returns string {
 public function getExpenseClaimSummary(int year, int month, int months,
         string? businessUnit = ()) returns ExpenseClaimSummaryResponse|error {
 
-    // Current period data
-    decimal totalClaimAmount = check database:queryExpenseTotalAmount(year, month, months, businessUnit);
-    int totalClaimCount = check database:queryExpenseClaimCount(year, month, months, businessUnit);
-    decimal avgClaimAmount = check database:queryExpenseAvgAmount(year, month, months, businessUnit);
-
-    // Status counts (numeric codes: -1=Rejected, 0=Draft, 1=Submitted, 2=Lead Approved, 3=Finance Approved)
-    int pendingClaims = check database:queryExpenseCountByStatuses(year, month, months, PENDING_STATUSES, businessUnit);
-    int approvedClaims = check database:queryExpenseCountByStatuses(year, month, months, APPROVED_STATUSES, businessUnit);
-    int rejectedClaims = check database:queryExpenseCountByStatuses(year, month, months, REJECTED_STATUSES, businessUnit);
+    // Fetch all aggregate stats in a single query
+    database:ExpenseSummaryStatsRow stats = check database:queryExpenseSummaryStats(year, month, months, businessUnit);
 
     // Chart data
     database:BuExpenseRow[] buExpenseRows = check database:queryExpenseByBu(year, month, months);
     database:ClaimStatusRow[] claimStatusRows = check database:queryExpenseClaimsByStatus(year, month, months, businessUnit);
-    database:TopSpendingEmployeeRow[] topEmployeeRows = check database:queryTopSpendingEmployees(year, month, months, TOP_EMPLOYEES_LIMIT, businessUnit);
+    database:AllSpendingEmployeeRow[] topEmployeeRows = check database:querySpendingEmployees(year, month, months, businessUnit, TOP_EMPLOYEES_LIMIT);
     database:LeadApprovalFrequencyRow[] leadApprovalFrequencyRows = check database:queryLeadApprovalFrequency(
         year,
         month,
@@ -175,10 +168,11 @@ public function getExpenseClaimSummary(int year, int month, int months,
             prevYear = prevYear - 1;
         }
 
-        prevTotalAmount = check database:queryExpenseTotalAmount(prevYear, prevMonth, months, businessUnit);
-        prevTotalCount = check database:queryExpenseClaimCount(prevYear, prevMonth, months, businessUnit);
-        prevAvgAmount = check database:queryExpenseAvgAmount(prevYear, prevMonth, months, businessUnit);
-        prevApproved = check database:queryExpenseCountByStatuses(prevYear, prevMonth, months, APPROVED_STATUSES, businessUnit);
+        database:ExpenseSummaryStatsRow prevStats = check database:queryExpenseSummaryStats(prevYear, prevMonth, months, businessUnit);
+        prevTotalAmount = prevStats.totalAmount;
+        prevTotalCount = prevStats.totalCount;
+        prevAvgAmount = prevStats.avgAmount;
+        prevApproved = prevStats.approvedCount;
     }
 
     // Transform rows into response types
@@ -194,7 +188,7 @@ public function getExpenseClaimSummary(int year, int month, int months,
             value: row.count
         };
 
-    TopEmployeeItem[] topSpendingEmployees = from database:TopSpendingEmployeeRow row in topEmployeeRows
+    TopEmployeeItem[] topSpendingEmployees = from database:AllSpendingEmployeeRow row in topEmployeeRows
         select {
             name: deriveDisplayName(row.employeeEmail),
             email: row.employeeEmail,
@@ -220,21 +214,21 @@ public function getExpenseClaimSummary(int year, int month, int months,
         select {name: row.expenseType, category: mapExpenseCategory(row.expenseType), amount: row.total};
 
     return {
-        totalClaimAmount: totalClaimAmount,
-        totalClaimCount: totalClaimCount,
-        pendingClaims: pendingClaims,
-        approvedClaims: approvedClaims,
-        rejectedClaims: rejectedClaims,
-        avgClaimAmount: avgClaimAmount,
+        totalClaimAmount: stats.totalAmount,
+        totalClaimCount: stats.totalCount,
+        pendingClaims: stats.pendingCount,
+        approvedClaims: stats.approvedCount,
+        rejectedClaims: stats.rejectedCount,
+        avgClaimAmount: stats.avgAmount,
         buExpenses: buExpenses,
         activeClaimStats: activeClaimStats,
         topSpendingEmployees: topSpendingEmployees,
         leadApprovalFrequency: leadApprovalFrequency,
         topApprovingLeads: topApprovingLeads,
         recurringExpenseTypes: recurringExpenseTypes,
-        trendTotalAmount: calculateTrend(totalClaimAmount, prevTotalAmount),
-        trendTotalCount: calculateTrend(<decimal>totalClaimCount, <decimal>prevTotalCount),
-        trendApproved: calculateTrend(<decimal>approvedClaims, <decimal>prevApproved),
-        trendAvgAmount: calculateTrend(avgClaimAmount, prevAvgAmount)
+        trendTotalAmount: calculateTrend(stats.totalAmount, prevTotalAmount),
+        trendTotalCount: calculateTrend(<decimal>stats.totalCount, <decimal>prevTotalCount),
+        trendApproved: calculateTrend(<decimal>stats.approvedCount, <decimal>prevApproved),
+        trendAvgAmount: calculateTrend(stats.avgAmount, prevAvgAmount)
     };
 }

@@ -284,7 +284,7 @@ service http:InterceptableService / on new http:Listener(9090) {
 
         string? effectiveBusinessUnit = normalizeBusinessUnit(businessUnit);
 
-        database:AllSpendingEmployeeRow[]|error rows = database:queryAllSpendingEmployees(
+        database:AllSpendingEmployeeRow[]|error rows = database:querySpendingEmployees(
                 effectiveYear, effectiveMonth, months, effectiveBusinessUnit
         );
         if rows is error {
@@ -566,6 +566,7 @@ service http:InterceptableService / on new http:Listener(9090) {
                 claimId: row.claimId,
                 employeeName: nameMap[lowerEmpEmail] ?: deriveDisplayName(row.employeeEmail),
                 claimType: mainCat,
+                subCategory: row.expenseType,
                 amount: row.amount,
                 category: mainCat,
                 submittedDate: row.submittedDate,

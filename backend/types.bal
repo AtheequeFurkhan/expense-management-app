@@ -246,6 +246,8 @@ public type LeadApprovedClaimItem record {|
     string employeeName;
     # Main expense category label.
     string claimType;
+    # Full expense type name (sub-category).
+    string subCategory;
     # Reimbursement amount.
     decimal amount;
     # Main expense category, or null.

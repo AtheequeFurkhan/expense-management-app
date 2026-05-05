@@ -25,7 +25,6 @@ import { MONTH_OPTIONS, PAGE_SIZE_LEADS } from "@config/constant";
 import {
   type LeadFrequencyItem,
   formatResponseTime,
-  getResponseTimeStyle,
   useLeadFrequencyList,
 } from "@slices/expenseSlice/useLeadApprovalFrequency";
 import { type CurrencyCode } from "@utils/currency";
@@ -62,7 +61,6 @@ function LeadRow({
   lead: LeadFrequencyItem;
   onClick: () => void;
 }) {
-  const { color: freqColor, bg: freqBg } = getResponseTimeStyle(lead.avgResponseDays);
   const freqLabel = formatResponseTime(lead.avgResponseDays);
 
   const lastDate = lead.lastApprovedDate
@@ -124,7 +122,7 @@ function LeadRow({
             px: 1,
             py: 0.25,
             borderRadius: 1,
-            bgcolor: lead.avgResponseDays > 0 ? freqBg : "action.hover",
+            bgcolor: lead.avgResponseDays > 0 ? "#FEF0EB" : "action.hover",
             minWidth: 110,
             textAlign: "center",
           }}
@@ -133,7 +131,7 @@ function LeadRow({
             sx={{
               fontSize: 11,
               fontWeight: 700,
-              color: lead.avgResponseDays > 0 ? freqColor : "text.disabled",
+              color: lead.avgResponseDays > 0 ? "#E8420A" : "text.disabled",
               whiteSpace: "nowrap",
             }}
           >
