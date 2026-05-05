@@ -15,6 +15,16 @@
 // under the License.
 import * as XLSX from "xlsx";
 
+import {
+  EMP_CATEGORY_COLS,
+  EMP_SUMMARY_FIELDS,
+  LEAD_BY_EMPLOYEE_COLS,
+  LEAD_CATEGORY_COLS,
+  LEAD_CLAIMS_COLS,
+  LEAD_CLAIMS_EXTRA_COLS,
+  LEAD_SUMMARY_FIELDS,
+} from "@config/exportLabels";
+
 function addSheet(wb: XLSX.WorkBook, name: string, rows: unknown[][]): void {
   const ws = XLSX.utils.aoa_to_sheet(rows);
   applyAutoWidths(ws);
@@ -59,6 +69,7 @@ export interface EmployeeBreakdownExportParams {
     percentage: number;
     compTotal: number;
     compClaimCount: number;
+    subCategories: Array<{ name: string; currentTotal: number; compTotal: number }>;
   }>;
 }
 
@@ -68,30 +79,42 @@ export function exportEmployeeBreakdown(p: EmployeeBreakdownExportParams): void 
 
   addSheet(wb, "Summary", [
     ["Field", "Value"],
-    ["Employee Name", p.name],
-    ["Email", p.email],
-    ["Period", p.dateRange],
-    ["Status Filter", p.statusTab],
-    ["Currency", p.currency],
+    [EMP_SUMMARY_FIELDS.employeeName, p.name],
+    [EMP_SUMMARY_FIELDS.email,        p.email],
+    [EMP_SUMMARY_FIELDS.period,       p.dateRange],
+    [EMP_SUMMARY_FIELDS.statusFilter, p.statusTab],
+    [EMP_SUMMARY_FIELDS.currency,     p.currency],
     [],
     ["", "Current Period", compLabel],
-    ["Total Amount", p.totalAmount, p.prevTotalAmount],
-    ["Total Claims", p.claimCount, p.prevClaimCount],
+    [EMP_SUMMARY_FIELDS.totalAmount, p.totalAmount, p.prevTotalAmount],
+    [EMP_SUMMARY_FIELDS.totalClaims, p.claimCount,  p.prevClaimCount],
   ]);
 
-  const categoryRows = p.categories.map((cat) => {
+  const breakdownRows: unknown[][] = [
+    [
+      EMP_CATEGORY_COLS.category,
+      EMP_CATEGORY_COLS.subCategory,
+      `${compLabel} ${EMP_CATEGORY_COLS.compAmount} (${p.currency})`,
+      `${compLabel} ${EMP_CATEGORY_COLS.compClaims}`,
+      `${EMP_CATEGORY_COLS.currentAmount} (${p.currency})`,
+      EMP_CATEGORY_COLS.currentClaims,
+      EMP_CATEGORY_COLS.pctOfTotal,
+      EMP_CATEGORY_COLS.change,
+    ],
+  ];
+  for (const cat of p.categories) {
     const change =
       cat.compTotal > 0
         ? `${(((cat.total - cat.compTotal) / cat.compTotal) * 100).toFixed(1)}%`
         : cat.total > 0
           ? "+100%"
           : "—";
-    return [cat.category, cat.compTotal, cat.compClaimCount, cat.total, cat.claimCount, `${cat.percentage.toFixed(1)}%`, change];
-  });
-  addSheet(wb, "Category Breakdown", [
-    ["Category", `${compLabel} Amount (${p.currency})`, `${compLabel} Claims`, `Current Amount (${p.currency})`, "Current Claims", "% of Total", "Change %"],
-    ...categoryRows,
-  ]);
+    breakdownRows.push([cat.category, "", cat.compTotal || "—", cat.compClaimCount || "—", cat.total, cat.claimCount, `${cat.percentage.toFixed(1)}%`, change]);
+    for (const sub of cat.subCategories) {
+      breakdownRows.push(["", sub.name, sub.compTotal || "—", "", sub.currentTotal, "", "", ""]);
+    }
+  }
+  addSheet(wb, "Category Breakdown", breakdownRows);
 
   XLSX.writeFile(
     wb,
@@ -108,6 +131,12 @@ export interface LeadApprovalsExportParams {
   avgResponseDays: number;
   firstApprovedDate: string | null;
   lastApprovedDate: string | null;
+  categoryBreakdown: Array<{
+    type: string;
+    totalAmount: number;
+    count: number;
+    subCategories: Array<{ name: string; totalAmount: number; count: number }>;
+  }>;
   employeeBreakdown: Array<{
     name: string;
     count: number;
@@ -117,6 +146,7 @@ export interface LeadApprovalsExportParams {
     claimId: string;
     employeeName: string;
     claimType: string;
+    subCategory: string;
     category: string | null;
     amount: number;
     submittedDate: string | null;
@@ -130,21 +160,46 @@ export function exportLeadApprovals(p: LeadApprovalsExportParams): void {
 
   addSheet(wb, "Lead Summary", [
     ["Field", "Value"],
-    ["Lead Name", p.name],
-    ["Email", p.email],
-    ["Period", p.dateRange],
-    ["Currency", p.currency],
-    ["Total Approvals", p.totalApproved],
-    ["Avg Response Time (days)", p.avgResponseDays],
-    ["First Approval Date", p.firstApprovedDate ?? "—"],
-    ["Last Approval Date", p.lastApprovedDate ?? "—"],
+    [LEAD_SUMMARY_FIELDS.leadName,          p.name],
+    [LEAD_SUMMARY_FIELDS.email,             p.email],
+    [LEAD_SUMMARY_FIELDS.period,            p.dateRange],
+    [LEAD_SUMMARY_FIELDS.currency,          p.currency],
+    [LEAD_SUMMARY_FIELDS.totalApprovals,    p.totalApproved],
+    [LEAD_SUMMARY_FIELDS.avgResponseTime,   p.avgResponseDays > 0 ? p.avgResponseDays : "—"],
+    [LEAD_SUMMARY_FIELDS.firstApprovalDate, p.firstApprovedDate ?? "—"],
+    [LEAD_SUMMARY_FIELDS.lastApprovalDate,  p.lastApprovedDate ?? "—"],
   ]);
 
+  const grandTotal = p.categoryBreakdown.reduce((s, c) => s + c.totalAmount, 0);
+  const catBreakdownRows: unknown[][] = [
+    [
+      LEAD_CATEGORY_COLS.category,
+      LEAD_CATEGORY_COLS.subCategory,
+      LEAD_CATEGORY_COLS.claims,
+      `${LEAD_CATEGORY_COLS.amount} (${p.currency})`,
+      LEAD_CATEGORY_COLS.pctOfTotal,
+    ],
+  ];
+  for (const cat of p.categoryBreakdown) {
+    const pct = grandTotal > 0 ? ((cat.totalAmount / grandTotal) * 100).toFixed(1) : "0.0";
+    catBreakdownRows.push([cat.type, "", cat.count, cat.totalAmount, `${pct}%`]);
+    for (const sub of cat.subCategories) {
+      const subPct = grandTotal > 0 ? ((sub.totalAmount / grandTotal) * 100).toFixed(1) : "0.0";
+      catBreakdownRows.push(["", sub.name, sub.count, sub.totalAmount, `${subPct}%`]);
+    }
+  }
+  addSheet(wb, "Category Breakdown", catBreakdownRows);
+
   addSheet(wb, "By Employee", [
-    ["Employee", "Claims Approved", `Total Amount (${p.currency})`],
+    [
+      LEAD_BY_EMPLOYEE_COLS.employee,
+      LEAD_BY_EMPLOYEE_COLS.claimsApproved,
+      `${LEAD_BY_EMPLOYEE_COLS.totalAmount} (${p.currency})`,
+    ],
     ...p.employeeBreakdown.map((e) => [e.name, e.count, e.amount]),
   ]);
 
+  const claimCols = LEAD_CLAIMS_COLS;
   const claimRows = p.claims.map((c) => {
     let delay: number | string = "—";
     if (c.submittedDate && c.approvedDate) {
@@ -154,10 +209,32 @@ export function exportLeadApprovals(p: LeadApprovalsExportParams): void {
         delay = Math.round((approvedMs - submittedMs) / (1000 * 60 * 60 * 24));
       }
     }
-    return [c.claimId, c.employeeName, c.claimType, c.category ?? "—", c.amount, c.submittedDate ?? "—", c.approvedDate ?? "—", delay, c.status];
+    return [
+      c.claimId,
+      c.employeeName,
+      c.claimType,
+      c.subCategory,
+      c.category ?? "—",
+      c.amount,
+      c.submittedDate ?? "—",
+      c.approvedDate ?? "—",
+      delay,
+      c.status,
+    ];
   });
   addSheet(wb, "Approved Claims", [
-    ["Claim ID", "Employee", "Type", "Category", `Amount (${p.currency})`, "Submitted Date", "Approved Date", "Delay (days)", "Status"],
+    [
+      LEAD_CLAIMS_EXTRA_COLS.claimId,
+      claimCols[0].label,  // Employee
+      claimCols[1].label,  // Type
+      claimCols[2].label,  // Sub Category
+      claimCols[3].label,  // Category
+      `${claimCols[4].label} (${p.currency})`, // Amount
+      claimCols[5].label,  // Submitted Date
+      claimCols[6].label,  // Approved Date
+      claimCols[7].label,  // Delay (days)
+      claimCols[8].label,  // Status
+    ],
     ...claimRows,
   ]);
 

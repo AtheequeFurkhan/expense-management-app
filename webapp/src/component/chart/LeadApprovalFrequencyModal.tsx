@@ -41,6 +41,7 @@ import {
   MONTH_OPTIONS,
   PERIOD_TO_DATE_RANGE,
 } from "@config/constant";
+import { LEAD_CLAIMS_COLS } from "@config/exportLabels";
 import { type CurrencyCode, CURRENCIES, formatWithSymbol } from "@utils/currency";
 import { exportLeadApprovals } from "@utils/exportExcel";
 
@@ -80,15 +81,7 @@ function DelayChip({ days }: { days: number | null }) {
   );
 }
 
-const TABLE_COLS = [
-  { label: "Employee", flex: 1.4 },
-  { label: "Type", flex: 1 },
-  { label: "Category", flex: 1 },
-  { label: "Amount", flex: 0.9 },
-  { label: "Submitted", flex: 0.9 },
-  { label: "Approved", flex: 0.9 },
-  { label: "Delay", flex: 0.65 },
-];
+const TABLE_COLS = LEAD_CLAIMS_COLS.filter((c) => c.key !== "status");
 
 function ClaimsTable({ claims, fmtSym }: { claims: LeadApprovedClaim[]; fmtSym: (v: number) => string }) {
   const [search, setSearch] = useState("");
@@ -170,6 +163,10 @@ function ClaimsTable({ claims, fmtSym }: { claims: LeadApprovedClaim[]; fmtSym: 
                       <Typography sx={{ fontSize: 11, fontWeight: 600, color: meta.color }}>{claim.claimType}</Typography>
                     </Box>
                   </Box>
+
+                  <Typography sx={{ flex: 1.2, fontSize: 12, color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", pr: 1 }}>
+                    {claim.subCategory ?? claim.claimType}
+                  </Typography>
 
                   <Typography sx={{ flex: 1, fontSize: 12, color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {claim.category ?? "—"}
@@ -378,8 +375,9 @@ export default function LeadApprovalFrequencyModal({
                 avgResponseDays: detail.avgResponseDays,
                 firstApprovedDate: null,
                 lastApprovedDate: detail.lastApprovedDate,
+                categoryBreakdown,
                 employeeBreakdown,
-                claims: detail.claims,
+                claims: detail.claims.map((c) => ({ ...c, subCategory: c.subCategory ?? c.claimType })),
               });
             }}
             sx={{

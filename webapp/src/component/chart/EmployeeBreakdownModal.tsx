@@ -21,10 +21,13 @@ import { ChevronDown, ChevronRight, Download, TrendingDown, TrendingUp, X } from
 import { useEffect, useState } from "react";
 
 import {
+  type EmployeeCategoryTransactionItem,
   type EmployeeSpendingBreakdownResponse,
+  resolveDateRangeParams,
   useEmployeeBreakdown,
   useEmployeeCategoryTransactions,
 } from "@slices/expenseSlice/useEmployeeSpending";
+import { apiService } from "@utils/apiService";
 import { type CurrencyCode, CURRENCIES, formatWithSymbol } from "@utils/currency";
 import { exportEmployeeBreakdown } from "@utils/exportExcel";
 
@@ -512,6 +515,7 @@ export default function EmployeeBreakdownModal({
   const [statusTab, setStatusTab] = useState<StatusTab>("All");
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState<CompareMode>("prevMonth");
+  const [exportLoading, setExportLoading] = useState(false);
 
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
 
@@ -543,6 +547,79 @@ export default function EmployeeBreakdownModal({
   const maxComp = compBreakdown ? Math.max(...compBreakdown.categories.map((c) => c.total), 1) : 1;
   const compMap = new Map((compBreakdown?.categories ?? []).map((c) => [c.category, c]));
 
+  const handleExport = async () => {
+    if (!breakdown || !employeeEmail) return;
+    setExportLoading(true);
+
+    const curParams = resolveDateRangeParams(dateRange);
+    const cmpParams = resolveDateRangeParams(compDateRange);
+    const statusParam = statusTab === "All" ? undefined : statusTab;
+
+    const fetchSubs = (params: typeof curParams) =>
+      Promise.all(
+        breakdown.categories.map((cat) =>
+          apiService
+            .get<EmployeeCategoryTransactionItem[]>("/employee-category-transactions", {
+              params: {
+                email: employeeEmail,
+                category: cat.category,
+                year: params.year,
+                month: params.month,
+                months: params.months,
+                ...(statusParam ? { statusFilter: statusParam } : {}),
+              },
+            })
+            .then((r) => ({ category: cat.category, txns: r.data ?? [] }))
+            .catch(() => ({ category: cat.category, txns: [] as EmployeeCategoryTransactionItem[] })),
+        ),
+      );
+
+    const buildSubMap = (txns: EmployeeCategoryTransactionItem[]) => {
+      const m = new Map<string, number>();
+      txns.forEach((t) => m.set(t.description, (m.get(t.description) ?? 0) + Number(t.amount)));
+      return m;
+    };
+
+    try {
+      const [curResults, cmpResults] = await Promise.all([fetchSubs(curParams), fetchSubs(cmpParams)]);
+      const curSubMaps = new Map(curResults.map((r) => [r.category, buildSubMap(r.txns)]));
+      const cmpSubMaps = new Map(cmpResults.map((r) => [r.category, buildSubMap(r.txns)]));
+
+      exportEmployeeBreakdown({
+        name: employeeName,
+        email: employeeEmail,
+        dateRange,
+        statusTab,
+        currency: CURRENCIES[currency].code,
+        totalAmount: breakdown.totalAmount,
+        claimCount: breakdown.claimCount,
+        compareMode,
+        prevTotalAmount: compBreakdown?.totalAmount ?? 0,
+        prevClaimCount: compBreakdown?.claimCount ?? 0,
+        categories: breakdown.categories.map((cat) => {
+          const cmp = compMap.get(cat.category);
+          const curSubMap = curSubMaps.get(cat.category) ?? new Map<string, number>();
+          const cmpSubMap = cmpSubMaps.get(cat.category) ?? new Map<string, number>();
+          const allSubNames = [...new Set([...curSubMap.keys(), ...cmpSubMap.keys()])].sort();
+          return {
+            category: cat.category,
+            total: cat.total,
+            claimCount: cat.claimCount,
+            percentage: cat.percentage,
+            compTotal: cmp?.total ?? 0,
+            compClaimCount: cmp?.claimCount ?? 0,
+            subCategories: allSubNames.map((name) => ({
+              name,
+              currentTotal: curSubMap.get(name) ?? 0,
+              compTotal: cmpSubMap.get(name) ?? 0,
+            })),
+          };
+        }),
+      });
+    } finally {
+      setExportLoading(false);
+    }
+  };
 
   return (
     <Dialog
@@ -587,50 +664,27 @@ export default function EmployeeBreakdownModal({
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Box
-            onClick={() => {
-              if (!breakdown) return;
-              exportEmployeeBreakdown({
-                name: employeeName,
-                email: employeeEmail ?? "",
-                dateRange,
-                statusTab,
-                currency: CURRENCIES[currency].code,
-                totalAmount: breakdown.totalAmount,
-                claimCount: breakdown.claimCount,
-                compareMode,
-                prevTotalAmount: compBreakdown?.totalAmount ?? 0,
-                prevClaimCount: compBreakdown?.claimCount ?? 0,
-                categories: breakdown.categories.map((cat) => {
-                  const cmp = compMap.get(cat.category);
-                  return {
-                    category: cat.category,
-                    total: cat.total,
-                    claimCount: cat.claimCount,
-                    percentage: cat.percentage,
-                    compTotal: cmp?.total ?? 0,
-                    compClaimCount: cmp?.claimCount ?? 0,
-                  };
-                }),
-              });
-            }}
+            onClick={!breakdown || exportLoading ? undefined : handleExport}
             sx={{
               display: "flex",
               alignItems: "center",
               gap: 0.6,
-              cursor: breakdown ? "pointer" : "not-allowed",
-              opacity: breakdown ? 1 : 0.4,
+              cursor: breakdown && !exportLoading ? "pointer" : "not-allowed",
+              opacity: breakdown && !exportLoading ? 1 : 0.4,
               color: "primary.main",
               px: 1.25,
               py: 0.5,
               borderRadius: 1,
               border: "1px solid",
               borderColor: "primary.main",
-              "&:hover": breakdown ? { bgcolor: "primary.main", color: "#fff" } : {},
+              "&:hover": breakdown && !exportLoading ? { bgcolor: "primary.main", color: "#fff" } : {},
               transition: "all 0.2s",
             }}
           >
-            <Download size={14} />
-            <Typography sx={{ fontSize: 12, fontWeight: 700 }}>Export</Typography>
+            {exportLoading ? <CircularProgress size={14} color="inherit" /> : <Download size={14} />}
+            <Typography sx={{ fontSize: 12, fontWeight: 700 }}>
+              {exportLoading ? "Exporting..." : "Export"}
+            </Typography>
           </Box>
           <Box
             onClick={onClose}
