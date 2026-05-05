@@ -37,7 +37,8 @@ function applyAutoWidths(ws: XLSX.WorkSheet): void {
 }
 
 function safeFileName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9]/g, "_");
+  const safe = name.replace(/[^a-zA-Z0-9]/g, "_").replace(/^_+|_+$/g, "");
+  return safe || "export";
 }
 
 export interface EmployeeBreakdownExportParams {
@@ -147,8 +148,11 @@ export function exportLeadApprovals(p: LeadApprovalsExportParams): void {
   const claimRows = p.claims.map((c) => {
     let delay: number | string = "—";
     if (c.submittedDate && c.approvedDate) {
-      const ms = new Date(c.approvedDate).getTime() - new Date(c.submittedDate).getTime();
-      delay = Math.round(ms / (1000 * 60 * 60 * 24));
+      const approvedMs = new Date(c.approvedDate).getTime();
+      const submittedMs = new Date(c.submittedDate).getTime();
+      if (!Number.isNaN(approvedMs) && !Number.isNaN(submittedMs)) {
+        delay = Math.round((approvedMs - submittedMs) / (1000 * 60 * 60 * 24));
+      }
     }
     return [c.claimId, c.employeeName, c.claimType, c.category ?? "—", c.amount, c.submittedDate ?? "—", c.approvedDate ?? "—", delay, c.status];
   });

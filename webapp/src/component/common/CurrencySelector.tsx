@@ -37,6 +37,13 @@ export default function CurrencySelector({ value, onChange }: CurrencySelectorPr
     <>
       <Box
         onClick={(e) => setAnchorEl(e.currentTarget)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            setAnchorEl(e.currentTarget as HTMLElement);
+          }
+        }}
+        role="button"
+        tabIndex={0}
         sx={{
           display: "inline-flex",
           alignItems: "center",

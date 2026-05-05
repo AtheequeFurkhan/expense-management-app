@@ -73,6 +73,8 @@ export function resolveDateRangeParams(dateRange: string): DateRangeParams {
       return { year: String(currentYear), month: String(currentMonth), months: "3" };
     case "Last 6 Months":
       return { year: String(currentYear), month: String(currentMonth), months: "6" };
+    case "Last 9 Months":
+      return { year: String(currentYear), month: String(currentMonth), months: "9" };
     case "Year to Date":
       return {
         year: String(currentYear),
@@ -289,6 +291,14 @@ export function useEmployeeCategoryTransactions(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const cacheRef = useRef<Map<string, EmployeeCategoryTransactionItem[]>>(new Map());
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const fetchTransactions = useCallback(
     (emp: string, cat: string) => {
@@ -311,6 +321,7 @@ export function useEmployeeCategoryTransactions(
       apiService
         .get<EmployeeCategoryTransactionItem[]>("/employee-category-transactions", { params })
         .then((res) => {
+          if (!mountedRef.current) return;
           const data = (res.data ?? []).map((t) => ({
             ...t,
             amount: Number(t.amount),
@@ -319,12 +330,13 @@ export function useEmployeeCategoryTransactions(
           setTransactions(data);
         })
         .catch((err) => {
+          if (!mountedRef.current) return;
           if (!axios.isCancel(err)) {
             setError("Failed to load transactions.");
           }
         })
         .finally(() => {
-          setLoading(false);
+          if (mountedRef.current) setLoading(false);
         });
     },
     [dateRange, statusFilter],

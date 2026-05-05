@@ -372,7 +372,7 @@ export default function LeadApprovalFrequencyModal({
               exportLeadApprovals({
                 name: leadName,
                 email: leadEmail ?? "",
-                dateRange,
+                dateRange: localDateRange,
                 currency: CURRENCIES[currency].code,
                 totalApproved: detail.totalApproved,
                 avgResponseDays: detail.avgResponseDays,

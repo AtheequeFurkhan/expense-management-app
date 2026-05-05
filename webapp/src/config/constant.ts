@@ -140,7 +140,7 @@ export const PERIOD_TO_DATE_RANGE: Record<string, string> = {
   current: "This Month",
   pastThree: "Last 3 Months",
   pastSix: "Last 6 Months",
-  pastNine: "Last 6 Months",
+  pastNine: "Last 9 Months",
   pastTwelve: "Year to Date",
 };
 
@@ -150,6 +150,7 @@ export const DATE_RANGE_TO_PERIOD: Record<string, string> = {
   "Last Month": "current",
   "Last 3 Months": "pastThree",
   "Last 6 Months": "pastSix",
+  "Last 9 Months": "pastNine",
   "Year to Date": "pastTwelve",
   "Last Year": "pastTwelve",
 };

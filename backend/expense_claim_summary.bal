@@ -161,12 +161,9 @@ public function getExpenseClaimSummary(int year, int month, int months,
     int prevApproved = 0;
 
     if months > 0 {
-        int prevMonth = month - months;
-        int prevYear = year;
-        if prevMonth <= 0 {
-            prevMonth = prevMonth + 12;
-            prevYear = prevYear - 1;
-        }
+        int totalMonths = (year * 12 + month) - months;
+        int prevYear = (totalMonths - 1) / 12;
+        int prevMonth = ((totalMonths - 1) % 12) + 1;
 
         database:ExpenseSummaryStatsRow prevStats = check database:queryExpenseSummaryStats(prevYear, prevMonth, months, businessUnit);
         prevTotalAmount = prevStats.totalAmount;

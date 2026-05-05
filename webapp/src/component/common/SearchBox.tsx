@@ -41,6 +41,9 @@ export default function SearchBox({ value, onChange, placeholder = "Search..." }
       <Search size={16} style={{ color: "var(--mui-palette-text-disabled, #888)", flexShrink: 0 }} />
       <Box
         component="input"
+        type="text"
+        role="searchbox"
+        aria-label={placeholder}
         value={value}
         onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
         placeholder={placeholder}

@@ -56,7 +56,7 @@ export default function PaginationBar({ page, totalPages, onPageChange }: Pagina
         ← Prev
       </Box>
       <Typography sx={{ fontSize: 12, color: "text.disabled" }}>
-        {page + 1} / {totalPages}
+        {page + 1} / {Math.max(totalPages, 1)}
       </Typography>
       <Box
         component="button"
