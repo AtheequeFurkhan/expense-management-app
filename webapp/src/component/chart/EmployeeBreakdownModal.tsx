@@ -18,19 +18,15 @@ import DialogContent from "@mui/material/DialogContent";
 import { Box, CircularProgress, Skeleton, Typography } from "@wso2/oxygen-ui";
 import { ChevronDown, ChevronRight, Download, TrendingDown, TrendingUp, X } from "lucide-react";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
-  type EmployeeCategoryTransactionItem,
   type EmployeeSpendingBreakdownResponse,
-  resolveDateRangeParams,
   useEmployeeBreakdown,
   useEmployeeCategoryTransactions,
 } from "@slices/expenseSlice/useEmployeeSpending";
-import { apiService } from "@utils/apiService";
 import { type CurrencyCode, CURRENCIES, formatWithSymbol } from "@utils/currency";
 import { exportEmployeeBreakdown } from "@utils/exportExcel";
-import { exportEmployeeBreakdownPdf } from "@utils/exportPdf";
 
 const SEGMENT_COLORS = [
   "#00B4D8",
@@ -516,7 +512,6 @@ export default function EmployeeBreakdownModal({
   const [statusTab, setStatusTab] = useState<StatusTab>("All");
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const [compareMode, setCompareMode] = useState<CompareMode>("prevMonth");
-  const [pdfLoading, setPdfLoading] = useState(false);
 
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
 
@@ -548,79 +543,6 @@ export default function EmployeeBreakdownModal({
   const maxComp = compBreakdown ? Math.max(...compBreakdown.categories.map((c) => c.total), 1) : 1;
   const compMap = new Map((compBreakdown?.categories ?? []).map((c) => [c.category, c]));
 
-  const handlePdfExport = useCallback(async () => {
-    if (!breakdown || !employeeEmail) return;
-    setPdfLoading(true);
-    try {
-      const statusFilter = statusTab === "All" ? "" : statusTab;
-      const curParams = resolveDateRangeParams(dateRange);
-      const cmpParams = resolveDateRangeParams(compDateRange);
-
-      const fetchTxns = async (
-        cat: string,
-        params: ReturnType<typeof resolveDateRangeParams>,
-      ): Promise<EmployeeCategoryTransactionItem[]> => {
-        const p: Record<string, string> = {
-          email: employeeEmail,
-          category: cat,
-          year: params.year,
-          month: params.month,
-          months: params.months,
-        };
-        if (statusFilter) p.statusFilter = statusFilter;
-        const res = await apiService.get<EmployeeCategoryTransactionItem[]>(
-          "/employee-category-transactions",
-          { params: p },
-        );
-        return (res.data ?? []).map((t) => ({ ...t, amount: Number(t.amount) }));
-      };
-
-      const categories = await Promise.all(
-        breakdown.categories.map(async (cat, i) => {
-          const [curTxns, cmpTxns] = await Promise.all([
-            fetchTxns(cat.category, curParams),
-            fetchTxns(cat.category, cmpParams),
-          ]);
-          const curMap = new Map<string, number>();
-          curTxns.forEach((t) => curMap.set(t.description, (curMap.get(t.description) ?? 0) + t.amount));
-          const cmpMapLocal = new Map<string, number>();
-          cmpTxns.forEach((t) => cmpMapLocal.set(t.description, (cmpMapLocal.get(t.description) ?? 0) + t.amount));
-          const allSubs = [...new Set([...curMap.keys(), ...cmpMapLocal.keys()])].sort();
-          const cmp = compMap.get(cat.category);
-          return {
-            category: cat.category,
-            total: cat.total,
-            claimCount: cat.claimCount,
-            percentage: cat.percentage,
-            compTotal: cmp?.total ?? 0,
-            compClaimCount: cmp?.claimCount ?? 0,
-            color: SEGMENT_COLORS[i % SEGMENT_COLORS.length],
-            subExpenses: allSubs.map((sub) => ({
-              name: sub,
-              currentAmount: curMap.get(sub) ?? 0,
-              compAmount: cmpMapLocal.get(sub) ?? 0,
-            })),
-          };
-        }),
-      );
-
-      exportEmployeeBreakdownPdf({
-        name: employeeName,
-        email: employeeEmail,
-        dateRange,
-        statusTab,
-        currency: CURRENCIES[currency].code,
-        totalAmount: breakdown.totalAmount,
-        claimCount: breakdown.claimCount,
-        compareMode,
-        prevTotalAmount: compBreakdown?.totalAmount ?? 0,
-        prevClaimCount: compBreakdown?.claimCount ?? 0,
-        categories,
-      });
-    } finally {
-      setPdfLoading(false);
-    }
-  }, [breakdown, compBreakdown, compDateRange, compareMode, compMap, currency, dateRange, employeeEmail, employeeName, statusTab]);
 
   return (
     <Dialog
@@ -664,35 +586,6 @@ export default function EmployeeBreakdownModal({
           )}
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          {/* PDF Export */}
-          <Box
-            onClick={handlePdfExport}
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 0.6,
-              cursor: breakdown && !pdfLoading ? "pointer" : "not-allowed",
-              opacity: breakdown && !pdfLoading ? 1 : 0.4,
-              color: "#C62828",
-              px: 1.25,
-              py: 0.5,
-              borderRadius: 1,
-              border: "1px solid #C62828",
-              "&:hover": breakdown && !pdfLoading ? { bgcolor: "#C62828", color: "#fff" } : {},
-              transition: "all 0.2s",
-            }}
-          >
-            {pdfLoading ? (
-              <CircularProgress size={13} sx={{ color: "inherit" }} />
-            ) : (
-              <Download size={14} />
-            )}
-            <Typography sx={{ fontSize: 12, fontWeight: 700 }}>
-              {pdfLoading ? "Exporting…" : "PDF"}
-            </Typography>
-          </Box>
-
-          {/* Excel Export */}
           <Box
             onClick={() => {
               if (!breakdown) return;

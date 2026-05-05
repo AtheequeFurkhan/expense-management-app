@@ -69,6 +69,9 @@ export default function ExpenseClaims() {
   const [chartPeriod, setChartPeriod] = useState("all");
   const [currency, setCurrency] = useState<CurrencyCode>("LKR");
   const [selectedRecurringCategory, setSelectedRecurringCategory] = useState<string | null>(null);
+  const [recurringPage, setRecurringPage] = useState(0);
+
+  const RECURRING_PAGE_SIZE = 8;
 
   const fmt = (v: number) => formatCurrencyValue(v, currency);
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
@@ -116,10 +119,16 @@ export default function ExpenseClaims() {
         .sort((a, b) => b.value - a.value)
     : [];
 
-  const recurringChartItems =
-    selectedRecurringCategory === null ? recurringCategoryItems : recurringDetailItems;
-
-  const recurringMaxValue = Math.max(...recurringChartItems.map((d) => d.value), 1);
+  const recurringTotalPages = Math.max(1, Math.ceil(recurringCategoryItems.length / RECURRING_PAGE_SIZE));
+  const recurringPageItems = recurringCategoryItems.slice(
+    recurringPage * RECURRING_PAGE_SIZE,
+    (recurringPage + 1) * RECURRING_PAGE_SIZE,
+  );
+  const recurringPageKeys = recurringCategoryKeys.slice(
+    recurringPage * RECURRING_PAGE_SIZE,
+    (recurringPage + 1) * RECURRING_PAGE_SIZE,
+  );
+  const recurringPageMaxValue = Math.max(...recurringPageItems.map((d) => d.value), 1);
 
   // Sync main date range → chart period
   useEffect(() => {
@@ -158,6 +167,11 @@ export default function ExpenseClaims() {
       setSelectedRecurringCategory(null);
     }
   }, [recurringExpenseGroups, selectedRecurringCategory]);
+
+  // Reset pagination when period changes or drill-down is closed
+  useEffect(() => {
+    setRecurringPage(0);
+  }, [chartPeriod, selectedRecurringCategory]);
 
   if (loading && !hasLoadedOnce) {
     return (
@@ -380,7 +394,6 @@ export default function ExpenseClaims() {
               ? `${selectedRecurringCategory} sub-expenses`
               : "Grouped expense categories"
           }
-          minHeight={520}
           action={
             <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
               {selectedRecurringCategory ? (
@@ -400,46 +413,96 @@ export default function ExpenseClaims() {
             </Box>
           }
         >
-          <Box
-            sx={{
-              maxHeight: 460,
-              overflowY: "auto",
-              pr: 1,
-              "&::-webkit-scrollbar": { width: 6 },
-              "&::-webkit-scrollbar-track": {
-                bgcolor: "action.hover",
-                borderRadius: 3,
-              },
-              "&::-webkit-scrollbar-thumb": {
-                bgcolor: "text.disabled",
-                borderRadius: 3,
-                "&:hover": { bgcolor: "text.secondary" },
-              },
-            }}
-          >
-            {selectedRecurringCategory === null ? (
+          {selectedRecurringCategory === null ? (
+            <Box>
               <HorizontalBarChart
-                data={recurringCategoryItems}
+                data={recurringPageItems}
                 formatValue={(v) => fmtSym(v)}
                 barColor="#2E8B57"
                 barHoverColor="#246d45"
-                maxValue={recurringMaxValue}
+                maxValue={recurringPageMaxValue}
                 onItemClick={(_, index) => {
-                  setSelectedRecurringCategory(recurringCategoryKeys[index] ?? null);
+                  setSelectedRecurringCategory(recurringPageKeys[index] ?? null);
                 }}
                 showRank={false}
                 barHeight={24}
                 labelWidth={220}
               />
-            ) : (
-              <DoughnutChart
-                data={recurringDetailItems}
-                formatValue={(v) => fmtSym(v)}
-                centerLabel={selectedRecurringCategory}
-                centerValue={fmtSym(recurringExpenseGroups[selectedRecurringCategory]?.total ?? 0)}
-              />
-            )}
-          </Box>
+
+              {/* Pagination bar */}
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  mt: 2,
+                  pt: 1.5,
+                  borderTop: "1px solid",
+                  borderColor: "divider",
+                }}
+              >
+                <Box
+                  onClick={() => setRecurringPage((p) => Math.max(0, p - 1))}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    px: 1.5,
+                    py: 0.6,
+                    borderRadius: 1,
+                    border: "1px solid",
+                    borderColor: recurringPage === 0 ? "transparent" : "divider",
+                    color: recurringPage === 0 ? "text.disabled" : "text.secondary",
+                    cursor: recurringPage === 0 ? "default" : "pointer",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    userSelect: "none",
+                    "&:hover": recurringPage > 0 ? { bgcolor: "action.hover" } : {},
+                    transition: "all 0.15s",
+                  }}
+                >
+                  ← Prev
+                </Box>
+
+                <Box sx={{ fontSize: 13, color: "text.secondary" }}>
+                  <Box component="span" sx={{ fontWeight: 700, color: "text.primary" }}>
+                    {recurringPage + 1}
+                  </Box>
+                  {" / "}{recurringTotalPages}
+                </Box>
+
+                <Box
+                  onClick={() => setRecurringPage((p) => Math.min(recurringTotalPages - 1, p + 1))}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    px: 1.5,
+                    py: 0.6,
+                    borderRadius: 1,
+                    border: "1px solid",
+                    borderColor: recurringPage === recurringTotalPages - 1 ? "transparent" : "divider",
+                    color: recurringPage === recurringTotalPages - 1 ? "text.disabled" : "text.secondary",
+                    cursor: recurringPage === recurringTotalPages - 1 ? "default" : "pointer",
+                    fontSize: 13,
+                    fontWeight: 600,
+                    userSelect: "none",
+                    "&:hover": recurringPage < recurringTotalPages - 1 ? { bgcolor: "action.hover" } : {},
+                    transition: "all 0.15s",
+                  }}
+                >
+                  Next →
+                </Box>
+              </Box>
+            </Box>
+          ) : (
+            <DoughnutChart
+              data={recurringDetailItems}
+              formatValue={(v) => fmtSym(v)}
+              centerLabel={selectedRecurringCategory}
+              centerValue={fmtSym(recurringExpenseGroups[selectedRecurringCategory]?.total ?? 0)}
+            />
+          )}
         </ChartCard>
       </Box>
     </Box>
