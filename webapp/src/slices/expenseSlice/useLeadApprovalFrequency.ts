@@ -28,6 +28,8 @@ import {
   HIGH_FREQ_THRESHOLD,
   MED_FREQ_THRESHOLD,
   MS_PER_DAY,
+  RESP_FAST_DAYS,
+  RESP_MED_DAYS,
 } from "@config/constant";
 import { apiService } from "@utils/apiService";
 
@@ -39,6 +41,7 @@ export interface LeadFrequencyItem {
   bu: string;
   totalApproved: number;
   avgFrequencyPerDay: number;
+  avgResponseDays: number;
   firstApprovedDate: string | null;
   lastApprovedDate: string | null;
 }
@@ -65,6 +68,7 @@ export interface LeadApprovalDetail {
   email: string;
   totalApproved: number;
   avgFrequencyPerDay: number;
+  avgResponseDays: number;
   lastApprovedDate: string | null;
   claimTypeBreakdown: LeadClaimTypeBreakdown[];
   claims: LeadApprovedClaim[];
@@ -78,6 +82,19 @@ export function formatApprovalFrequency(claimsPerDay: number): string {
 export function getFrequencyStyle(claimsPerDay: number): { color: string; bg: string } {
   if (claimsPerDay >= HIGH_FREQ_THRESHOLD) return { color: FREQ_HIGH_COLOR, bg: FREQ_HIGH_BG };
   if (claimsPerDay >= MED_FREQ_THRESHOLD) return { color: FREQ_MED_COLOR, bg: FREQ_MED_BG };
+  return { color: FREQ_LOW_COLOR, bg: FREQ_LOW_BG };
+}
+
+export function formatResponseTime(days: number): string {
+  if (days <= 0) return "No data";
+  if (days < 1) return "< 1 day avg";
+  return `${days.toFixed(1)} days avg`;
+}
+
+export function getResponseTimeStyle(avgResponseDays: number): { color: string; bg: string } {
+  if (avgResponseDays <= 0) return { color: FREQ_LOW_COLOR, bg: FREQ_LOW_BG };
+  if (avgResponseDays <= RESP_FAST_DAYS) return { color: FREQ_HIGH_COLOR, bg: FREQ_HIGH_BG };
+  if (avgResponseDays <= RESP_MED_DAYS) return { color: FREQ_MED_COLOR, bg: FREQ_MED_BG };
   return { color: FREQ_LOW_COLOR, bg: FREQ_LOW_BG };
 }
 
@@ -129,6 +146,7 @@ export function useLeadFrequencyList(dateRange: string, businessUnit: string) {
                   l.firstApprovedDate ?? "",
                   l.lastApprovedDate ?? "",
                 ),
+              avgResponseDays: Number(l.avgResponseDays) || 0,
             })),
           );
         }
@@ -180,19 +198,23 @@ export function useLeadApprovalDetail(email: string | null, dateRange: string) {
           const computedFreq =
             Number(d.avgFrequencyPerDay) ||
             computeFreq(Number(d.totalApproved), firstDate ?? "", d.lastApprovedDate ?? "");
+          const mappedClaims = (d.claims ?? []).map((c) => ({ ...c, amount: Number(c.amount) }));
+          const delays = mappedClaims
+            .map((c) => calcDaysBetween(c.submittedDate, c.approvedDate))
+            .filter((v): v is number => v !== null);
+          const avgResponseDays =
+            delays.length > 0 ? delays.reduce((a, b) => a + b, 0) / delays.length : 0;
           setDetail({
               ...d,
               totalApproved: Number(d.totalApproved),
               avgFrequencyPerDay: computedFreq,
+              avgResponseDays,
               claimTypeBreakdown: (d.claimTypeBreakdown ?? []).map((c) => ({
                 ...c,
                 count: Number(c.count),
                 totalAmount: Number(c.totalAmount),
               })),
-              claims: (d.claims ?? []).map((c) => ({
-                ...c,
-                amount: Number(c.amount),
-              })),
+              claims: mappedClaims,
             });
         }
       })

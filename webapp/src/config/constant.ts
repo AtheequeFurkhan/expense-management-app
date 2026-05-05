@@ -108,6 +108,9 @@ export const DAYS_PER_MONTH = 30;
 export const HIGH_FREQ_THRESHOLD = 1 / 7;
 export const MED_FREQ_THRESHOLD = 1 / 30;
 
+export const RESP_FAST_DAYS = 2;
+export const RESP_MED_DAYS = 7;
+
 export const FREQ_HIGH_COLOR = "#2E8B57";
 export const FREQ_MED_COLOR = "#F4B400";
 export const FREQ_LOW_COLOR = "#9E9E9E";

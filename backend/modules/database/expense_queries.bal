@@ -461,7 +461,8 @@ isolated function getLeadFrequencyListQuery(int year, int month, int months,
                COUNT(*) AS totalApproved,
                DATE_FORMAT(MIN(ec.lead_approved_date), '%Y-%m-%d') AS firstApprovedDate,
                DATE_FORMAT(MAX(ec.lead_approved_date), '%Y-%m-%d') AS lastApprovedDate,
-               GREATEST(1, DATEDIFF(MAX(ec.lead_approved_date), MIN(ec.lead_approved_date))) AS daySpan
+               GREATEST(1, DATEDIFF(MAX(ec.lead_approved_date), MIN(ec.lead_approved_date))) AS daySpan,
+               COALESCE(AVG(DATEDIFF(ec.lead_approved_date, ec.txn_date)), 0) AS avgResponseDays
         FROM expense_claims ec
         WHERE `;
 

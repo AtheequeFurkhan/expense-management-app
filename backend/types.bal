@@ -220,6 +220,8 @@ public type LeadFrequencyItemResponse record {|
     int totalApproved;
     # Average approval frequency in claims per day.
     decimal avgFrequencyPerDay;
+    # Average number of days between claim submission and lead approval.
+    decimal avgResponseDays;
     # Date of the first approval in the range (YYYY-MM-DD), or null.
     string? firstApprovedDate;
     # Date of the most recent approval in the range (YYYY-MM-DD), or null.

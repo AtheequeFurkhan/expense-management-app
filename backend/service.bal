@@ -472,6 +472,7 @@ service http:InterceptableService / on new http:Listener(9090) {
                 bu: "",
                 totalApproved: row.totalApproved,
                 avgFrequencyPerDay: avgFreq,
+                avgResponseDays: row.avgResponseDays,
                 firstApprovedDate: row.firstApprovedDate,
                 lastApprovedDate: row.lastApprovedDate
             });

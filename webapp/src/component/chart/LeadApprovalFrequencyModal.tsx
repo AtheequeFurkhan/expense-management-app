@@ -23,8 +23,8 @@ import { useMemo, useState } from "react";
 import {
   type LeadApprovedClaim,
   calcDaysBetween,
-  formatApprovalFrequency,
-  getFrequencyStyle,
+  formatResponseTime,
+  getResponseTimeStyle,
   useLeadApprovalDetail,
 } from "@slices/expenseSlice/useLeadApprovalFrequency";
 import { type CurrencyCode, CURRENCIES, formatWithSymbol } from "@utils/currency";
@@ -323,8 +323,8 @@ export default function LeadApprovalFrequencyModal({
 
   const maxCount = employeeBreakdown.length > 0 ? employeeBreakdown[0].count : 1;
 
-  const { color: freqColor, bg: freqBg } = getFrequencyStyle(detail?.avgFrequencyPerDay ?? 0);
-  const freqLabel = detail ? formatApprovalFrequency(detail.avgFrequencyPerDay) : null;
+  const { color: freqColor, bg: freqBg } = getResponseTimeStyle(detail?.avgResponseDays ?? 0);
+  const freqLabel = detail ? formatResponseTime(detail.avgResponseDays) : null;
 
   const lastDate = detail?.lastApprovedDate
     ? new Date(detail.lastApprovedDate).toLocaleDateString("en-GB", {
@@ -415,7 +415,7 @@ export default function LeadApprovalFrequencyModal({
                 dateRange,
                 currency: CURRENCIES[currency].code,
                 totalApproved: detail.totalApproved,
-                avgFrequencyPerDay: detail.avgFrequencyPerDay,
+                avgResponseDays: detail.avgResponseDays,
                 firstApprovedDate: null,
                 lastApprovedDate: detail.lastApprovedDate,
                 employeeBreakdown,

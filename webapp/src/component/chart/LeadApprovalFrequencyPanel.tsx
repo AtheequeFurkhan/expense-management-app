@@ -24,8 +24,8 @@ import SearchBox from "@component/common/SearchBox";
 import { MONTH_OPTIONS, PAGE_SIZE_LEADS } from "@config/constant";
 import {
   type LeadFrequencyItem,
-  formatApprovalFrequency,
-  getFrequencyStyle,
+  formatResponseTime,
+  getResponseTimeStyle,
   useLeadFrequencyList,
 } from "@slices/expenseSlice/useLeadApprovalFrequency";
 import { type CurrencyCode } from "@utils/currency";
@@ -40,6 +40,7 @@ function toFrequencyItem(lead: TopLeadItem): LeadFrequencyItem {
     bu: lead.bu,
     totalApproved: lead.count,
     avgFrequencyPerDay: 0,
+    avgResponseDays: 0,
     firstApprovedDate: null,
     lastApprovedDate: null,
   };
@@ -61,8 +62,8 @@ function LeadRow({
   lead: LeadFrequencyItem;
   onClick: () => void;
 }) {
-  const { color: freqColor, bg: freqBg } = getFrequencyStyle(lead.avgFrequencyPerDay);
-  const freqLabel = formatApprovalFrequency(lead.avgFrequencyPerDay);
+  const { color: freqColor, bg: freqBg } = getResponseTimeStyle(lead.avgResponseDays);
+  const freqLabel = formatResponseTime(lead.avgResponseDays);
 
   const lastDate = lead.lastApprovedDate
     ? new Date(lead.lastApprovedDate).toLocaleString("default", {
@@ -123,7 +124,7 @@ function LeadRow({
             px: 1,
             py: 0.25,
             borderRadius: 1,
-            bgcolor: lead.avgFrequencyPerDay > 0 ? freqBg : "action.hover",
+            bgcolor: lead.avgResponseDays > 0 ? freqBg : "action.hover",
             minWidth: 110,
             textAlign: "center",
           }}
@@ -132,11 +133,11 @@ function LeadRow({
             sx={{
               fontSize: 11,
               fontWeight: 700,
-              color: lead.avgFrequencyPerDay > 0 ? freqColor : "text.disabled",
+              color: lead.avgResponseDays > 0 ? freqColor : "text.disabled",
               whiteSpace: "nowrap",
             }}
           >
-            {lead.avgFrequencyPerDay > 0 ? freqLabel : "Frequency N/A"}
+            {freqLabel}
           </Typography>
         </Box>
 
@@ -173,11 +174,12 @@ export default function LeadApprovalFrequencyPanel({
 
   const sorted = useMemo(
     () =>
-      [...leads].sort((a, b) =>
-        b.avgFrequencyPerDay !== a.avgFrequencyPerDay
-          ? b.avgFrequencyPerDay - a.avgFrequencyPerDay
-          : b.totalApproved - a.totalApproved,
-      ),
+      [...leads].sort((a, b) => {
+        if (a.avgResponseDays === 0 && b.avgResponseDays > 0) return 1;
+        if (b.avgResponseDays === 0 && a.avgResponseDays > 0) return -1;
+        if (a.avgResponseDays !== b.avgResponseDays) return a.avgResponseDays - b.avgResponseDays;
+        return b.totalApproved - a.totalApproved;
+      }),
     [leads],
   );
 
@@ -202,8 +204,8 @@ export default function LeadApprovalFrequencyPanel({
   return (
     <>
       <ChartCard
-        title="Lead Approval Frequency"
-        subtitle="How often each lead/approver approves claims on average"
+        title="Lead Approval Response Time"
+        subtitle="Average days from claim submission to lead approval"
         minHeight={420}
         action={
           <ChartPeriodFilter

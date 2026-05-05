@@ -169,6 +169,8 @@ public type LeadFrequencyRow record {|
     string? lastApprovedDate;
     # Number of days between first and last approval (minimum 1).
     int daySpan;
+    # Average number of days between claim submission and lead approval.
+    decimal avgResponseDays;
 |};
 
 # Query result for individual approved claims under a specific lead.

@@ -104,7 +104,7 @@ export interface LeadApprovalsExportParams {
   dateRange: string;
   currency: string;
   totalApproved: number;
-  avgFrequencyPerDay: number;
+  avgResponseDays: number;
   firstApprovedDate: string | null;
   lastApprovedDate: string | null;
   employeeBreakdown: Array<{
@@ -134,7 +134,7 @@ export function exportLeadApprovals(p: LeadApprovalsExportParams): void {
     ["Period", p.dateRange],
     ["Currency", p.currency],
     ["Total Approvals", p.totalApproved],
-    ["Avg Frequency (claims/day)", p.avgFrequencyPerDay],
+    ["Avg Response Time (days)", p.avgResponseDays],
     ["First Approval Date", p.firstApprovedDate ?? "—"],
     ["Last Approval Date", p.lastApprovedDate ?? "—"],
   ]);
