@@ -28,9 +28,9 @@ configurable decimal claimRangeStep = ?;
 configurable int lastYearClaimGracePeriodInDays = ?;
 
 final cache:Cache cache = new ({
-    capacity: 2000,
-    defaultMaxAge: 1800.0,
-    cleanupInterval: 900.0
+    capacity: CACHE_CAPACITY,
+    defaultMaxAge: CACHE_DEFAULT_MAX_AGE,
+    cleanupInterval: CACHE_CLEANUP_INTERVAL
 });
 
 service class ErrorInterceptor {

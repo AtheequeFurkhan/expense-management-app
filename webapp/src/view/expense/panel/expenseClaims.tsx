@@ -26,7 +26,14 @@ import EmployeeSpendingBreakdownPanel from "@component/chart/EmployeeSpendingBre
 import HorizontalBarChart from "@component/chart/HorizontalBarChart";
 import LeadApprovalFrequencyPanel from "@component/chart/LeadApprovalFrequencyPanel";
 import CurrencySelector from "@component/common/CurrencySelector";
-import { MONTH_OPTIONS, OPD_SUMMARY_CARDS_CONFIG } from "@config/constant";
+import {
+  DATE_RANGE_TO_PERIOD,
+  DEFAULT_CURRENCY,
+  MONTH_OPTIONS,
+  OPD_SUMMARY_CARDS_CONFIG,
+  PAGE_SIZE_RECURRING,
+  PERIOD_TO_DATE_RANGE,
+} from "@config/constant";
 import { resetExpenseClaims, useExpenseClaims } from "@slices/expenseSlice/useExpenseClaims";
 import { useAppDispatch } from "@slices/store";
 import {
@@ -43,35 +50,14 @@ const prevMonth = new Date(new Date().setMonth(new Date().getMonth() - 1)).toLoc
   { month: "long" },
 );
 
-const PERIOD_TO_DATE_RANGE: Record<string, string> = {
-  all: "All Time",
-  current: "This Month",
-  pastThree: "Last 3 Months",
-  pastSix: "Last 6 Months",
-  pastNine: "Last 6 Months",
-  pastTwelve: "Year to Date",
-};
-
-const DATE_RANGE_TO_PERIOD: Record<string, string> = {
-  "All Time": "all",
-  "This Month": "current",
-  "Last Month": "current",
-  "Last 3 Months": "pastThree",
-  "Last 6 Months": "pastSix",
-  "Year to Date": "pastTwelve",
-  "Last Year": "pastTwelve",
-};
-
 export default function ExpenseClaims() {
   const dispatch = useAppDispatch();
   const { data, filters, loading, error, handleFiltersChange } = useExpenseClaims();
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [chartPeriod, setChartPeriod] = useState("all");
-  const [currency, setCurrency] = useState<CurrencyCode>("LKR");
+  const [currency, setCurrency] = useState<CurrencyCode>(DEFAULT_CURRENCY as CurrencyCode);
   const [selectedRecurringCategory, setSelectedRecurringCategory] = useState<string | null>(null);
   const [recurringPage, setRecurringPage] = useState(0);
-
-  const RECURRING_PAGE_SIZE = 8;
 
   const fmt = (v: number) => formatCurrencyValue(v, currency);
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
@@ -119,14 +105,14 @@ export default function ExpenseClaims() {
         .sort((a, b) => b.value - a.value)
     : [];
 
-  const recurringTotalPages = Math.max(1, Math.ceil(recurringCategoryItems.length / RECURRING_PAGE_SIZE));
+  const recurringTotalPages = Math.max(1, Math.ceil(recurringCategoryItems.length / PAGE_SIZE_RECURRING));
   const recurringPageItems = recurringCategoryItems.slice(
-    recurringPage * RECURRING_PAGE_SIZE,
-    (recurringPage + 1) * RECURRING_PAGE_SIZE,
+    recurringPage * PAGE_SIZE_RECURRING,
+    (recurringPage + 1) * PAGE_SIZE_RECURRING,
   );
   const recurringPageKeys = recurringCategoryKeys.slice(
-    recurringPage * RECURRING_PAGE_SIZE,
-    (recurringPage + 1) * RECURRING_PAGE_SIZE,
+    recurringPage * PAGE_SIZE_RECURRING,
+    (recurringPage + 1) * PAGE_SIZE_RECURRING,
   );
   const recurringPageMaxValue = Math.max(...recurringPageItems.map((d) => d.value), 1);
 

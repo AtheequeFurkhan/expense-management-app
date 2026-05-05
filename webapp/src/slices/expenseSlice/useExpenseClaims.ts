@@ -22,6 +22,10 @@ import { useEffect } from "react";
 import type { AppDispatch, RootState } from "@slices/store";
 import { apiService } from "@utils/apiService";
 import {
+  ACTIVE_CLAIM_STATUS_LABEL_MAP,
+  ACTIVE_CLAIM_STATUS_ORDER,
+} from "@config/constant";
+import {
   type ActiveClaimStatItem,
   type BuExpenseItem,
   type ExpenseFilters,
@@ -57,21 +61,6 @@ export interface ExpenseClaimsState {
   loading: boolean;
   error: string | null;
 }
-
-const ACTIVE_CLAIM_STATUS_ORDER = [
-  "Claims Submitted",
-  "Lead Approved",
-  "Finance Approved",
-  "Rejected",
-] as const;
-
-const ACTIVE_CLAIM_STATUS_LABEL_MAP: Record<string, string> = {
-  Draft: "Claims Submitted",
-  Submitted: "Claims Submitted",
-  "Lead Approved": "Lead Approved",
-  "Finance Approved": "Finance Approved",
-  Rejected: "Rejected",
-};
 
 export const DEFAULT_EXPENSE_DATA: ExpenseClaimsData = {
   totalClaimAmount: 0,

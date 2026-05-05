@@ -17,6 +17,18 @@ import axios from "axios";
 
 import { useEffect, useState } from "react";
 
+import {
+  DAYS_PER_MONTH,
+  FREQ_HIGH_BG,
+  FREQ_HIGH_COLOR,
+  FREQ_LOW_BG,
+  FREQ_LOW_COLOR,
+  FREQ_MED_BG,
+  FREQ_MED_COLOR,
+  HIGH_FREQ_THRESHOLD,
+  MED_FREQ_THRESHOLD,
+  MS_PER_DAY,
+} from "@config/constant";
 import { apiService } from "@utils/apiService";
 
 import { resolveDateRangeParams } from "./useEmployeeSpending";
@@ -60,36 +72,35 @@ export interface LeadApprovalDetail {
 
 export function formatApprovalFrequency(claimsPerDay: number): string {
   if (claimsPerDay <= 0) return "No activity";
-  return `${(claimsPerDay * 30).toFixed(1)} claims/month`;
+  return `${(claimsPerDay * DAYS_PER_MONTH).toFixed(1)} claims/month`;
 }
 
 export function getFrequencyColor(claimsPerDay: number): string {
-  if (claimsPerDay >= 1 / 7) return "#2E8B57";
-  if (claimsPerDay >= 1 / 30) return "#F4B400";
-  return "#9E9E9E";
+  if (claimsPerDay >= HIGH_FREQ_THRESHOLD) return FREQ_HIGH_COLOR;
+  if (claimsPerDay >= MED_FREQ_THRESHOLD) return FREQ_MED_COLOR;
+  return FREQ_LOW_COLOR;
 }
 
 export function getFrequencyBgColor(claimsPerDay: number): string {
-  if (claimsPerDay >= 1 / 7) return "#E8F5E9";
-  if (claimsPerDay >= 1 / 30) return "#FFF8E1";
-  return "#F5F5F5";
+  if (claimsPerDay >= HIGH_FREQ_THRESHOLD) return FREQ_HIGH_BG;
+  if (claimsPerDay >= MED_FREQ_THRESHOLD) return FREQ_MED_BG;
+  return FREQ_LOW_BG;
 }
 
 function computeFreq(total: number, first: string, last: string): number {
   const days = Math.max(
     1,
-    Math.round(Math.abs(new Date(last).getTime() - new Date(first).getTime()) / 86_400_000),
+    Math.round(Math.abs(new Date(last).getTime() - new Date(first).getTime()) / MS_PER_DAY),
   );
   return total / days;
 }
-
 
 export function calcDaysBetween(dateA: string | null, dateB: string | null): number | null {
   if (!dateA || !dateB) return null;
   const a = new Date(dateA).getTime();
   const b = new Date(dateB).getTime();
   if (isNaN(a) || isNaN(b)) return null;
-  return Math.round(Math.abs(b - a) / 86_400_000);
+  return Math.round(Math.abs(b - a) / MS_PER_DAY);
 }
 
 export function useLeadFrequencyList(dateRange: string, businessUnit: string) {

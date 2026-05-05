@@ -20,7 +20,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import ChartCard from "@component/chart/ChartCard";
 import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
-import { MONTH_OPTIONS } from "@config/constant";
+import { MONTH_OPTIONS, PAGE_SIZE_LEADS } from "@config/constant";
 import {
   type LeadFrequencyItem,
   formatApprovalFrequency,
@@ -167,8 +167,6 @@ export default function LeadApprovalFrequencyPanel({
   const [selectedLead, setSelectedLead] = useState<LeadFrequencyItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const PAGE_SIZE = 7;
-
   const { leads: apiLeads, loading, error } = useLeadFrequencyList(dateRange, businessUnit);
 
   const usingFallback = apiLeads.length === 0 && fallbackLeads.length > 0;
@@ -194,8 +192,8 @@ export default function LeadApprovalFrequencyPanel({
 
   useEffect(() => { setPage(0); }, [search]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE_LEADS);
+  const paginated = filtered.slice(page * PAGE_SIZE_LEADS, (page + 1) * PAGE_SIZE_LEADS);
 
   const handleLeadClick = (lead: LeadFrequencyItem) => {
     setSelectedLead(lead);
@@ -254,7 +252,7 @@ export default function LeadApprovalFrequencyPanel({
         <Box>
           {loading ? (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-              {[...Array(PAGE_SIZE)].map((_, i) => (
+              {[...Array(PAGE_SIZE_LEADS)].map((_, i) => (
                 <Skeleton key={i} variant="rectangular" height={58} sx={{ borderRadius: 1.5 }} />
               ))}
             </Box>
@@ -271,7 +269,7 @@ export default function LeadApprovalFrequencyPanel({
           ) : (
             <>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                {[...Array(PAGE_SIZE)].map((_, i) => {
+                {[...Array(PAGE_SIZE_LEADS)].map((_, i) => {
                   const lead = paginated[i];
                   if (!lead) {
                     return (

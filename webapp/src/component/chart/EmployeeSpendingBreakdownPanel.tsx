@@ -21,7 +21,7 @@ import { useState, useMemo, useEffect } from "react";
 import ChartCard from "@component/chart/ChartCard";
 import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
 import EmployeeBreakdownModal from "@component/chart/EmployeeBreakdownModal";
-import { MONTH_OPTIONS } from "@config/constant";
+import { MONTH_OPTIONS, PAGE_SIZE_EMPLOYEES } from "@config/constant";
 import {
   useEmployeeSpendingList,
   type EmployeeSpendingItem,
@@ -48,8 +48,6 @@ export default function EmployeeSpendingBreakdownPanel({
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeSpendingItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const PAGE_SIZE = 7;
-
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
 
   const { employees, loading, error } = useEmployeeSpendingList(dateRange, businessUnit);
@@ -64,8 +62,8 @@ export default function EmployeeSpendingBreakdownPanel({
 
   useEffect(() => { setPage(0); }, [search]);
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE_EMPLOYEES);
+  const paginated = filtered.slice(page * PAGE_SIZE_EMPLOYEES, (page + 1) * PAGE_SIZE_EMPLOYEES);
 
   const handleEmployeeClick = (emp: EmployeeSpendingItem) => {
     setSelectedEmployee(emp);
@@ -138,7 +136,7 @@ export default function EmployeeSpendingBreakdownPanel({
           ) : (
             <>
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
-                {[...Array(PAGE_SIZE)].map((_, i) => {
+                {[...Array(PAGE_SIZE_EMPLOYEES)].map((_, i) => {
                   const emp = paginated[i];
                   if (!emp) {
                     return (

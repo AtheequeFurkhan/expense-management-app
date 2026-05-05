@@ -97,3 +97,74 @@ export const MONTH_OPTIONS = [
   { value: "pastNine", label: "Past 9 Months" },
   { value: "pastTwelve", label: "Past 12 Months" },
 ];
+
+// ---------------------------------------------------------------------------
+// Pagination
+// ---------------------------------------------------------------------------
+export const PAGE_SIZE_EMPLOYEES = 7;
+export const PAGE_SIZE_LEADS = 7;
+export const PAGE_SIZE_RECURRING = 8;
+
+// ---------------------------------------------------------------------------
+// Time helpers
+// ---------------------------------------------------------------------------
+export const MS_PER_DAY = 86_400_000;
+export const DAYS_PER_MONTH = 30;
+
+// ---------------------------------------------------------------------------
+// Lead approval frequency thresholds (claims per day)
+// ---------------------------------------------------------------------------
+export const HIGH_FREQ_THRESHOLD = 1 / 7;
+export const MED_FREQ_THRESHOLD = 1 / 30;
+
+export const FREQ_HIGH_COLOR = "#2E8B57";
+export const FREQ_MED_COLOR = "#F4B400";
+export const FREQ_LOW_COLOR = "#9E9E9E";
+export const FREQ_HIGH_BG = "#E8F5E9";
+export const FREQ_MED_BG = "#FFF8E1";
+export const FREQ_LOW_BG = "#F5F5F5";
+
+// ---------------------------------------------------------------------------
+// Currency
+// ---------------------------------------------------------------------------
+export const DEFAULT_CURRENCY = "LKR";
+
+// ---------------------------------------------------------------------------
+// Claim status display config
+// ---------------------------------------------------------------------------
+export const ACTIVE_CLAIM_STATUS_LABEL_MAP: Record<string, string> = {
+  Draft: "Claims Submitted",
+  Submitted: "Claims Submitted",
+  "Lead Approved": "Lead Approved",
+  "Finance Approved": "Finance Approved",
+  Rejected: "Rejected",
+};
+
+export const ACTIVE_CLAIM_STATUS_ORDER = [
+  "Claims Submitted",
+  "Lead Approved",
+  "Finance Approved",
+  "Rejected",
+] as const;
+
+// ---------------------------------------------------------------------------
+// Period ↔ Date range mappings (chart period filter ↔ main filter)
+// ---------------------------------------------------------------------------
+export const PERIOD_TO_DATE_RANGE: Record<string, string> = {
+  all: "All Time",
+  current: "This Month",
+  pastThree: "Last 3 Months",
+  pastSix: "Last 6 Months",
+  pastNine: "Last 6 Months",
+  pastTwelve: "Year to Date",
+};
+
+export const DATE_RANGE_TO_PERIOD: Record<string, string> = {
+  "All Time": "all",
+  "This Month": "current",
+  "Last Month": "current",
+  "Last 3 Months": "pastThree",
+  "Last 6 Months": "pastSix",
+  "Year to Date": "pastTwelve",
+  "Last Year": "pastTwelve",
+};

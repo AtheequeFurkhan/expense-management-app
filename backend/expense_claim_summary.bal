@@ -160,22 +160,22 @@ public function getExpenseClaimSummary(int year, int month, int months,
     decimal avgClaimAmount = check database:queryExpenseAvgAmount(year, month, months, businessUnit);
 
     // Status counts (numeric codes: -1=Rejected, 0=Draft, 1=Submitted, 2=Lead Approved, 3=Finance Approved)
-    int pendingClaims = check database:queryExpenseCountByStatuses(year, month, months, ["0", "1"], businessUnit);
-    int approvedClaims = check database:queryExpenseCountByStatuses(year, month, months, ["2", "3"], businessUnit);
-    int rejectedClaims = check database:queryExpenseCountByStatuses(year, month, months, ["-1"], businessUnit);
+    int pendingClaims = check database:queryExpenseCountByStatuses(year, month, months, PENDING_STATUSES, businessUnit);
+    int approvedClaims = check database:queryExpenseCountByStatuses(year, month, months, APPROVED_STATUSES, businessUnit);
+    int rejectedClaims = check database:queryExpenseCountByStatuses(year, month, months, REJECTED_STATUSES, businessUnit);
 
     // Chart data
     database:BuExpenseRow[] buExpenseRows = check database:queryExpenseByBu(year, month, months);
     database:ClaimStatusRow[] claimStatusRows = check database:queryExpenseClaimsByStatus(year, month, months, businessUnit);
-    database:TopSpendingEmployeeRow[] topEmployeeRows = check database:queryTopSpendingEmployees(year, month, months, 7, businessUnit);
+    database:TopSpendingEmployeeRow[] topEmployeeRows = check database:queryTopSpendingEmployees(year, month, months, TOP_EMPLOYEES_LIMIT, businessUnit);
     database:LeadApprovalFrequencyRow[] leadApprovalFrequencyRows = check database:queryLeadApprovalFrequency(
         year,
         month,
         months,
         businessUnit
     );
-    database:TopApprovingLeadRow[] topLeadRows = check database:queryTopApprovingLeads(year, month, months, 7, businessUnit);
-    database:RecurringExpenseTypeRow[] recurringRows = check database:queryRecurringExpenseTypes(year, month, months, 500, businessUnit);
+    database:TopApprovingLeadRow[] topLeadRows = check database:queryTopApprovingLeads(year, month, months, TOP_LEADS_LIMIT, businessUnit);
+    database:RecurringExpenseTypeRow[] recurringRows = check database:queryRecurringExpenseTypes(year, month, months, EXPENSE_TYPES_FETCH_LIMIT, businessUnit);
 
     // Previous period data for trend calculation (skip for All Time where months=0)
     decimal prevTotalAmount = 0;
@@ -194,7 +194,7 @@ public function getExpenseClaimSummary(int year, int month, int months,
         prevTotalAmount = check database:queryExpenseTotalAmount(prevYear, prevMonth, months, businessUnit);
         prevTotalCount = check database:queryExpenseClaimCount(prevYear, prevMonth, months, businessUnit);
         prevAvgAmount = check database:queryExpenseAvgAmount(prevYear, prevMonth, months, businessUnit);
-        prevApproved = check database:queryExpenseCountByStatuses(prevYear, prevMonth, months, ["2", "3"], businessUnit);
+        prevApproved = check database:queryExpenseCountByStatuses(prevYear, prevMonth, months, APPROVED_STATUSES, businessUnit);
     }
 
     // Transform rows into response types
