@@ -66,9 +66,9 @@ isolated function getExpenseSummaryStatsQuery(int year, int month, int months,
         SELECT COALESCE(SUM(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS totalAmount,
                COUNT(*) AS totalCount,
                COALESCE(AVG(CAST(ec.reimbursement_amount AS DECIMAL(10,2))), 0) AS avgAmount,
-               SUM(CASE WHEN ec.status = '-1'        THEN 1 ELSE 0 END) AS rejectedCount,
-               SUM(CASE WHEN ec.status IN ('0', '1') THEN 1 ELSE 0 END) AS pendingCount,
-               SUM(CASE WHEN ec.status IN ('2', '3') THEN 1 ELSE 0 END) AS approvedCount
+               CAST(COALESCE(SUM(CASE WHEN ec.status = '-1'        THEN 1 ELSE 0 END), 0) AS SIGNED) AS rejectedCount,
+               CAST(COALESCE(SUM(CASE WHEN ec.status IN ('0', '1') THEN 1 ELSE 0 END), 0) AS SIGNED) AS pendingCount,
+               CAST(COALESCE(SUM(CASE WHEN ec.status IN ('2', '3') THEN 1 ELSE 0 END), 0) AS SIGNED) AS approvedCount
         FROM expense_claims ec
         WHERE `;
 
@@ -166,7 +166,7 @@ isolated function getLeadApprovalFrequencyQuery(int year, int month, int months,
 
     sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
-    query = sql:queryConcat(query, ` AND ec.status IN ('2', '3')`);
+    query = sql:queryConcat(query, ` AND ec.status IN ('2', '3') AND ec.txn_date IS NOT NULL`);
 
     if businessUnit is string {
         query = sql:queryConcat(query, ` AND ec.business_unit = ${businessUnit}`);

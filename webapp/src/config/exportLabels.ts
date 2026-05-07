@@ -44,14 +44,13 @@ export const LEAD_BY_EMPLOYEE_COLS = {
 // Used by both the UI claims table headers and the export sheet.
 export const LEAD_CLAIMS_COLS = [
   { key: "employee",     label: "Employee",       flex: 1.4  },
-  { key: "type",         label: "Type",           flex: 1    },
-  { key: "subCategory",  label: "Sub Category",   flex: 1.2  },
+  { key: "subCategory",  label: "Sub Category",   flex: 1.5  },
   { key: "category",     label: "Category",       flex: 1    },
   { key: "amount",       label: "Amount",         flex: 0.9  },
-  { key: "submitted",    label: "Submitted Date",  flex: 0.9  },
-  { key: "approved",     label: "Approved Date",   flex: 0.9  },
-  { key: "delay",        label: "Delay (days)",    flex: 0.65 },
-  { key: "status",       label: "Status",          flex: 0.7  },
+  { key: "submitted",    label: "Submitted Date", flex: 0.9  },
+  { key: "approved",     label: "Approved Date",  flex: 0.9  },
+  { key: "delay",        label: "Delay (days)",   flex: 0.65 },
+  { key: "status",       label: "Status",         flex: 0.7  },
 ] as const;
 
 export const LEAD_CLAIMS_EXTRA_COLS = {

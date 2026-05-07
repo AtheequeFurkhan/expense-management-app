@@ -19,11 +19,8 @@ import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
 import {
   ChevronDown,
   ChevronRight,
-  CreditCard,
   Download,
-  FileText,
   Search,
-  Stethoscope,
   X,
 } from "lucide-react";
 
@@ -52,20 +49,10 @@ const TABS: { id: TabId; label: string }[] = [
   { id: "claims", label: "Claims" },
 ];
 
-const CLAIM_TYPE_META: Record<string, { icon: React.ReactNode; color: string; bg: string }> = {
-  Expense: { icon: <FileText size={14} />, color: "#1976D2", bg: "#E3F2FD" },
-  "Credit Card": { icon: <CreditCard size={14} />, color: "#7B1FA2", bg: "#F3E5F5" },
-  OPD: { icon: <Stethoscope size={14} />, color: "#2E7D32", bg: "#E8F5E9" },
-};
-
 const CATEGORY_COLORS = [
   "#E8420A", "#1976D2", "#2E7D32", "#7B1FA2", "#F57C00",
   "#0288D1", "#388E3C", "#C62828", "#5C6BC0", "#00838F",
 ];
-
-function defaultTypeMeta(type: string) {
-  return CLAIM_TYPE_META[type] ?? { icon: <FileText size={14} />, color: "#616161", bg: "#F5F5F5" };
-}
 
 function DelayChip({ days }: { days: number | null }) {
   if (days === null)
@@ -128,8 +115,8 @@ function ClaimsTable({ claims, fmtSym }: { claims: LeadApprovedClaim[]; fmtSym: 
             bgcolor: "action.hover", borderBottom: "1px solid", borderColor: "divider", flexShrink: 0,
           }}
         >
-          {TABLE_COLS.map((col) => (
-            <Typography key={col.label} sx={{ flex: col.flex, fontSize: 10, fontWeight: 700, color: "text.disabled", textTransform: "uppercase", letterSpacing: 0.6, minWidth: 0 }}>
+          {TABLE_COLS.map((col, idx) => (
+            <Typography key={col.label} sx={{ flex: col.flex, fontSize: 10, fontWeight: 700, color: "text.disabled", textTransform: "uppercase", letterSpacing: 0.6, minWidth: 0, pr: idx < TABLE_COLS.length - 1 ? 1 : 0 }}>
               {col.label}
             </Typography>
           ))}
@@ -143,7 +130,6 @@ function ClaimsTable({ claims, fmtSym }: { claims: LeadApprovedClaim[]; fmtSym: 
           ) : (
             filtered.map((claim, idx) => {
               const delay = calcDaysBetween(claim.submittedDate, claim.approvedDate);
-              const meta = defaultTypeMeta(claim.claimType);
               const isLast = idx === filtered.length - 1;
               return (
                 <Box
@@ -151,31 +137,24 @@ function ClaimsTable({ claims, fmtSym }: { claims: LeadApprovedClaim[]; fmtSym: 
                   sx={{ display: "flex", alignItems: "center", px: 2, py: 0.9, borderBottom: isLast ? "none" : "1px solid", borderColor: "divider", "&:hover": { bgcolor: "action.hover" }, transition: "background 0.12s" }}
                 >
                   <Box sx={{ flex: 1.4, minWidth: 0, pr: 1 }}>
-                    <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    <Typography title={claim.employeeName} sx={{ fontSize: 13, fontWeight: 600, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                       {claim.employeeName}
                     </Typography>
                     {claim.claimId && <Typography sx={{ fontSize: 10, color: "text.disabled" }}>{claim.claimId}</Typography>}
                   </Box>
 
-                  <Box sx={{ flex: 1, minWidth: 0, pr: 1 }}>
-                    <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.4, px: 0.75, py: 0.25, borderRadius: 1, bgcolor: meta.bg }}>
-                      <Box sx={{ color: meta.color, display: "flex", alignItems: "center" }}>{meta.icon}</Box>
-                      <Typography sx={{ fontSize: 11, fontWeight: 600, color: meta.color }}>{claim.claimType}</Typography>
-                    </Box>
-                  </Box>
-
-                  <Typography sx={{ flex: 1.2, fontSize: 12, color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", pr: 1 }}>
+                  <Typography title={claim.subCategory ?? claim.claimType} sx={{ flex: 1.5, fontSize: 12, color: "text.primary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", pr: 1 }}>
                     {claim.subCategory ?? claim.claimType}
                   </Typography>
 
-                  <Typography sx={{ flex: 1, fontSize: 12, color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <Typography title={claim.category ?? undefined} sx={{ flex: 1, fontSize: 12, color: "text.secondary", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", pr: 1 }}>
                     {claim.category ?? "—"}
                   </Typography>
-                  <Typography sx={{ flex: 0.9, fontSize: 13, fontWeight: 700, color: "text.primary" }}>{fmtSym(claim.amount)}</Typography>
-                  <Typography sx={{ flex: 0.9, fontSize: 11, color: "text.secondary" }}>
+                  <Typography sx={{ flex: 0.9, fontSize: 13, fontWeight: 700, color: "text.primary", pr: 1 }}>{fmtSym(claim.amount)}</Typography>
+                  <Typography sx={{ flex: 0.9, fontSize: 11, color: "text.secondary", pr: 1 }}>
                     {claim.submittedDate ? new Date(claim.submittedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—"}
                   </Typography>
-                  <Typography sx={{ flex: 0.9, fontSize: 11, color: "text.secondary" }}>
+                  <Typography sx={{ flex: 0.9, fontSize: 11, color: "text.secondary", pr: 1 }}>
                     {claim.approvedDate ? new Date(claim.approvedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short" }) : "—"}
                   </Typography>
                   <Box sx={{ flex: 0.65 }}><DelayChip days={delay} /></Box>
@@ -292,32 +271,6 @@ export default function LeadApprovalFrequencyModal({
     ? new Date(detail.lastApprovedDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
     : null;
 
-  const STAT_CARDS = detail
-    ? [
-        {
-          label: "Total Approvals",
-          value: detail.totalApproved.toLocaleString(),
-          sub: "claims approved",
-          color: "#1976D2",
-          bg: "#E3F2FD",
-        },
-        {
-          label: "Total Amount",
-          value: fmtSym(totalAmount),
-          sub: "reimbursed",
-          color: "#2E7D32",
-          bg: "#E8F5E9",
-        },
-        {
-          label: "Avg Response",
-          value: freqLabel ?? "—",
-          sub: "submission to approval",
-          color: "#E8420A",
-          bg: "#FEF0EB",
-        },
-      ]
-    : [];
-
   return (
     <Dialog
       open={open}
@@ -338,7 +291,6 @@ export default function LeadApprovalFrequencyModal({
         },
       }}
     >
-      {/* Header */}
       <Box
         sx={{
           px: 3, pt: 2, pb: 0,
@@ -402,7 +354,6 @@ export default function LeadApprovalFrequencyModal({
         </Box>
       </Box>
 
-      {/* Tab bar */}
       <Box sx={{ px: 3, mt: 1.5, display: "flex", borderBottom: "1px solid", borderColor: "divider" }}>
         {TABS.map((tab) => (
           <Box
@@ -448,47 +399,57 @@ export default function LeadApprovalFrequencyModal({
             <Typography sx={{ color: "text.disabled", fontSize: 14 }}>No approval data found for this period</Typography>
           </Box>
         ) : activeTab === "summary" ? (
-
-          /* ── Summary tab ── */
           <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, gap: 2, overflowY: "auto" }}>
-
-            {/* Compact stat row */}
             <Box
               sx={{
-                display: "flex",
                 border: "1px solid", borderColor: "divider",
-                borderRadius: 1.5,
-                overflow: "hidden",
+                borderRadius: 2,
+                bgcolor: "background.paper",
+                px: 2, py: 1.25,
+                display: "flex", alignItems: "center", gap: 1.5,
                 flexShrink: 0,
               }}
             >
-              {STAT_CARDS.map((card, i) => (
-                <Box
-                  key={card.label}
-                  sx={{
-                    flex: 1,
-                    px: 2, py: 1.5,
-                    borderLeft: i > 0 ? "1px solid" : "none",
-                    borderColor: "divider",
-                  }}
-                >
-                  <Typography sx={{ fontSize: 11, color: "text.disabled", mb: 0.25 }}>
-                    {card.label}
-                  </Typography>
-                  <Typography sx={{ fontSize: 18, fontWeight: 800, color: card.color, lineHeight: 1.3 }}>
-                    {card.value}
-                  </Typography>
-                  <Typography sx={{ fontSize: 11, color: "text.disabled", mt: 0.2 }}>
-                    {card.sub}
-                  </Typography>
-                </Box>
-              ))}
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontSize: 9, fontWeight: 800, color: "text.disabled", textTransform: "uppercase", letterSpacing: 1 }}>
+                  Total Approvals
+                </Typography>
+                <Typography sx={{ fontSize: 16, fontWeight: 800, color: "text.primary", lineHeight: 1.2 }}>
+                  {detail.totalApproved.toLocaleString()}
+                </Typography>
+                <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.2 }}>
+                  claims approved
+                </Typography>
+              </Box>
+
+              <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 130, gap: 0.25 }}>
+                <Typography sx={{ fontSize: 9, fontWeight: 800, color: "text.disabled", textTransform: "uppercase", letterSpacing: 1 }}>
+                  Avg Response
+                </Typography>
+                <Typography sx={{ fontSize: 14, fontWeight: 800, color: "#E8420A" }}>
+                  {freqLabel ?? "—"}
+                </Typography>
+                <Typography sx={{ fontSize: 9, color: "text.disabled", textTransform: "uppercase", letterSpacing: 0.5, textAlign: "center" }}>
+                  submission to approval
+                </Typography>
+              </Box>
+
+              <Box sx={{ flex: 1, minWidth: 0, textAlign: "right" }}>
+                <Typography sx={{ fontSize: 9, fontWeight: 800, color: "text.disabled", textTransform: "uppercase", letterSpacing: 1 }}>
+                  Total Amount
+                </Typography>
+                <Typography sx={{ fontSize: 16, fontWeight: 800, color: "text.primary", lineHeight: 1.2 }}>
+                  {fmtSym(totalAmount)}
+                </Typography>
+                <Typography sx={{ fontSize: 11, color: "text.secondary", mt: 0.2 }}>
+                  reimbursed
+                </Typography>
+              </Box>
             </Box>
 
-            {/* Expense categories — reference-style flat list */}
             <Box sx={{ flexShrink: 0 }}>
               <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 1 }}>
-                Claim acceptance breakdown
+                Lead Approval Breakdown
               </Typography>
               {categoryBreakdown.length === 0 ? (
                 <Typography sx={{ fontSize: 13, color: "text.disabled" }}>No category data</Typography>
@@ -510,8 +471,7 @@ export default function LeadApprovalFrequencyModal({
 
                     return (
                       <Box key={cat.type}>
-                        {/* Main category row */}
-                        <Box
+                          <Box
                           onClick={() => hasSubs && toggleCategory(cat.type)}
                           sx={{
                             display: "flex", alignItems: "center",
@@ -524,18 +484,16 @@ export default function LeadApprovalFrequencyModal({
                             transition: "background 0.12s",
                           }}
                         >
-                          {/* Chevron */}
                           <Box sx={{ color: "text.disabled", display: "flex", alignItems: "center", mr: 1, flexShrink: 0 }}>
                             {hasSubs
                               ? isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />
                               : <Box sx={{ width: 14 }} />}
                           </Box>
 
-                          {/* Colour dot */}
                           <Box sx={{ width: 9, height: 9, borderRadius: "50%", bgcolor: color, flexShrink: 0, mr: 1.25 }} />
 
-                          {/* Name */}
                           <Typography
+                            title={cat.type}
                             sx={{
                               fontSize: 13, fontWeight: 600, color: "text.primary",
                               flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -544,21 +502,19 @@ export default function LeadApprovalFrequencyModal({
                             {cat.type}
                           </Typography>
 
-                          {/* Right side */}
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
-                            <Typography sx={{ fontSize: 12, color: "text.disabled", minWidth: 70, textAlign: "right" }}>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+                            <Typography sx={{ fontSize: 12, color: "text.disabled", minWidth: 76, textAlign: "right" }}>
                               {cat.count} {cat.count === 1 ? "claim" : "claims"}
                             </Typography>
-                            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary", minWidth: 90, textAlign: "right" }}>
+                            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary", minWidth: 120, textAlign: "right" }}>
                               {fmtSym(cat.totalAmount)}
                             </Typography>
-                            <Typography sx={{ fontSize: 12, color, fontWeight: 600, minWidth: 44, textAlign: "right" }}>
+                            <Typography sx={{ fontSize: 12, color, fontWeight: 600, minWidth: 48, textAlign: "right" }}>
                               {pct}%
                             </Typography>
                           </Box>
                         </Box>
 
-                        {/* Sub-category rows */}
                         {isExpanded && hasSubs && cat.subCategories.map((sub, si) => {
                           const subPct = ((sub.totalAmount / grandTotal) * 100).toFixed(1);
                           const isSubLast = si === cat.subCategories.length - 1 && idx === categoryBreakdown.length - 1;
@@ -573,10 +529,10 @@ export default function LeadApprovalFrequencyModal({
                                 bgcolor: "background.default",
                               }}
                             >
-                              {/* Bullet */}
                               <Box sx={{ width: 5, height: 5, borderRadius: "50%", bgcolor: color, opacity: 0.6, flexShrink: 0, mr: 1.5 }} />
 
                               <Typography
+                                title={sub.name}
                                 sx={{
                                   fontSize: 12, color: "text.secondary",
                                   flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -585,14 +541,14 @@ export default function LeadApprovalFrequencyModal({
                                 {sub.name}
                               </Typography>
 
-                              <Box sx={{ display: "flex", alignItems: "center", gap: 3, flexShrink: 0 }}>
-                                <Typography sx={{ fontSize: 11, color: "text.disabled", minWidth: 70, textAlign: "right" }}>
+                              <Box sx={{ display: "flex", alignItems: "center", gap: 2, flexShrink: 0 }}>
+                                <Typography sx={{ fontSize: 11, color: "text.disabled", minWidth: 76, textAlign: "right" }}>
                                   {sub.count} {sub.count === 1 ? "claim" : "claims"}
                                 </Typography>
-                                <Typography sx={{ fontSize: 12, fontWeight: 600, color: "text.secondary", minWidth: 90, textAlign: "right" }}>
+                                <Typography sx={{ fontSize: 12, fontWeight: 600, color: "text.secondary", minWidth: 120, textAlign: "right" }}>
                                   {fmtSym(sub.totalAmount)}
                                 </Typography>
-                                <Typography sx={{ fontSize: 11, color: "text.disabled", minWidth: 44, textAlign: "right" }}>
+                                <Typography sx={{ fontSize: 11, color: "text.disabled", minWidth: 48, textAlign: "right" }}>
                                   {subPct}%
                                 </Typography>
                               </Box>
@@ -608,11 +564,7 @@ export default function LeadApprovalFrequencyModal({
           </Box>
 
         ) : (
-
-          /* ── Claims tab ── */
           <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, gap: 2 }}>
-
-            {/* Approvals by employee */}
             {employeeBreakdown.length > 0 && (
               <Box sx={{ flexShrink: 0 }}>
                 <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 1 }}>
@@ -629,6 +581,7 @@ export default function LeadApprovalFrequencyModal({
                   {employeeBreakdown.map((emp) => (
                     <Box key={emp.name} sx={{ display: "flex", alignItems: "center", gap: 1.5, py: 0.75 }}>
                       <Typography
+                        title={emp.name}
                         sx={{
                           fontSize: 13, fontWeight: 600, color: "text.primary",
                           minWidth: 160, maxWidth: 160,
@@ -640,13 +593,10 @@ export default function LeadApprovalFrequencyModal({
                       <Box sx={{ flex: 1, height: 6, bgcolor: "action.hover", borderRadius: 3, overflow: "hidden" }}>
                         <Box sx={{ width: `${(emp.count / maxEmpCount) * 100}%`, height: "100%", bgcolor: "#E8420A", borderRadius: 3 }} />
                       </Box>
-                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary", minWidth: 24, textAlign: "right" }}>
-                        {emp.count}
+                      <Typography sx={{ fontSize: 12, color: "text.disabled", minWidth: 76, textAlign: "right" }}>
+                        {emp.count} {emp.count === 1 ? "claim" : "claims"}
                       </Typography>
-                      <Typography sx={{ fontSize: 11, color: "text.disabled", minWidth: 36 }}>
-                        {emp.count === 1 ? "claim" : "claims"}
-                      </Typography>
-                      <Typography sx={{ fontSize: 12, color: "text.secondary", minWidth: 88, textAlign: "right" }}>
+                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: "text.secondary", minWidth: 120, textAlign: "right" }}>
                         {fmtSym(emp.amount)}
                       </Typography>
                     </Box>
@@ -655,7 +605,6 @@ export default function LeadApprovalFrequencyModal({
               </Box>
             )}
 
-            {/* Claims table */}
             <Box sx={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
               {detail.claims.length === 0 ? (
                 <Box sx={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid", borderColor: "divider", borderRadius: 1.5 }}>

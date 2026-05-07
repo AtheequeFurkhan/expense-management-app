@@ -202,7 +202,7 @@ export default function LeadApprovalFrequencyPanel({
   return (
     <>
       <ChartCard
-        title="Lead Approval Response Time"
+        title="Lead Approval Breakdown"
         subtitle="Average days from claim submission to lead approval"
         minHeight={420}
         action={

@@ -65,24 +65,6 @@ public type EmployeeTotalRow record {|
     decimal totalAmount;
 |};
 
-# Query result for expense claim aggregated amount.
-public type ExpenseAmountRow record {|
-    # Aggregated total amount returned by the query.
-    decimal total;
-|};
-
-# Query result for expense claim aggregated count.
-public type ExpenseCountRow record {|
-    # Aggregated count returned by the query.
-    int count;
-|};
-
-# Query result for expense claim average amount.
-public type ExpenseAvgRow record {|
-    # Average amount returned by the query.
-    decimal avg;
-|};
-
 # Query result for expense amount grouped by business unit.
 public type BuExpenseRow record {|
     # Business unit label.
@@ -97,14 +79,6 @@ public type ClaimStatusRow record {|
     string status;
     # Number of claims with this status.
     int count;
-|};
-
-# Query result for top spending employees.
-public type TopSpendingEmployeeRow record {|
-    # Employee email.
-    string employeeEmail;
-    # Total reimbursement amount.
-    decimal total;
 |};
 
 # Query result for top approving leads.

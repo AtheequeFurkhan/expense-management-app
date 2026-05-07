@@ -25,7 +25,6 @@ isolated function calculateTrend(decimal current, decimal previous) returns deci
         return current > 0.0d ? 100.0d : 0.0d;
     }
     decimal change = ((current - previous) / previous) * 100.0d;
-    // Round to 1 decimal
     return <decimal>(<int>(change * 10.0d)) / 10.0d;
 }
 
@@ -138,10 +137,8 @@ isolated function mapExpenseCategory(string expenseType) returns string {
 public function getExpenseClaimSummary(int year, int month, int months,
         string? businessUnit = ()) returns ExpenseClaimSummaryResponse|error {
 
-    // Fetch all aggregate stats in a single query
     database:ExpenseSummaryStatsRow stats = check database:queryExpenseSummaryStats(year, month, months, businessUnit);
 
-    // Chart data
     database:BuExpenseRow[] buExpenseRows = check database:queryExpenseByBu(year, month, months);
     database:ClaimStatusRow[] claimStatusRows = check database:queryExpenseClaimsByStatus(year, month, months, businessUnit);
     database:AllSpendingEmployeeRow[] topEmployeeRows = check database:querySpendingEmployees(year, month, months, businessUnit, TOP_EMPLOYEES_LIMIT);
@@ -154,7 +151,6 @@ public function getExpenseClaimSummary(int year, int month, int months,
     database:TopApprovingLeadRow[] topLeadRows = check database:queryTopApprovingLeads(year, month, months, TOP_LEADS_LIMIT, businessUnit);
     database:RecurringExpenseTypeRow[] recurringRows = check database:queryRecurringExpenseTypes(year, month, months, EXPENSE_TYPES_FETCH_LIMIT, businessUnit);
 
-    // Previous period data for trend calculation (skip for All Time where months=0)
     decimal prevTotalAmount = 0;
     int prevTotalCount = 0;
     decimal prevAvgAmount = 0;
@@ -172,7 +168,6 @@ public function getExpenseClaimSummary(int year, int month, int months,
         prevApproved = prevStats.approvedCount;
     }
 
-    // Transform rows into response types
     BuExpenseItem[] buExpenses = from database:BuExpenseRow row in buExpenseRows
         select {
             label: row.businessUnit,

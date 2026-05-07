@@ -74,7 +74,7 @@ export default function EmployeeSpendingBreakdownPanel({
   return (
     <>
       <ChartCard
-        title="Employee spending breakdown"
+        title="Employee Spending Breakdown"
         subtitle="Employees with highest spending"
         minHeight={420}
         action={

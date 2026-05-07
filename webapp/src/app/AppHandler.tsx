@@ -82,6 +82,7 @@ const AppHandler = () => {
         return <ErrorHandler error={auth.statusMessage || "An error occurred"} />;
 
       case "success":
+        if (activeRoutes.length === 0) return <AppSkeleton />;
         return <RouterProvider router={router} />;
 
       case "maintenance":

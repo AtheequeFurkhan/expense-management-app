@@ -151,13 +151,18 @@ export function useEmployeeBreakdown(
   const [breakdown, setBreakdown] = useState<EmployeeSpendingBreakdownResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Track which key the current breakdown was loaded for so we can detect stale data
+  // immediately on render (before the async effect has a chance to clear state).
+  const resolvedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!email) {
       setBreakdown(null);
+      resolvedKeyRef.current = null;
       return;
     }
 
+    const key = `${email}::${dateRange}::${statusFilter}`;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -172,23 +177,27 @@ export function useEmployeeBreakdown(
     apiService
       .get<EmployeeSpendingBreakdownResponse>("/employee-spending-breakdown", { params })
       .then((res) => {
-        if (!cancelled && res.data) {
-          setBreakdown({
-            ...res.data,
-            totalAmount: Number(res.data.totalAmount),
-            claimCount: Number(res.data.claimCount),
-            categories: (res.data.categories ?? []).map((c) => ({
-              ...c,
-              total: Number(c.total),
-              claimCount: Number(c.claimCount),
-              percentage: Number(c.percentage),
-            })),
-          });
+        if (!cancelled) {
+          if (res.data) {
+            setBreakdown({
+              ...res.data,
+              totalAmount: Number(res.data.totalAmount),
+              claimCount: Number(res.data.claimCount),
+              categories: (res.data.categories ?? []).map((c) => ({
+                ...c,
+                total: Number(c.total),
+                claimCount: Number(c.claimCount),
+                percentage: Number(c.percentage),
+              })),
+            });
+          }
+          resolvedKeyRef.current = key;
         }
       })
       .catch((err) => {
         if (!cancelled && !axios.isCancel(err)) {
           setError("Failed to load employee breakdown.");
+          resolvedKeyRef.current = key;
         }
       })
       .finally(() => {
@@ -200,85 +209,14 @@ export function useEmployeeBreakdown(
     };
   }, [email, dateRange, statusFilter]);
 
-  return { breakdown, loading, error };
-}
+  const activeKey = email ? `${email}::${dateRange}::${statusFilter}` : null;
+  const isStale = !!activeKey && activeKey !== resolvedKeyRef.current;
 
-export interface EmployeeComparisonData {
-  currentMonth: EmployeeSpendingBreakdownResponse | null;
-  prevMonth: EmployeeSpendingBreakdownResponse | null;
-  currentYear: EmployeeSpendingBreakdownResponse | null;
-  prevYear: EmployeeSpendingBreakdownResponse | null;
-}
-
-export function useEmployeeComparisonData(email: string | null) {
-  const now = new Date();
-  const cy = now.getFullYear();
-  const cm = now.getMonth() + 1;
-  const pm = cm === 1 ? 12 : cm - 1;
-  const pmy = cm === 1 ? cy - 1 : cy;
-  const py = cy - 1;
-
-  const [data, setData] = useState<EmployeeComparisonData>({
-    currentMonth: null,
-    prevMonth: null,
-    currentYear: null,
-    prevYear: null,
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!email) return;
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    const fetch = (year: number, month: number, months: number) =>
-      apiService.get<EmployeeSpendingBreakdownResponse>("/employee-spending-breakdown", {
-        params: { email, year, month, months },
-      });
-
-    const mapRes = (res: {
-      data: EmployeeSpendingBreakdownResponse;
-    }): EmployeeSpendingBreakdownResponse => ({
-      ...res.data,
-      totalAmount: Number(res.data.totalAmount),
-      claimCount: Number(res.data.claimCount),
-      categories: (res.data.categories ?? []).map((c) => ({
-        ...c,
-        total: Number(c.total),
-        claimCount: Number(c.claimCount),
-        percentage: Number(c.percentage),
-      })),
-    });
-
-    Promise.all([fetch(cy, cm, 1), fetch(pmy, pm, 1), fetch(cy, cm, cm), fetch(py, 12, 12)])
-      .then(([r0, r1, r2, r3]) => {
-        if (!cancelled) {
-          setData({
-            currentMonth: r0.data ? mapRes(r0) : null,
-            prevMonth: r1.data ? mapRes(r1) : null,
-            currentYear: r2.data ? mapRes(r2) : null,
-            prevYear: r3.data ? mapRes(r3) : null,
-          });
-        }
-      })
-      .catch((err) => {
-        if (!cancelled && !axios.isCancel(err)) {
-          setError("Failed to load comparison data.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email]);
-
-  return { data, loading, error, cy, cm, pm, pmy, py };
+  return {
+    breakdown: isStale ? null : breakdown,
+    loading: loading || isStale,
+    error,
+  };
 }
 
 export function useEmployeeCategoryTransactions(

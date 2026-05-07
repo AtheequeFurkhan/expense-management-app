@@ -13,7 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Alert, Box, Button, Skeleton, Stack } from "@wso2/oxygen-ui";
+import { Alert, Box, Button, Skeleton, Stack, Typography } from "@wso2/oxygen-ui";
 
 import { useCallback, useEffect, useState } from "react";
 
@@ -23,7 +23,6 @@ import ChartCard from "@component/chart/ChartCard";
 import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
 import DoughnutChart from "@component/chart/DoughnutChart";
 import EmployeeSpendingBreakdownPanel from "@component/chart/EmployeeSpendingBreakdownPanel";
-import HorizontalBarChart from "@component/chart/HorizontalBarChart";
 import LeadApprovalFrequencyPanel from "@component/chart/LeadApprovalFrequencyPanel";
 import CurrencySelector from "@component/common/CurrencySelector";
 import {
@@ -115,14 +114,11 @@ export default function ExpenseClaims() {
     recurringPage * PAGE_SIZE_RECURRING,
     (recurringPage + 1) * PAGE_SIZE_RECURRING,
   );
-  const recurringPageMaxValue = Math.max(...recurringPageItems.map((d) => d.value), 1);
 
-  // Sync main date range → chart period
   useEffect(() => {
     setChartPeriod(DATE_RANGE_TO_PERIOD[filters.dateRange] ?? "pastTwelve");
   }, [filters.dateRange]);
 
-  // When chart period filter changes, update the main date range
   const handlePeriodChange = useCallback(
     (period: string) => {
       setChartPeriod(period);
@@ -155,7 +151,6 @@ export default function ExpenseClaims() {
     }
   }, [recurringExpenseGroups, selectedRecurringCategory]);
 
-  // Reset pagination when period changes or drill-down is closed
   useEffect(() => {
     setRecurringPage(0);
   }, [chartPeriod, selectedRecurringCategory]);
@@ -245,13 +240,11 @@ export default function ExpenseClaims() {
         overflowX: "hidden",
       }}
     >
-      {/* Filter bar */}
       <Box sx={{ mb: 2, display: "flex", alignItems: "center", gap: 1.5 }}>
         <FilterPanel filters={filters} onFiltersChange={handleFiltersChange} />
         <CurrencySelector value={currency} onChange={setCurrency} />
       </Box>
 
-      {/* Summary stat cards — same 3-card layout as OPD Claims */}
       <Box
         sx={{
           width: "100%",
@@ -299,7 +292,6 @@ export default function ExpenseClaims() {
         />
       </Box>
 
-      {/* Row 2: Expense from BU (bar) + Recurring Revenue (comparison) */}
       <Box
         sx={{
           mt: 2,
@@ -349,7 +341,6 @@ export default function ExpenseClaims() {
         </ChartCard>
       </Box>
 
-      {/* Row 3: Employee Spending Breakdown (standalone full-width) */}
       <Box sx={{ mt: 2 }}>
         <EmployeeSpendingBreakdownPanel
           dateRange={filters.dateRange}
@@ -360,7 +351,6 @@ export default function ExpenseClaims() {
         />
       </Box>
 
-      {/* Row 3.5: Lead Approval Frequency */}
       <Box sx={{ mt: 2 }}>
         <LeadApprovalFrequencyPanel
           dateRange={filters.dateRange}
@@ -372,7 +362,6 @@ export default function ExpenseClaims() {
         />
       </Box>
 
-      {/* Row 5: Recurring Expense Types — scrollable horizontal bar chart */}
       <Box sx={{ mt: 2 }}>
         <ChartCard
           title="Expense Category Breakdown"
@@ -402,19 +391,61 @@ export default function ExpenseClaims() {
         >
           {selectedRecurringCategory === null ? (
             <Box>
-              <HorizontalBarChart
-                data={recurringPageItems}
-                formatValue={(v) => fmtSym(v)}
-                barColor="#2E8B57"
-                barHoverColor="#246d45"
-                maxValue={recurringPageMaxValue}
-                onItemClick={(_, index) => {
-                  setSelectedRecurringCategory(recurringPageKeys[index] ?? null);
-                }}
-                showRank={false}
-                barHeight={24}
-                labelWidth={220}
-              />
+              <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+                {recurringPageItems.map((item, index) => {
+                  const categoryKey = recurringPageKeys[index];
+                  return (
+                    <Box
+                      key={categoryKey}
+                      onClick={() => setSelectedRecurringCategory(categoryKey ?? null)}
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        px: 2,
+                        py: 1.2,
+                        borderRadius: 1.5,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        cursor: "pointer",
+                        "&:hover": { bgcolor: "action.hover", borderColor: "primary.main" },
+                        transition: "all 0.15s ease",
+                        gap: 1.5,
+                      }}
+                    >
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Typography
+                          sx={{
+                            fontSize: 14, fontWeight: 600, color: "text.primary",
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          }}
+                        >
+                          {item.label}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontSize: 12, color: "text.disabled",
+                            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                          }}
+                        >
+                          {item.sublabel}
+                        </Typography>
+                      </Box>
+
+                      <Box
+                        sx={{
+                          px: 1, py: 0.25, borderRadius: 1,
+                          bgcolor: "#FEF0EB", minWidth: 140, textAlign: "center", flexShrink: 0,
+                        }}
+                      >
+                        <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#E8420A", whiteSpace: "nowrap" }}>
+                          {fmtSym(item.value)}
+                        </Typography>
+                      </Box>
+
+                    </Box>
+                  );
+                })}
+              </Box>
 
               <PaginationBar
                 page={recurringPage}

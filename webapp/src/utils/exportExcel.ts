@@ -212,7 +212,6 @@ export function exportLeadApprovals(p: LeadApprovalsExportParams): void {
     return [
       c.claimId,
       c.employeeName,
-      c.claimType,
       c.subCategory,
       c.category ?? "—",
       c.amount,
@@ -225,15 +224,14 @@ export function exportLeadApprovals(p: LeadApprovalsExportParams): void {
   addSheet(wb, "Approved Claims", [
     [
       LEAD_CLAIMS_EXTRA_COLS.claimId,
-      claimCols[0].label,  // Employee
-      claimCols[1].label,  // Type
-      claimCols[2].label,  // Sub Category
-      claimCols[3].label,  // Category
-      `${claimCols[4].label} (${p.currency})`, // Amount
-      claimCols[5].label,  // Submitted Date
-      claimCols[6].label,  // Approved Date
-      claimCols[7].label,  // Delay (days)
-      claimCols[8].label,  // Status
+      claimCols[0].label,                      // Employee
+      claimCols[1].label,                      // Sub Category
+      claimCols[2].label,                      // Category
+      `${claimCols[3].label} (${p.currency})`, // Amount
+      claimCols[4].label,                      // Submitted Date
+      claimCols[5].label,                      // Approved Date
+      claimCols[6].label,                      // Delay (days)
+      claimCols[7].label,                      // Status
     ],
     ...claimRows,
   ]);

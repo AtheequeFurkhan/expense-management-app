@@ -536,6 +536,7 @@ export default function EmployeeBreakdownModal({
     if (open) {
       setStatusTab("All");
       setExpandedCategory(null);
+      setCompareMode("prevMonth");
     }
   }, [open, employeeEmail]);
 
@@ -739,148 +740,157 @@ export default function EmployeeBreakdownModal({
           ))}
         </Box>
 
-        <PeriodComparison
-          currentBreakdown={breakdown}
-          prevBreakdown={compBreakdown}
-          loadingCurrent={loading}
-          loadingPrev={loadingComp}
-          fmtSym={fmtSym}
-          dateRange={dateRange}
-          compareMode={compareMode}
-        />
-
-        <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
-          {(["prevMonth", "prevYear"] as const).map((mode) => (
-            <Box
-              key={mode}
-              onClick={() => setCompareMode(mode)}
-              sx={{
-                cursor: "pointer",
-                px: 1.5,
-                py: 0.5,
-                borderRadius: 1,
-                border: "1px solid",
-                borderColor: compareMode === mode ? "primary.main" : "divider",
-                bgcolor: compareMode === mode ? "primary.main" : "transparent",
-                color: compareMode === mode ? "#fff" : "text.secondary",
-                fontSize: 12,
-                fontWeight: 600,
-                transition: "all 0.2s",
-                "&:hover": { borderColor: "primary.main" },
-              }}
-            >
-              {mode === "prevMonth" ? "Prev Month" : "Prev Year"}
-            </Box>
-          ))}
-        </Box>
-
         {loading ? (
-          <Box sx={{ display: "flex", gap: 1.5 }}>
-            <Box sx={{ flex: 1 }}>
-              {[0, 1, 2, 3].map((i) => (
-                <Skeleton
-                  key={i}
-                  variant="rectangular"
-                  height={62}
-                  sx={{ borderRadius: 1.5, mb: 0.5 }}
-                />
-              ))}
-            </Box>
-            <Box sx={{ flex: 1 }}>
-              {[0, 1, 2, 3].map((i) => (
-                <Skeleton
-                  key={i}
-                  variant="rectangular"
-                  height={62}
-                  sx={{ borderRadius: 1.5, mb: 0.5 }}
-                />
-              ))}
-            </Box>
-          </Box>
-        ) : !breakdown || breakdown.categories.length === 0 ? (
-          <Box sx={{ textAlign: "center", py: 6 }}>
-            <Typography sx={{ color: "text.disabled", fontSize: 14 }}>
-              No expense data found for this period
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minHeight: 380,
+              gap: 1.5,
+            }}
+          >
+            <CircularProgress size={36} />
+            <Typography sx={{ fontSize: 13, color: "text.secondary" }}>
+              Loading breakdown data...
             </Typography>
           </Box>
         ) : (
           <>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                pl: 1.5,
-                pr: 2,
-                pb: 0.5,
-                gap: 1.5,
-              }}
-            >
-              <Box sx={{ flex: 1 }} />
-              <Box sx={{ display: "flex", gap: 2, flexShrink: 0 }}>
-                <Typography
+            <PeriodComparison
+              currentBreakdown={breakdown}
+              prevBreakdown={compBreakdown}
+              loadingCurrent={false}
+              loadingPrev={loadingComp}
+              fmtSym={fmtSym}
+              dateRange={dateRange}
+              compareMode={compareMode}
+            />
+
+            <Box sx={{ display: "flex", gap: 1, mb: 1.5 }}>
+              {(["prevMonth", "prevYear"] as const).map((mode) => (
+                <Box
+                  key={mode}
+                  onClick={() => setCompareMode(mode)}
                   sx={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: "text.disabled",
-                    textTransform: "uppercase",
-                    letterSpacing: 0.5,
-                    minWidth: 110,
-                    textAlign: "right",
+                    cursor: "pointer",
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 1,
+                    border: "1px solid",
+                    borderColor: compareMode === mode ? "primary.main" : "divider",
+                    bgcolor: compareMode === mode ? "primary.main" : "transparent",
+                    color: compareMode === mode ? "#fff" : "text.secondary",
+                    fontSize: 12,
+                    fontWeight: 600,
+                    transition: "all 0.2s",
+                    "&:hover": { borderColor: "primary.main" },
                   }}
                 >
-                  {compareMode === "prevMonth" ? "Prev Month" : "Prev Year"}
-                </Typography>
-                <Typography
-                  sx={{
-                    fontSize: 10,
-                    fontWeight: 700,
-                    color: "text.disabled",
-                    textTransform: "uppercase",
-                    letterSpacing: 0.5,
-                    minWidth: 110,
-                    textAlign: "right",
-                  }}
-                >
-                  This Period
+                  {mode === "prevMonth" ? "Prev Month" : "Prev Year"}
+                </Box>
+              ))}
+            </Box>
+
+            {!breakdown || breakdown.categories.length === 0 ? (
+              <Box sx={{ textAlign: "center", py: 6 }}>
+                <Typography sx={{ color: "text.disabled", fontSize: 14 }}>
+                  No expense data found for this period
                 </Typography>
               </Box>
-            </Box>
-            <Box
-              sx={{
-                maxHeight: 460,
-                overflowY: "auto",
-                pr: 0.5,
-                "&::-webkit-scrollbar": { width: 4 },
-                "&::-webkit-scrollbar-track": { bgcolor: "action.hover", borderRadius: 2 },
-                "&::-webkit-scrollbar-thumb": { bgcolor: "text.disabled", borderRadius: 2 },
-              }}
-            >
-              {breakdown.categories.map((cat, i) => {
-                const cmp = compMap.get(cat.category);
-                return (
-                  <CategoryRow
-                    key={cat.category}
-                    category={cat.category}
-                    total={cat.total}
-                    claimCount={cat.claimCount}
-                    percentage={cat.percentage}
-                    color={SEGMENT_COLORS[i % SEGMENT_COLORS.length]}
-                    maxTotal={maxCurrent}
-                    compTotal={cmp?.total ?? 0}
-                    compClaimCount={cmp?.claimCount ?? 0}
-                    maxCompTotal={maxComp}
-                    email={employeeEmail ?? ""}
-                    dateRange={dateRange}
-                    compDateRange={compDateRange}
-                    fmtSym={fmtSym}
-                    isExpanded={expandedCategory === cat.category}
-                    onToggle={() =>
-                      setExpandedCategory((prev) => (prev === cat.category ? null : cat.category))
-                    }
-                  />
-                );
-              })}
-            </Box>
+            ) : (
+              <>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    pl: 1.5,
+                    pr: 2,
+                    pb: 0.5,
+                    gap: 1.5,
+                  }}
+                >
+                  <Box sx={{ flex: 1 }} />
+                  <Box sx={{ display: "flex", gap: 2, flexShrink: 0, alignItems: "center" }}>
+                    <Box
+                      sx={{
+                        minWidth: 110,
+                        textAlign: "right",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "flex-end",
+                        gap: 0.5,
+                      }}
+                    >
+                      {loadingComp && <CircularProgress size={10} thickness={5} />}
+                      <Typography
+                        sx={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          color: "text.disabled",
+                          textTransform: "uppercase",
+                          letterSpacing: 0.5,
+                        }}
+                      >
+                        {compareMode === "prevMonth" ? "Prev Month" : "Prev Year"}
+                      </Typography>
+                    </Box>
+                    <Typography
+                      sx={{
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: "text.disabled",
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                        minWidth: 110,
+                        textAlign: "right",
+                      }}
+                    >
+                      This Period
+                    </Typography>
+                  </Box>
+                </Box>
+                <Box
+                  sx={{
+                    maxHeight: 460,
+                    overflowY: "auto",
+                    pr: 0.5,
+                    "&::-webkit-scrollbar": { width: 4 },
+                    "&::-webkit-scrollbar-track": { bgcolor: "action.hover", borderRadius: 2 },
+                    "&::-webkit-scrollbar-thumb": { bgcolor: "text.disabled", borderRadius: 2 },
+                  }}
+                >
+                  {breakdown.categories.map((cat, i) => {
+                    const cmp = compMap.get(cat.category);
+                    return (
+                      <CategoryRow
+                        key={cat.category}
+                        category={cat.category}
+                        total={cat.total}
+                        claimCount={cat.claimCount}
+                        percentage={cat.percentage}
+                        color={SEGMENT_COLORS[i % SEGMENT_COLORS.length]}
+                        maxTotal={maxCurrent}
+                        compTotal={cmp?.total ?? 0}
+                        compClaimCount={cmp?.claimCount ?? 0}
+                        maxCompTotal={maxComp}
+                        email={employeeEmail ?? ""}
+                        dateRange={dateRange}
+                        compDateRange={compDateRange}
+                        fmtSym={fmtSym}
+                        isExpanded={expandedCategory === cat.category}
+                        onToggle={() =>
+                          setExpandedCategory((prev) =>
+                            prev === cat.category ? null : cat.category,
+                          )
+                        }
+                      />
+                    );
+                  })}
+                </Box>
+              </>
+            )}
           </>
         )}
       </DialogContent>

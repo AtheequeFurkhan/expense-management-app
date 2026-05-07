@@ -70,6 +70,7 @@ export interface LeadApprovalDetail {
   totalApproved: number;
   avgFrequencyPerDay: number;
   avgResponseDays: number;
+  firstApprovedDate: string | null;
   lastApprovedDate: string | null;
   claimTypeBreakdown: LeadClaimTypeBreakdown[];
   claims: LeadApprovedClaim[];
@@ -194,8 +195,7 @@ export function useLeadApprovalDetail(email: string | null, dateRange: string) {
       .then((res) => {
         if (!cancelled && res.data) {
           const d = res.data;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const firstDate: string | null = (d as any).firstApprovedDate ?? null;
+          const firstDate: string | null = d.firstApprovedDate ?? null;
           const computedFreq =
             Number(d.avgFrequencyPerDay) ||
             computeFreq(Number(d.totalApproved), firstDate ?? "", d.lastApprovedDate ?? "");
