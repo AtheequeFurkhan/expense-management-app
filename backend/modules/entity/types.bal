@@ -14,6 +14,16 @@
 // specific language governing permissions and limitations
 // under the License.
 
+# OAuth2 client credentials configuration for the HR entity service.
+type Oauth2Config record {|
+    # OAuth2 client ID
+    string clientId;
+    # OAuth2 client secret
+    string clientSecret;
+    # Token endpoint URL
+    string tokenUrl;
+|};
+
 # Employee basic information returned by the HR entity service.
 public type Employee record {|
     # First name of the employee
