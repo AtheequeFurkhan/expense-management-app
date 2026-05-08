@@ -59,6 +59,7 @@ interface SubCategoryPanelProps {
   compDateRange: string;
   fmtSym: (v: number) => string;
   color: string;
+  statusFilter: string;
 }
 
 function SubCategoryPanel({
@@ -68,18 +69,19 @@ function SubCategoryPanel({
   compDateRange,
   fmtSym,
   color,
+  statusFilter,
 }: SubCategoryPanelProps) {
   const { transactions: curTxns, loading: curLoading } = useEmployeeCategoryTransactions(
     email,
     category,
     dateRange,
-    "All",
+    statusFilter,
   );
   const { transactions: cmpTxns, loading: cmpLoading } = useEmployeeCategoryTransactions(
     email,
     category,
     compDateRange,
-    "All",
+    statusFilter,
   );
 
   const curMap = new Map<string, number>();
@@ -194,6 +196,7 @@ interface CategoryRowProps {
   fmtSym: (v: number) => string;
   isExpanded: boolean;
   onToggle: () => void;
+  statusFilter: string;
 }
 
 function CategoryRow({
@@ -212,6 +215,7 @@ function CategoryRow({
   fmtSym,
   isExpanded,
   onToggle,
+  statusFilter,
 }: CategoryRowProps) {
   const curBarW = maxTotal > 0 ? Math.min(100, (total / maxTotal) * 100) : 0;
   const cmpBarW = maxCompTotal > 0 ? Math.min(100, (compTotal / maxCompTotal) * 100) : 0;
@@ -329,6 +333,7 @@ function CategoryRow({
           compDateRange={compDateRange}
           fmtSym={fmtSym}
           color={color}
+          statusFilter={statusFilter}
         />
       )}
     </Box>
@@ -885,6 +890,7 @@ export default function EmployeeBreakdownModal({
                             prev === cat.category ? null : cat.category,
                           )
                         }
+                        statusFilter={statusTab}
                       />
                     );
                   })}
