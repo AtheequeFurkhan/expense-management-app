@@ -33,8 +33,8 @@ final cache:Cache cache = new ({
     cleanupInterval: CACHE_CLEANUP_INTERVAL
 });
 
-isolated function extractUserInfo(http:RequestContext ctx) returns authorization:CustomJwtPayload|http:BadRequest {
-    authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
+isolated function extractUserInfo(http:RequestContext ctx) returns authorization:UserInfo|http:BadRequest {
+    authorization:UserInfo|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
     if userInfo is error {
         return <http:BadRequest>{body: {message: "User information header not found!"}};
     }
@@ -107,7 +107,7 @@ service http:InterceptableService / on new http:Listener(9090) {
     # + ctx - Request context containing authenticated user information
     # + return - User information response if successful, otherwise an internal server error
     resource function get user\-info(http:RequestContext ctx) returns UserInfoResponse|http:InternalServerError {
-        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
+        authorization:UserInfo|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
         if userInfo is error {
             return <http:InternalServerError>{
                 body: {
@@ -167,7 +167,7 @@ service http:InterceptableService / on new http:Listener(9090) {
     resource function get opd\-claims(http:RequestContext ctx, int? year = (), int? month = (), int months = 1)
         returns OpdClaimSummaryResponse|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
         if authResult is http:BadRequest {
             return authResult;
         }
@@ -217,7 +217,7 @@ service http:InterceptableService / on new http:Listener(9090) {
             int months = 1, string? businessUnit = ())
         returns ExpenseClaimSummaryResponse|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
         if authResult is http:BadRequest {
             return authResult;
         }
@@ -270,7 +270,7 @@ service http:InterceptableService / on new http:Listener(9090) {
             int months = 1, string? businessUnit = ())
         returns EmployeeSpendingItem[]|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
         if authResult is http:BadRequest {
             return authResult;
         }
@@ -318,7 +318,7 @@ service http:InterceptableService / on new http:Listener(9090) {
             int? year = (), int? month = (), int months = 1, string? statusFilter = ())
         returns EmployeeSpendingBreakdownResponse|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
         if authResult is http:BadRequest {
             return authResult;
         }
@@ -388,7 +388,7 @@ service http:InterceptableService / on new http:Listener(9090) {
             string category, int? year = (), int? month = (), int months = 1, string? statusFilter = ())
         returns EmployeeCategoryTransactionItem[]|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
         if authResult is http:BadRequest {
             return authResult;
         }
@@ -435,7 +435,7 @@ service http:InterceptableService / on new http:Listener(9090) {
             int months = 1, string? businessUnit = ())
         returns LeadFrequencyItemResponse[]|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
         if authResult is http:BadRequest {
             return authResult;
         }
@@ -492,7 +492,7 @@ service http:InterceptableService / on new http:Listener(9090) {
             int? year = (), int? month = (), int months = 1)
         returns LeadApprovalDetailResponse|http:BadRequest|HttpInternalServerError {
 
-        authorization:CustomJwtPayload|http:BadRequest authResult = extractUserInfo(ctx);
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
         if authResult is http:BadRequest {
             return authResult;
         }

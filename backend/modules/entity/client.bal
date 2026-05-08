@@ -16,10 +16,13 @@
 import ballerina/http;
 
 configurable string hrEntityBaseUrl = ?;
+configurable Oauth2Config oauthConfig = ?;
 
 # Shared HTTP client used for HR entity service requests.
 @display {
     label: "HR Entity REST Service",
     id: "hris/hr-entity-service"
 }
-final http:Client hrClient = check new (hrEntityBaseUrl);
+final http:Client hrClient = check new (hrEntityBaseUrl, {
+    auth: {...oauthConfig}
+});
