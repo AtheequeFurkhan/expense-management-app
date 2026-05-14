@@ -23,9 +23,6 @@ import ballerina/log;
 import ballerina/time;
 
 public configurable AppConfig appConfig = ?;
-configurable decimal annualClaimLimit = ?;
-configurable decimal claimRangeStep = ?;
-configurable int lastYearClaimGracePeriodInDays = ?;
 
 final cache:Cache cache = new ({
     capacity: 2000,

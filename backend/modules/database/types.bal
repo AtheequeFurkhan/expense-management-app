@@ -14,8 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import ballerina/sql;
-
 # OPD claim status codes stored in the database.
 public enum OpdClaimStatus {
     OPD_CLAIM_STATUS_DELETED = "-1",
@@ -23,6 +21,12 @@ public enum OpdClaimStatus {
     OPD_CLAIM_STATUS_REJECTED = "1",
     OPD_CLAIM_STATUS_APPROVED = "3"
 }
+
+public type ConnectionPoolConfig record {|
+    int maxOpenConnections;
+    decimal maxConnectionLifeTime;
+    int minIdleConnections;
+|};
 
 # Configurable database connection settings.
 public type DatabaseConfig record {|
@@ -36,8 +40,10 @@ public type DatabaseConfig record {|
     string database;
     # Port used by the database server
     int port = 3306;
+    # Maximum time in seconds to wait when establishing a connection
+    decimal connectTimeout;
     # Connection pool settings for the database client
-    sql:ConnectionPool connectionPool = {};
+    ConnectionPoolConfig connectionPool;
 |};
 
 # Query result containing a single aggregated decimal total.
