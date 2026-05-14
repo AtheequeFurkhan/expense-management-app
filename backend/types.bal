@@ -38,13 +38,10 @@ public type UserInfoResponse record {|
 public type AppConfig record {|
     # Annual OPD claim limit per employee
     decimal claimLimit;
-
     # Allowed employee locations for claim submissions
     string[] submissionsAllowedLocations;
-
     # Step size used for OPD claim distribution chart buckets
     decimal claimRangeStep;
-
     # Number of days after year-end that prior-year claims are still accepted
     int lastYearClaimGracePeriodInDays;
 |};
