@@ -16,14 +16,13 @@
 import ballerinax/mysql;
 import ballerinax/mysql.driver as _;
 
-configurable decimal connectTimeout = ?;
 configurable DatabaseConfig expenseDatabaseConfig = ?;
 
 final mysql:Options expenseDbOptions = {
     ssl: {
         mode: mysql:SSL_REQUIRED
     },
-    connectTimeout: connectTimeout
+    connectTimeout: expenseDatabaseConfig.connectTimeout
 };
 
 public final mysql:Client expenseDbClient = check new (
@@ -33,7 +32,11 @@ public final mysql:Client expenseDbClient = check new (
     expenseDatabaseConfig.database,
     expenseDatabaseConfig.port,
     expenseDbOptions,
-    expenseDatabaseConfig.connectionPool
+    {
+        maxOpenConnections: expenseDatabaseConfig.connectionPool.maxOpenConnections,
+        maxConnectionLifeTime: expenseDatabaseConfig.connectionPool.maxConnectionLifeTime,
+        minIdleConnections: expenseDatabaseConfig.connectionPool.minIdleConnections
+    }
 );
 
 # Check the health of the expense database.

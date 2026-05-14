@@ -41,6 +41,12 @@ public type AppConfig record {|
 
     # Allowed employee locations for claim submissions
     string[] submissionsAllowedLocations;
+
+    # Step size used for OPD claim distribution chart buckets
+    decimal claimRangeStep;
+
+    # Number of days after year-end that prior-year claims are still accepted
+    int lastYearClaimGracePeriodInDays;
 |};
 
 # Claim distribution bucket used by OPD summary responses.
