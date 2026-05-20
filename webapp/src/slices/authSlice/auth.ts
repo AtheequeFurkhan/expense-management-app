@@ -30,6 +30,9 @@ export enum Role {
   EMPLOYEE = "EMPLOYEE",
 }
 
+const FINANCE_ADMIN_PRIVILEGE = 762;
+const EMPLOYEE_PRIVILEGE = 987;
+
 interface ExtendedDecodedIDTokenPayload extends DecodedIDTokenPayload {
   groups?: string[];
 }
@@ -56,12 +59,10 @@ export interface UserState {
 }
 
 export interface UserInfoInterface {
-  employeeId: string;
   firstName: string;
   lastName: string;
   workEmail: string;
   employeeThumbnail: string | null;
-  jobRole: string;
   avatar?: string;
   privileges: number[];
 }
@@ -92,10 +93,10 @@ export const loadPrivileges = createAsyncThunk(
     const userPrivileges = userInfo?.privileges || [];
     const roles: Role[] = [];
 
-    if (userPrivileges.includes(789)) {
+    if (userPrivileges.includes(FINANCE_ADMIN_PRIVILEGE)) {
       roles.push(Role.ADMIN);
     }
-    if (userPrivileges.includes(987)) {
+    if (userPrivileges.includes(EMPLOYEE_PRIVILEGE)) {
       roles.push(Role.EMPLOYEE);
     }
 

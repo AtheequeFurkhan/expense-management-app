@@ -71,3 +71,131 @@ public type EmployeeTotalRow record {|
     # Total claim amount calculated for the employee
     decimal totalAmount;
 |};
+
+# Query result for expense amount grouped by business unit.
+public type BuExpenseRow record {|
+    # Business unit label.
+    string businessUnit;
+    # Total reimbursement amount for the business unit.
+    decimal total;
+|};
+
+# Query result for claim count grouped by status.
+public type ClaimStatusRow record {|
+    # Claim status label.
+    string status;
+    # Number of claims with this status.
+    int count;
+|};
+
+# Query result for top approving leads.
+public type TopApprovingLeadRow record {|
+    # Lead email.
+    string leadEmail;
+    # Business unit associated with the lead's approved claims.
+    string businessUnit;
+    # Number of claims approved by the lead.
+    int count;
+|};
+
+# Query result for lead-approved claim frequency over time.
+public type LeadApprovalFrequencyRow record {|
+    # Display label for the approval window.
+    string label;
+    # Calendar year for sorting.
+    int year;
+    # Calendar month for sorting.
+    int month;
+    # Number of lead-approved claims in the window.
+    int count;
+|};
+
+# Query result for recurring expense types.
+public type RecurringExpenseTypeRow record {|
+    # Expense type name.
+    string expenseType;
+    # Total reimbursement amount for the expense type.
+    decimal total;
+|};
+
+# Query result for all spending employees with claim count.
+public type AllSpendingEmployeeRow record {|
+    # Employee email.
+    string employeeEmail;
+    # Total reimbursement amount.
+    decimal total;
+    # Number of claims submitted.
+    int claimCount;
+|};
+
+# Query result for employee expense breakdown by category.
+public type EmployeeCategoryRow record {|
+    # Expense category label.
+    string category;
+    # Total reimbursement amount for the category.
+    decimal total;
+    # Number of claims in this category.
+    int claimCount;
+|};
+
+# Query result for lead approval frequency list (per lead aggregation).
+public type LeadFrequencyRow record {|
+    # Lead email address.
+    string leadEmail;
+    # Total number of claims approved by this lead.
+    int totalApproved;
+    # Date of the first approval (YYYY-MM-DD).
+    string? firstApprovedDate;
+    # Date of the most recent approval (YYYY-MM-DD).
+    string? lastApprovedDate;
+    # Number of days between first and last approval (minimum 1).
+    int daySpan;
+    # Average number of days between claim submission and lead approval.
+    decimal avgResponseDays;
+|};
+
+# Query result for individual approved claims under a specific lead.
+public type LeadApprovalDetailRow record {|
+    # Expense claim sequence number.
+    string claimId;
+    # Email of the employee who submitted the claim.
+    string employeeEmail;
+    # Full expense type label.
+    string expenseType;
+    # Reimbursement amount.
+    decimal amount;
+    # Formatted transaction date (YYYY-MM-DD).
+    string? submittedDate;
+    # Formatted lead approval date (YYYY-MM-DD).
+    string? approvedDate;
+    # Human-readable approval status.
+    string status;
+|};
+
+# Consolidated query result for all expense claim aggregate statistics in one pass.
+public type ExpenseSummaryStatsRow record {|
+    # Total reimbursement amount.
+    decimal totalAmount;
+    # Total number of claims.
+    int totalCount;
+    # Average reimbursement amount.
+    decimal avgAmount;
+    # Number of rejected claims (status = '-1').
+    int rejectedCount;
+    # Number of pending claims (status in '0', '1').
+    int pendingCount;
+    # Number of approved claims (status in '2', '3').
+    int approvedCount;
+|};
+
+# Query result for individual transactions within an employee's expense category.
+public type EmployeeCategoryTransactionRow record {|
+    # Description of the individual expense.
+    string description;
+    # Formatted transaction date string.
+    string txnDate;
+    # Reimbursement amount for the transaction.
+    decimal amount;
+    # Human-readable status label.
+    string status;
+|};

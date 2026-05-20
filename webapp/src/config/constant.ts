@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import { DollarSign, Hash, TrendingUp } from "lucide-react";
 
 export const SnackMessage = {
@@ -91,9 +90,67 @@ export const OPD_SIDE_CARDS_CONFIG = {
 };
 
 export const MONTH_OPTIONS = [
+  { value: "all", label: "All Time" },
   { value: "current", label: "Current Month" },
   { value: "pastThree", label: "Past 3 Months" },
   { value: "pastSix", label: "Past 6 Months" },
   { value: "pastNine", label: "Past 9 Months" },
   { value: "pastTwelve", label: "Past 12 Months" },
 ];
+
+export const PAGE_SIZE_EMPLOYEES = 7;
+export const PAGE_SIZE_LEADS = 7;
+export const PAGE_SIZE_RECURRING = 8;
+
+export const MS_PER_DAY = 86_400_000;
+export const DAYS_PER_MONTH = 30;
+
+export const HIGH_FREQ_THRESHOLD = 1 / 7;
+export const MED_FREQ_THRESHOLD = 1 / 30;
+
+export const RESP_FAST_DAYS = 2;
+export const RESP_MED_DAYS = 7;
+
+export const FREQ_HIGH_COLOR = "#2E8B57";
+export const FREQ_MED_COLOR = "#F4B400";
+export const FREQ_LOW_COLOR = "#9E9E9E";
+export const FREQ_HIGH_BG = "#E8F5E9";
+export const FREQ_MED_BG = "#FFF8E1";
+export const FREQ_LOW_BG = "#F5F5F5";
+
+export const DEFAULT_CURRENCY = "LKR";
+
+export const ACTIVE_CLAIM_STATUS_LABEL_MAP: Record<string, string> = {
+  Draft: "Claims Submitted",
+  Submitted: "Claims Submitted",
+  "Lead Approved": "Lead Approved",
+  "Finance Approved": "Finance Approved",
+  Rejected: "Rejected",
+};
+
+export const ACTIVE_CLAIM_STATUS_ORDER = [
+  "Claims Submitted",
+  "Lead Approved",
+  "Finance Approved",
+  "Rejected",
+] as const;
+
+export const PERIOD_TO_DATE_RANGE: Record<string, string> = {
+  all: "All Time",
+  current: "This Month",
+  pastThree: "Last 3 Months",
+  pastSix: "Last 6 Months",
+  pastNine: "Last 9 Months",
+  pastTwelve: "Year to Date",
+};
+
+export const DATE_RANGE_TO_PERIOD: Record<string, string> = {
+  "All Time": "all",
+  "This Month": "current",
+  "Last Month": "current",
+  "Last 3 Months": "pastThree",
+  "Last 6 Months": "pastSix",
+  "Last 9 Months": "pastNine",
+  "Year to Date": "pastTwelve",
+  "Last Year": "pastTwelve",
+};

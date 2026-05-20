@@ -13,7 +13,6 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import {
   BanknoteArrowDown,
   CreditCard,
@@ -105,7 +104,6 @@ export const routes: RouteObjectWithRole[] = [
 const hiddenNavigationPaths = new Set([
   "/profile",
   "/admin",
-  "/expense-claim-summary",
   "/employee-summary",
   "/credit-card-summary",
   "/report-summary",

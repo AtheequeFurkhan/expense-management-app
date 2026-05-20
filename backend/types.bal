@@ -13,21 +13,16 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 import ballerina/http;
 
 # Represents the response structure for retrieving user information.
 public type UserInfoResponse record {|
-    # Id of the employee
-    string employeeId;
     # Email of the employee
     string workEmail;
     # First name of the employee
     string firstName;
     # Last name of the employee
     string lastName;
-    # Job role
-    string jobRole;
     # Thumbnail of the employee
     string? employeeThumbnail;
     # User privileges
@@ -70,6 +65,222 @@ public type OpdClaimSummaryResponse record {|
     int fullyClaimedEmployees;
     # Claim distribution data for the active claims chart.
     OpdClaimBucket[] activeClaimsChart;
+|};
+
+# Business unit expense item in the summary response.
+public type BuExpenseItem record {|
+    # Business unit label.
+    string label;
+    # Total reimbursement amount.
+    decimal value;
+|};
+
+# Active claim stats item in the summary response.
+public type ActiveClaimStatItem record {|
+    # Claim status label.
+    string label;
+    # Number of claims with this status.
+    int value;
+|};
+
+# Top spending employee item in the summary response.
+public type TopEmployeeItem record {|
+    # Display name derived from employee email.
+    string name;
+    # Employee email.
+    string email;
+    # Business unit.
+    string bu;
+    # Total reimbursement amount.
+    decimal amount;
+|};
+
+# Top approving lead item in the summary response.
+public type TopLeadItem record {|
+    # Display name derived from lead email.
+    string name;
+    # Lead email.
+    string email;
+    # Business unit.
+    string bu;
+    # Number of approved claims.
+    int count;
+|};
+
+# Lead approval frequency item in the summary response.
+public type LeadApprovalFrequencyItem record {|
+    # Time-window label.
+    string label;
+    # Number of lead-approved claims in the window.
+    int value;
+|};
+
+# Recurring expense type item in the summary response.
+public type ExpenseTypeItem record {|
+    # Expense type name.
+    string name;
+    # High-level category this expense type belongs to.
+    string category;
+    # Total reimbursement amount.
+    decimal amount;
+|};
+
+# HTTP response returned by the expense claims summary endpoint.
+public type ExpenseClaimSummaryResponse record {|
+    # Total reimbursement amount for the selected period.
+    decimal totalClaimAmount;
+    # Total number of claims in the selected period.
+    int totalClaimCount;
+    # Number of pending claims.
+    int pendingClaims;
+    # Number of approved claims.
+    int approvedClaims;
+    # Number of rejected claims.
+    int rejectedClaims;
+    # Average reimbursement amount per claim.
+    decimal avgClaimAmount;
+    # Expense amounts grouped by business unit.
+    BuExpenseItem[] buExpenses;
+    # Claim counts grouped by status.
+    ActiveClaimStatItem[] activeClaimStats;
+    # Top spending employees.
+    TopEmployeeItem[] topSpendingEmployees;
+    # Lead approval frequency across date windows.
+    LeadApprovalFrequencyItem[] leadApprovalFrequency;
+    # Top approving leads.
+    TopLeadItem[] topApprovingLeads;
+    # Top recurring expense types by total amount.
+    ExpenseTypeItem[] recurringExpenseTypes;
+    # Trend percentage for total claim amount vs previous period.
+    decimal trendTotalAmount;
+    # Trend percentage for total claim count vs previous period.
+    decimal trendTotalCount;
+    # Trend percentage for approved claims vs previous period.
+    decimal trendApproved;
+    # Trend percentage for average claim amount vs previous period.
+    decimal trendAvgAmount;
+|};
+
+# Employee spending item returned in the all-employees list.
+public type EmployeeSpendingItem record {|
+    # Display name derived from employee email.
+    string name;
+    # Employee email.
+    string email;
+    # Total reimbursement amount.
+    decimal totalAmount;
+    # Number of claims submitted.
+    int claimCount;
+|};
+
+# Single category entry in an employee's spending breakdown.
+public type EmployeeCategoryItem record {|
+    # Expense category label.
+    string category;
+    # Total reimbursement amount for the category.
+    decimal total;
+    # Number of claims in this category.
+    int claimCount;
+    # Percentage of the employee's total spend.
+    decimal percentage;
+|};
+
+# Full spending breakdown response for a single employee.
+public type EmployeeSpendingBreakdownResponse record {|
+    # Display name derived from employee email.
+    string name;
+    # Employee email.
+    string email;
+    # Total reimbursement amount across all categories.
+    decimal totalAmount;
+    # Total number of claims.
+    int claimCount;
+    # Per-category breakdown.
+    EmployeeCategoryItem[] categories;
+|};
+
+# Individual transaction within an employee's expense category.
+public type EmployeeCategoryTransactionItem record {|
+    # Description of the expense (sub-type name).
+    string description;
+    # Formatted transaction date string.
+    string txnDate;
+    # Reimbursement amount for this transaction.
+    decimal amount;
+    # Human-readable status label.
+    string status;
+|};
+
+# Response item for a single lead in the approval frequency list.
+public type LeadFrequencyItemResponse record {|
+    # Display name of the lead.
+    string name;
+    # Lead email.
+    string email;
+    # Business unit (empty string when not applicable).
+    string bu;
+    # Total number of claims approved.
+    int totalApproved;
+    # Average approval frequency in claims per day.
+    decimal avgFrequencyPerDay;
+    # Average number of days between claim submission and lead approval.
+    decimal avgResponseDays;
+    # Date of the first approval in the range (YYYY-MM-DD), or null.
+    string? firstApprovedDate;
+    # Date of the most recent approval in the range (YYYY-MM-DD), or null.
+    string? lastApprovedDate;
+|};
+
+# Claim type breakdown entry in a lead's approval detail.
+public type LeadClaimTypeBreakdownItem record {|
+    # Expense type label.
+    string 'type;
+    # Number of claims of this type approved by the lead.
+    int count;
+    # Total reimbursement amount for this type.
+    decimal totalAmount;
+|};
+
+# Individual approved claim in a lead's approval detail.
+public type LeadApprovedClaimItem record {|
+    # Expense claim sequence number or ID.
+    string claimId;
+    # Display name of the employee who submitted the claim.
+    string employeeName;
+    # Main expense category label.
+    string claimType;
+    # Full expense type name (sub-category).
+    string subCategory;
+    # Reimbursement amount.
+    decimal amount;
+    # Main expense category, or null.
+    string? category;
+    # Formatted submission date (YYYY-MM-DD), or null.
+    string? submittedDate;
+    # Formatted lead approval date (YYYY-MM-DD), or null.
+    string? approvedDate;
+    # Human-readable approval status.
+    string status;
+|};
+
+# Full approval detail response for a single lead.
+public type LeadApprovalDetailResponse record {|
+    # Display name of the lead.
+    string name;
+    # Lead email.
+    string email;
+    # Total number of claims approved in the range.
+    int totalApproved;
+    # Average approval frequency in claims per day (0 means caller should compute from dates).
+    decimal avgFrequencyPerDay;
+    # Date of the first approval (YYYY-MM-DD), or null.
+    string? firstApprovedDate;
+    # Date of the most recent approval (YYYY-MM-DD), or null.
+    string? lastApprovedDate;
+    # Breakdown of approved claims by expense category.
+    LeadClaimTypeBreakdownItem[] claimTypeBreakdown;
+    # Individual approved claims.
+    LeadApprovedClaimItem[] claims;
 |};
 
 # Standard error payload returned to API clients.

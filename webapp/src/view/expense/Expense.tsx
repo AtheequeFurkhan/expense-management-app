@@ -13,9 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
-import UnderDevelopment from "@src/layout/pages/Maintenance";
+import ExpenseClaims from "./panel/expenseClaims";
 
 export default function Expense() {
-  return <UnderDevelopment />;
+  return <ExpenseClaims />;
 }
