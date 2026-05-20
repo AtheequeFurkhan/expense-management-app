@@ -24,8 +24,8 @@ import ballerina/sql;
 # + return - Expense summary stats if the query succeeds, otherwise an error
 public function queryExpenseSummaryStats(int year, int month, int months,
         string? businessUnit = ()) returns ExpenseSummaryStatsRow|error {
-    return check expenseDbClient->queryRow(
-        getExpenseSummaryStatsQuery(year, month, months, businessUnit), ExpenseSummaryStatsRow
+    return expenseDbClient->queryRow(
+        getExpenseSummaryStatsQuery(year, month, months, businessUnit)
     );
 }
 
