@@ -162,9 +162,9 @@ service http:InterceptableService / on new http:Listener(9090) {
     # + ctx - Request context containing authenticated user information
     # + year - Optional reporting year
     # + month - Optional reporting month
-    # + months - Number of months included in the reporting window
+    # + monthRange - Number of months included in the reporting window
     # + return - OPD claim summary if successful, otherwise an HTTP error response
-    resource function get opd\-claims(http:RequestContext ctx, int? year = (), int? month = (), int months = 1)
+    resource function get opd\-claims(http:RequestContext ctx, int? year = (), int? month = (), int monthRange = 1)
         returns OpdClaimSummaryResponse|http:BadRequest|HttpInternalServerError {
 
         authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
@@ -190,7 +190,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         OpdClaimSummaryResponse|error summary = getOpdClaimSummary(
                 effectiveYear,
                 effectiveMonth,
-                months
+                monthRange
         );
         if summary is error {
             string customError = "Failed to build OPD claim summary.";
@@ -210,11 +210,11 @@ service http:InterceptableService / on new http:Listener(9090) {
     # + ctx - Request context containing authenticated user information
     # + year - Optional reporting year (defaults to current year)
     # + month - Optional reporting month (defaults to current month)
-    # + months - Number of months included in the reporting window
+    # + monthRange - Number of months included in the reporting window
     # + businessUnit - Optional business unit filter
     # + return - Expense claim summary if successful, otherwise an HTTP error response
     resource function get expense\-claims(http:RequestContext ctx, int? year = (), int? month = (),
-            int months = 1, string? businessUnit = ())
+            int monthRange = 1, string? businessUnit = ())
         returns ExpenseClaimSummaryResponse|http:BadRequest|HttpInternalServerError {
 
         authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
@@ -242,7 +242,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         ExpenseClaimSummaryResponse|error summary = getExpenseClaimSummary(
                 effectiveYear,
                 effectiveMonth,
-                months,
+                monthRange,
                 effectiveBusinessUnit
         );
         if summary is error {
@@ -263,11 +263,11 @@ service http:InterceptableService / on new http:Listener(9090) {
     # + ctx - Request context containing authenticated user information
     # + year - Optional reporting year (defaults to current year)
     # + month - Optional reporting month (defaults to current month)
-    # + months - Number of months included in the reporting window
+    # + monthRange - Number of months included in the reporting window
     # + businessUnit - Optional business unit filter
     # + return - Employee spending list if successful, otherwise an HTTP error response
     resource function get employee\-spending(http:RequestContext ctx, int? year = (), int? month = (),
-            int months = 1, string? businessUnit = ())
+            int monthRange = 1, string? businessUnit = ())
         returns EmployeeSpendingItem[]|http:BadRequest|HttpInternalServerError {
 
         authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
@@ -285,7 +285,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         string? effectiveBusinessUnit = normalizeBusinessUnit(businessUnit);
 
         database:AllSpendingEmployeeRow[]|error rows = database:querySpendingEmployees(
-                effectiveYear, effectiveMonth, months, effectiveBusinessUnit
+                effectiveYear, effectiveMonth, monthRange, effectiveBusinessUnit
         );
         if rows is error {
             string customError = "Failed to fetch employee spending data.";
@@ -311,11 +311,11 @@ service http:InterceptableService / on new http:Listener(9090) {
     # + email - Employee email address
     # + year - Optional reporting year (defaults to current year)
     # + month - Optional reporting month (defaults to current month)
-    # + months - Number of months included in the reporting window
+    # + monthRange - Number of months included in the reporting window
     # + statusFilter - Optional status group filter: "Approved" or "Pending"
     # + return - Employee spending breakdown if successful, otherwise an HTTP error response
     resource function get employee\-spending\-breakdown(http:RequestContext ctx, string email,
-            int? year = (), int? month = (), int months = 1, string? statusFilter = ())
+            int? year = (), int? month = (), int monthRange = 1, string? statusFilter = ())
         returns EmployeeSpendingBreakdownResponse|http:BadRequest|HttpInternalServerError {
 
         authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
@@ -336,7 +336,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         string? effectiveStatusFilter = (statusFilter is string && statusFilter.trim().length() == 0) ? () : statusFilter;
 
         database:EmployeeCategoryRow[]|error catRows = database:queryEmployeeCategoryBreakdown(
-                email, effectiveYear, effectiveMonth, months, effectiveStatusFilter
+                email, effectiveYear, effectiveMonth, monthRange, effectiveStatusFilter
         );
         if catRows is error {
             string customError = "Failed to fetch employee category breakdown.";
@@ -381,11 +381,11 @@ service http:InterceptableService / on new http:Listener(9090) {
     # + category - Expense category label
     # + year - Optional reporting year (defaults to current year)
     # + month - Optional reporting month (defaults to current month)
-    # + months - Number of months included in the reporting window
+    # + monthRange - Number of months included in the reporting window
     # + statusFilter - Optional status group filter: "Approved" or "Pending"
     # + return - Transaction list if successful, otherwise an HTTP error response
     resource function get employee\-category\-transactions(http:RequestContext ctx, string email,
-            string category, int? year = (), int? month = (), int months = 1, string? statusFilter = ())
+            string category, int? year = (), int? month = (), int monthRange = 1, string? statusFilter = ())
         returns EmployeeCategoryTransactionItem[]|http:BadRequest|HttpInternalServerError {
 
         authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
@@ -406,7 +406,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         string? effectiveStatusFilter = (statusFilter is string && statusFilter.trim().length() == 0) ? () : statusFilter;
 
         database:EmployeeCategoryTransactionRow[]|error txnRows = database:queryEmployeeCategoryTransactions(
-                email, category, effectiveYear, effectiveMonth, months, effectiveStatusFilter
+                email, category, effectiveYear, effectiveMonth, monthRange, effectiveStatusFilter
         );
         if txnRows is error {
             string customError = "Failed to fetch employee category transactions.";
@@ -428,11 +428,11 @@ service http:InterceptableService / on new http:Listener(9090) {
     # + ctx - Request context containing authenticated user information
     # + year - Optional reporting year (defaults to current year)
     # + month - Optional reporting month (defaults to current month)
-    # + months - Number of months included in the reporting window
+    # + monthRange - Number of months included in the reporting window
     # + businessUnit - Optional business unit filter
     # + return - Lead frequency list if successful, otherwise an HTTP error response
     resource function get lead\-approval\-frequency(http:RequestContext ctx, int? year = (), int? month = (),
-            int months = 1, string? businessUnit = ())
+            int monthRange = 1, string? businessUnit = ())
         returns LeadFrequencyItemResponse[]|http:BadRequest|HttpInternalServerError {
 
         authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
@@ -450,7 +450,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         string? effectiveBusinessUnit = normalizeBusinessUnit(businessUnit);
 
         database:LeadFrequencyRow[]|error rows = database:queryLeadFrequencyList(
-                effectiveYear, effectiveMonth, months, effectiveBusinessUnit
+                effectiveYear, effectiveMonth, monthRange, effectiveBusinessUnit
         );
         if rows is error {
             string customError = "Failed to fetch lead approval frequency list.";
@@ -486,10 +486,10 @@ service http:InterceptableService / on new http:Listener(9090) {
     # + email - Lead email address
     # + year - Optional reporting year (defaults to current year)
     # + month - Optional reporting month (defaults to current month)
-    # + months - Number of months included in the reporting window
+    # + monthRange - Number of months included in the reporting window
     # + return - Lead approval detail if successful, otherwise an HTTP error response
     resource function get lead\-approval\-detail(http:RequestContext ctx, string email,
-            int? year = (), int? month = (), int months = 1)
+            int? year = (), int? month = (), int monthRange = 1)
         returns LeadApprovalDetailResponse|http:BadRequest|HttpInternalServerError {
 
         authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
@@ -509,7 +509,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         int effectiveMonth = dateResult[1];
 
         database:LeadApprovalDetailRow[]|error rows = database:queryLeadApprovalDetail(
-                email, effectiveYear, effectiveMonth, months
+                email, effectiveYear, effectiveMonth, monthRange
         );
         if rows is error {
             string customError = "Failed to fetch lead approval detail.";

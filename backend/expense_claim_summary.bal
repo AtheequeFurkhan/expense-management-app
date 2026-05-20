@@ -131,37 +131,37 @@ isolated function mapExpenseCategory(string expenseType) returns string {
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + return - Expense claim summary response if all queries succeed, otherwise an error
-public function getExpenseClaimSummary(int year, int month, int months,
+public function getExpenseClaimSummary(int year, int month, int monthRange,
         string? businessUnit = ()) returns ExpenseClaimSummaryResponse|error {
 
-    database:ExpenseSummaryStatsRow stats = check database:queryExpenseSummaryStats(year, month, months, businessUnit);
+    database:ExpenseSummaryStatsRow stats = check database:queryExpenseSummaryStats(year, month, monthRange, businessUnit);
 
-    database:BuExpenseRow[] buExpenseRows = check database:queryExpenseByBu(year, month, months);
-    database:ClaimStatusRow[] claimStatusRows = check database:queryExpenseClaimsByStatus(year, month, months, businessUnit);
-    database:AllSpendingEmployeeRow[] topEmployeeRows = check database:querySpendingEmployees(year, month, months, businessUnit, TOP_EMPLOYEES_LIMIT);
+    database:BuExpenseRow[] buExpenseRows = check database:queryExpenseByBu(year, month, monthRange);
+    database:ClaimStatusRow[] claimStatusRows = check database:queryExpenseClaimsByStatus(year, month, monthRange, businessUnit);
+    database:AllSpendingEmployeeRow[] topEmployeeRows = check database:querySpendingEmployees(year, month, monthRange, businessUnit, TOP_EMPLOYEES_LIMIT);
     database:LeadApprovalFrequencyRow[] leadApprovalFrequencyRows = check database:queryLeadApprovalFrequency(
         year,
         month,
-        months,
+        monthRange,
         businessUnit
     );
-    database:TopApprovingLeadRow[] topLeadRows = check database:queryTopApprovingLeads(year, month, months, TOP_LEADS_LIMIT, businessUnit);
-    database:RecurringExpenseTypeRow[] recurringRows = check database:queryRecurringExpenseTypes(year, month, months, EXPENSE_TYPES_FETCH_LIMIT, businessUnit);
+    database:TopApprovingLeadRow[] topLeadRows = check database:queryTopApprovingLeads(year, month, monthRange, TOP_LEADS_LIMIT, businessUnit);
+    database:RecurringExpenseTypeRow[] recurringRows = check database:queryRecurringExpenseTypes(year, month, monthRange, EXPENSE_TYPES_FETCH_LIMIT, businessUnit);
 
     decimal prevTotalAmount = 0;
     int prevTotalCount = 0;
     decimal prevAvgAmount = 0;
     int prevApproved = 0;
 
-    if months > 0 {
-        int totalMonths = (year * 12 + month) - months;
+    if monthRange > 0 {
+        int totalMonths = (year * 12 + month) - monthRange;
         int prevYear = (totalMonths - 1) / 12;
         int prevMonth = ((totalMonths - 1) % 12) + 1;
 
-        database:ExpenseSummaryStatsRow prevStats = check database:queryExpenseSummaryStats(prevYear, prevMonth, months, businessUnit);
+        database:ExpenseSummaryStatsRow prevStats = check database:queryExpenseSummaryStats(prevYear, prevMonth, monthRange, businessUnit);
         prevTotalAmount = prevStats.totalAmount;
         prevTotalCount = prevStats.totalCount;
         prevAvgAmount = prevStats.avgAmount;
