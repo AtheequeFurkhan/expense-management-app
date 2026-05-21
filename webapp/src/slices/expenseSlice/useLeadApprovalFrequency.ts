@@ -126,8 +126,8 @@ export function useLeadFrequencyList(dateRange: string, businessUnit: string) {
     setLoading(true);
     setError(null);
 
-    const { year, month, months } = resolveDateRangeParams(dateRange);
-    const params: Record<string, string> = { year, month, months };
+    const { year, month, monthRange } = resolveDateRangeParams(dateRange);
+    const params: Record<string, string> = { year, month, monthRange };
     if (businessUnit && businessUnit !== "All Business Units") {
       params.businessUnit = businessUnit;
     }
@@ -186,11 +186,11 @@ export function useLeadApprovalDetail(email: string | null, dateRange: string) {
     setError(null);
     setDetail(null);
 
-    const { year, month, months } = resolveDateRangeParams(dateRange);
+    const { year, month, monthRange } = resolveDateRangeParams(dateRange);
 
     apiService
       .get<LeadApprovalDetail>("/lead-approval-detail", {
-        params: { email, year, month, months },
+        params: { email, year, month, monthRange },
       })
       .then((res) => {
         if (!cancelled && res.data) {
