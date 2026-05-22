@@ -21,7 +21,7 @@ import ballerina/sql;
 # + month - Optional month used to narrow the claim amount query
 # + return - Aggregated claim amount if the query succeeds, otherwise an error
 public function queryClaimAmount(int? year = (), int? month = ()) returns decimal|error {
-    AmountRow amountResult = check expenseDbClient->queryRow(getClaimAmountQuery(year, month), AmountRow);
+    AmountRow amountResult = check expenseDbClient->queryRow(getClaimAmountQuery(year, month));
 
     return amountResult.total;
 }
@@ -31,7 +31,7 @@ public function queryClaimAmount(int? year = (), int? month = ()) returns decima
 # + year - Reporting year used to filter claims
 # + return - Claim count for the given year if the query succeeds, otherwise an error
 public function queryClaimCount(int year) returns int|error {
-    CountRow countResult = check expenseDbClient->queryRow(getClaimCountQuery(year), CountRow);
+    CountRow countResult = check expenseDbClient->queryRow(getClaimCountQuery(year));
 
     return countResult.count;
 }
@@ -42,7 +42,7 @@ public function queryClaimCount(int year) returns int|error {
 # + gracePeriodDays - Number of days included in the grace period
 # + return - Grace period claim count if the query succeeds, otherwise an error
 public function queryGracePeriodClaimCount(int year, int gracePeriodDays) returns int|error {
-    CountRow countResult = check expenseDbClient->queryRow(getGracePeriodClaimCountQuery(year, gracePeriodDays), CountRow);
+    CountRow countResult = check expenseDbClient->queryRow(getGracePeriodClaimCountQuery(year, gracePeriodDays));
 
     return countResult.count;
 }

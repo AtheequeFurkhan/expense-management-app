@@ -34,17 +34,17 @@ isolated function appendStatusFilterClause(sql:ParameterizedQuery query, string?
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + return - Parameterized SQL fragment for the date range filter
-isolated function getExpenseDateRangeClause(int year, int month, int months)
+isolated function getExpenseDateRangeClause(int year, int month, int monthRange)
     returns sql:ParameterizedQuery {
-    // months=0 means "All Time" — skip date filtering
-    if months <= 0 {
+    // monthRange=0 means "All Time" — skip date filtering
+    if monthRange <= 0 {
         return `1=1`;
     }
     return `ec.txn_date >= DATE_SUB(
             STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
-            INTERVAL ${months - 1} MONTH
+            INTERVAL ${monthRange - 1} MONTH
         )
         AND ec.txn_date < DATE_ADD(
             STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
@@ -56,10 +56,10 @@ isolated function getExpenseDateRangeClause(int year, int month, int months)
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + return - Parameterized SQL query
-isolated function getExpenseSummaryStatsQuery(int year, int month, int months,
+isolated function getExpenseSummaryStatsQuery(int year, int month, int monthRange,
         string? businessUnit = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
@@ -72,7 +72,7 @@ isolated function getExpenseSummaryStatsQuery(int year, int month, int months,
         FROM expense_claims ec
         WHERE `;
 
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
 
     if businessUnit is string {
@@ -86,9 +86,9 @@ isolated function getExpenseSummaryStatsQuery(int year, int month, int months,
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + return - Parameterized SQL query
-isolated function getExpenseByBuQuery(int year, int month, int months)
+isolated function getExpenseByBuQuery(int year, int month, int monthRange)
     returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
@@ -97,7 +97,7 @@ isolated function getExpenseByBuQuery(int year, int month, int months)
         FROM expense_claims ec
         WHERE `;
 
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, monthRange);
 
     return sql:queryConcat(
             sql:queryConcat(baseQuery, dateClause),
@@ -112,10 +112,10 @@ isolated function getExpenseByBuQuery(int year, int month, int months)
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + return - Parameterized SQL query
-isolated function getExpenseClaimsByStatusQuery(int year, int month, int months,
+isolated function getExpenseClaimsByStatusQuery(int year, int month, int monthRange,
         string? businessUnit = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
@@ -131,7 +131,7 @@ isolated function getExpenseClaimsByStatusQuery(int year, int month, int months,
         FROM expense_claims ec
         WHERE `;
 
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
 
     if businessUnit is string {
@@ -150,10 +150,10 @@ isolated function getExpenseClaimsByStatusQuery(int year, int month, int months,
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + return - Parameterized SQL query
-isolated function getLeadApprovalFrequencyQuery(int year, int month, int months,
+isolated function getLeadApprovalFrequencyQuery(int year, int month, int monthRange,
         string? businessUnit = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
@@ -164,7 +164,7 @@ isolated function getLeadApprovalFrequencyQuery(int year, int month, int months,
         FROM expense_claims ec
         WHERE `;
 
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
     query = sql:queryConcat(query, ` AND ec.status IN ('2', '3') AND ec.txn_date IS NOT NULL`);
 
@@ -183,11 +183,11 @@ isolated function getLeadApprovalFrequencyQuery(int year, int month, int months,
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + 'limit - Optional maximum number of results to return
 # + return - Parameterized SQL query
-isolated function getSpendingEmployeesQuery(int year, int month, int months,
+isolated function getSpendingEmployeesQuery(int year, int month, int monthRange,
         string? businessUnit = (), int? 'limit = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
@@ -197,7 +197,7 @@ isolated function getSpendingEmployeesQuery(int year, int month, int months,
         FROM expense_claims ec
         WHERE `;
 
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
 
     if businessUnit is string {
@@ -222,11 +222,11 @@ isolated function getSpendingEmployeesQuery(int year, int month, int months,
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + 'limit - Maximum number of results to return
 # + businessUnit - Optional business unit filter
 # + return - Parameterized SQL query
-isolated function getTopApprovingLeadsQuery(int year, int month, int months,
+isolated function getTopApprovingLeadsQuery(int year, int month, int monthRange,
         int 'limit = 7, string? businessUnit = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
@@ -236,7 +236,7 @@ isolated function getTopApprovingLeadsQuery(int year, int month, int months,
         FROM expense_claims ec
         WHERE `;
 
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
     query = sql:queryConcat(query, ` AND ec.lead_approved_date IS NOT NULL AND ec.status IN ('2', '3')`);
 
@@ -257,11 +257,11 @@ isolated function getTopApprovingLeadsQuery(int year, int month, int months,
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + 'limit - Maximum number of results to return
 # + businessUnit - Optional business unit filter
 # + return - Parameterized SQL query
-isolated function getRecurringExpenseTypesQuery(int year, int month, int months,
+isolated function getRecurringExpenseTypesQuery(int year, int month, int monthRange,
         int 'limit = 25, string? businessUnit = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
@@ -272,7 +272,7 @@ isolated function getRecurringExpenseTypesQuery(int year, int month, int months,
             ON et.id = ec.expense_type_id
         WHERE `;
 
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
 
     if businessUnit is string {
@@ -292,10 +292,10 @@ isolated function getRecurringExpenseTypesQuery(int year, int month, int months,
 # + email - Employee email to filter on
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + statusFilter - Optional status group filter: "Approved" or "Pending"
 # + return - Parameterized SQL query
-isolated function getEmployeeCategoryBreakdownQuery(string email, int year, int month, int months,
+isolated function getEmployeeCategoryBreakdownQuery(string email, int year, int month, int monthRange,
         string? statusFilter = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
@@ -306,7 +306,7 @@ isolated function getEmployeeCategoryBreakdownQuery(string email, int year, int 
         INNER JOIN expense_type et ON et.id = ec.expense_type_id
         WHERE `;
 
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
     query = sql:queryConcat(query, ` AND ec.employee_email = ${email}`);
     query = appendStatusFilterClause(query, statusFilter);
@@ -322,10 +322,10 @@ isolated function getEmployeeCategoryBreakdownQuery(string email, int year, int 
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + return - Parameterized SQL query
-isolated function getLeadFrequencyListQuery(int year, int month, int months,
+isolated function getLeadFrequencyListQuery(int year, int month, int monthRange,
         string? businessUnit = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
@@ -338,7 +338,7 @@ isolated function getLeadFrequencyListQuery(int year, int month, int months,
         FROM expense_claims ec
         WHERE `;
 
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
 
     if businessUnit is string {
@@ -360,9 +360,9 @@ isolated function getLeadFrequencyListQuery(int year, int month, int months,
 # + leadEmail - Lead email to filter on
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + return - Parameterized SQL query
-isolated function getLeadApprovalDetailQuery(string leadEmail, int year, int month, int months)
+isolated function getLeadApprovalDetailQuery(string leadEmail, int year, int month, int monthRange)
         returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
@@ -377,7 +377,7 @@ isolated function getLeadApprovalDetailQuery(string leadEmail, int year, int mon
         LEFT JOIN expense_type et ON et.id = ec.expense_type_id
         WHERE `;
 
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
     query = sql:queryConcat(query, ` AND FIND_IN_SET(${leadEmail}, ec.lead_email) > 0`);
 
@@ -394,11 +394,11 @@ isolated function getLeadApprovalDetailQuery(string leadEmail, int year, int mon
 # + category - Expense category label to filter on
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + statusFilter - Optional status group filter: "Approved" or "Pending"
 # + return - Parameterized SQL query
 isolated function getEmployeeCategoryTransactionsQuery(string email, string category,
-        int year, int month, int months, string? statusFilter = ()) returns sql:ParameterizedQuery {
+        int year, int month, int monthRange, string? statusFilter = ()) returns sql:ParameterizedQuery {
 
     sql:ParameterizedQuery baseQuery = `
         SELECT et.expense_type AS description,
@@ -416,7 +416,7 @@ isolated function getEmployeeCategoryTransactionsQuery(string email, string cate
         INNER JOIN expense_type et ON et.id = ec.expense_type_id
         WHERE `;
 
-    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getExpenseDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery query = sql:queryConcat(baseQuery, dateClause);
     query = sql:queryConcat(query, ` AND ec.employee_email = ${email}`);
     query = sql:queryConcat(query,
