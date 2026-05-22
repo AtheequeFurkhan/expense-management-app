@@ -51,7 +51,7 @@ export interface EmployeeCategoryTransactionItem {
 export interface DateRangeParams {
   year: string;
   month: string;
-  months: string;
+  monthRange: string;
 }
 
 export function resolveDateRangeParams(dateRange: string): DateRangeParams {
@@ -61,30 +61,30 @@ export function resolveDateRangeParams(dateRange: string): DateRangeParams {
 
   switch (dateRange) {
     case "All Time":
-      return { year: String(currentYear), month: String(currentMonth), months: "0" };
+      return { year: String(currentYear), month: String(currentMonth), monthRange: "0" };
     case "This Month":
-      return { year: String(currentYear), month: String(currentMonth), months: "1" };
+      return { year: String(currentYear), month: String(currentMonth), monthRange: "1" };
     case "Last Month": {
       const m = currentMonth === 1 ? 12 : currentMonth - 1;
       const y = currentMonth === 1 ? currentYear - 1 : currentYear;
-      return { year: String(y), month: String(m), months: "1" };
+      return { year: String(y), month: String(m), monthRange: "1" };
     }
     case "Last 3 Months":
-      return { year: String(currentYear), month: String(currentMonth), months: "3" };
+      return { year: String(currentYear), month: String(currentMonth), monthRange: "3" };
     case "Last 6 Months":
-      return { year: String(currentYear), month: String(currentMonth), months: "6" };
+      return { year: String(currentYear), month: String(currentMonth), monthRange: "6" };
     case "Last 9 Months":
-      return { year: String(currentYear), month: String(currentMonth), months: "9" };
+      return { year: String(currentYear), month: String(currentMonth), monthRange: "9" };
     case "Year to Date":
       return {
         year: String(currentYear),
         month: String(currentMonth),
-        months: String(currentMonth),
+        monthRange: String(currentMonth),
       };
     case "Last Year":
-      return { year: String(currentYear - 1), month: "12", months: "12" };
+      return { year: String(currentYear - 1), month: "12", monthRange: "12" };
     default:
-      return { year: String(currentYear), month: String(currentMonth), months: "0" };
+      return { year: String(currentYear), month: String(currentMonth), monthRange: "0" };
   }
 }
 
@@ -98,8 +98,8 @@ export function useEmployeeSpendingList(dateRange: string, businessUnit: string)
     setLoading(true);
     setError(null);
 
-    const { year, month, months } = resolveDateRangeParams(dateRange);
-    const params: Record<string, string> = { year, month, months };
+    const { year, month, monthRange } = resolveDateRangeParams(dateRange);
+    const params: Record<string, string> = { year, month, monthRange };
     if (businessUnit && businessUnit !== "All Business Units") {
       params.businessUnit = businessUnit;
     }
@@ -168,8 +168,8 @@ export function useEmployeeBreakdown(
     setError(null);
     setBreakdown(null);
 
-    const { year, month, months } = resolveDateRangeParams(dateRange);
-    const params: Record<string, string> = { email, year, month, months };
+    const { year, month, monthRange } = resolveDateRangeParams(dateRange);
+    const params: Record<string, string> = { email, year, month, monthRange };
     if (statusFilter && statusFilter !== "All") {
       params.statusFilter = statusFilter;
     }
@@ -250,8 +250,8 @@ export function useEmployeeCategoryTransactions(
       setLoading(true);
       setError(null);
 
-      const { year, month, months } = resolveDateRangeParams(dateRange);
-      const params: Record<string, string> = { email: emp, category: cat, year, month, months };
+      const { year, month, monthRange } = resolveDateRangeParams(dateRange);
+      const params: Record<string, string> = { email: emp, category: cat, year, month, monthRange };
       if (statusFilter && statusFilter !== "All") {
         params.statusFilter = statusFilter;
       }

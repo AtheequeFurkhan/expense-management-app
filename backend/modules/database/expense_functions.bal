@@ -15,17 +15,30 @@
 // under the License.
 import ballerina/sql;
 
+isolated function validateDateRangeInputs(int month, int monthRange, int? 'limit = ()) returns error? {
+    if month < 1 || month > 12 {
+        return error(string `Invalid month: ${month}. Must be between 1 and 12.`);
+    }
+    if monthRange < 0 {
+        return error(string `Invalid monthRange: ${monthRange}. Must be 0 (all time) or greater.`);
+    }
+    if 'limit is int && 'limit <= 0 {
+        return error(string `Invalid limit: ${'limit}. Must be greater than 0.`);
+    }
+}
+
 # Query all aggregate statistics for the given date range in one database round-trip.
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + return - Expense summary stats if the query succeeds, otherwise an error
-public function queryExpenseSummaryStats(int year, int month, int months,
+public function queryExpenseSummaryStats(int year, int month, int monthRange,
         string? businessUnit = ()) returns ExpenseSummaryStatsRow|error {
-    return check expenseDbClient->queryRow(
-        getExpenseSummaryStatsQuery(year, month, months, businessUnit), ExpenseSummaryStatsRow
+    check validateDateRangeInputs(month, monthRange);
+    return expenseDbClient->queryRow(
+        getExpenseSummaryStatsQuery(year, month, monthRange, businessUnit)
     );
 }
 
@@ -33,12 +46,12 @@ public function queryExpenseSummaryStats(int year, int month, int months,
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + return - Business unit expense rows if the query succeeds, otherwise an error
-public function queryExpenseByBu(int year, int month, int months)
-        returns BuExpenseRow[]|error {
+public function queryExpenseByBu(int year, int month, int monthRange) returns BuExpenseRow[]|error {
+    check validateDateRangeInputs(month, monthRange);
     stream<BuExpenseRow, sql:Error?> resultStream =
-        expenseDbClient->query(getExpenseByBuQuery(year, month, months), BuExpenseRow);
+        expenseDbClient->query(getExpenseByBuQuery(year, month, monthRange), BuExpenseRow);
     return check from BuExpenseRow row in resultStream
         select row;
 }
@@ -47,14 +60,15 @@ public function queryExpenseByBu(int year, int month, int months)
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + return - Claim status rows if the query succeeds, otherwise an error
-public function queryExpenseClaimsByStatus(int year, int month, int months,
+public function queryExpenseClaimsByStatus(int year, int month, int monthRange,
         string? businessUnit = ()) returns ClaimStatusRow[]|error {
+    check validateDateRangeInputs(month, monthRange);
     stream<ClaimStatusRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getExpenseClaimsByStatusQuery(year, month, months, businessUnit), ClaimStatusRow
+            getExpenseClaimsByStatusQuery(year, month, monthRange, businessUnit), ClaimStatusRow
         );
     return check from ClaimStatusRow row in resultStream
         select row;
@@ -64,14 +78,15 @@ public function queryExpenseClaimsByStatus(int year, int month, int months,
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + return - Lead approval frequency rows if the query succeeds, otherwise an error
-public function queryLeadApprovalFrequency(int year, int month, int months,
+public function queryLeadApprovalFrequency(int year, int month, int monthRange,
         string? businessUnit = ()) returns LeadApprovalFrequencyRow[]|error {
+    check validateDateRangeInputs(month, monthRange);
     stream<LeadApprovalFrequencyRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getLeadApprovalFrequencyQuery(year, month, months, businessUnit),
+            getLeadApprovalFrequencyQuery(year, month, monthRange, businessUnit),
             LeadApprovalFrequencyRow
         );
     return check from LeadApprovalFrequencyRow row in resultStream
@@ -83,15 +98,16 @@ public function queryLeadApprovalFrequency(int year, int month, int months,
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + 'limit - Optional maximum number of results to return
 # + return - Spending employee rows if the query succeeds, otherwise an error
-public function querySpendingEmployees(int year, int month, int months,
+public function querySpendingEmployees(int year, int month, int monthRange,
         string? businessUnit = (), int? 'limit = ()) returns AllSpendingEmployeeRow[]|error {
+    check validateDateRangeInputs(month, monthRange, 'limit);
     stream<AllSpendingEmployeeRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getSpendingEmployeesQuery(year, month, months, businessUnit, 'limit),
+            getSpendingEmployeesQuery(year, month, monthRange, businessUnit, 'limit),
             AllSpendingEmployeeRow
         );
     return check from AllSpendingEmployeeRow row in resultStream
@@ -102,15 +118,16 @@ public function querySpendingEmployees(int year, int month, int months,
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + 'limit - Maximum number of results to return
 # + businessUnit - Optional business unit filter
 # + return - Top approving lead rows if the query succeeds, otherwise an error
-public function queryTopApprovingLeads(int year, int month, int months,
+public function queryTopApprovingLeads(int year, int month, int monthRange,
         int 'limit = 7, string? businessUnit = ()) returns TopApprovingLeadRow[]|error {
+    check validateDateRangeInputs(month, monthRange, 'limit);
     stream<TopApprovingLeadRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getTopApprovingLeadsQuery(year, month, months, 'limit, businessUnit),
+            getTopApprovingLeadsQuery(year, month, monthRange, 'limit, businessUnit),
             TopApprovingLeadRow
         );
     return check from TopApprovingLeadRow row in resultStream
@@ -121,15 +138,16 @@ public function queryTopApprovingLeads(int year, int month, int months,
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + 'limit - Maximum number of results to return
 # + businessUnit - Optional business unit filter
 # + return - Recurring expense type rows if the query succeeds, otherwise an error
-public function queryRecurringExpenseTypes(int year, int month, int months,
+public function queryRecurringExpenseTypes(int year, int month, int monthRange,
         int 'limit = 25, string? businessUnit = ()) returns RecurringExpenseTypeRow[]|error {
+    check validateDateRangeInputs(month, monthRange, 'limit);
     stream<RecurringExpenseTypeRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getRecurringExpenseTypesQuery(year, month, months, 'limit, businessUnit),
+            getRecurringExpenseTypesQuery(year, month, monthRange, 'limit, businessUnit),
             RecurringExpenseTypeRow
         );
     return check from RecurringExpenseTypeRow row in resultStream
@@ -141,14 +159,15 @@ public function queryRecurringExpenseTypes(int year, int month, int months,
 # + email - Employee email to filter on
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + statusFilter - Optional status group filter: "Approved" or "Pending"
 # + return - Employee category rows if the query succeeds, otherwise an error
-public function queryEmployeeCategoryBreakdown(string email, int year, int month, int months,
+public function queryEmployeeCategoryBreakdown(string email, int year, int month, int monthRange,
         string? statusFilter = ()) returns EmployeeCategoryRow[]|error {
+    check validateDateRangeInputs(month, monthRange);
     stream<EmployeeCategoryRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getEmployeeCategoryBreakdownQuery(email, year, month, months, statusFilter),
+            getEmployeeCategoryBreakdownQuery(email, year, month, monthRange, statusFilter),
             EmployeeCategoryRow
         );
     return check from EmployeeCategoryRow row in resultStream
@@ -159,14 +178,15 @@ public function queryEmployeeCategoryBreakdown(string email, int year, int month
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + businessUnit - Optional business unit filter
 # + return - Lead frequency rows if the query succeeds, otherwise an error
-public function queryLeadFrequencyList(int year, int month, int months,
+public function queryLeadFrequencyList(int year, int month, int monthRange,
         string? businessUnit = ()) returns LeadFrequencyRow[]|error {
+    check validateDateRangeInputs(month, monthRange);
     stream<LeadFrequencyRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getLeadFrequencyListQuery(year, month, months, businessUnit),
+            getLeadFrequencyListQuery(year, month, monthRange, businessUnit),
             LeadFrequencyRow
         );
     return check from LeadFrequencyRow row in resultStream
@@ -178,13 +198,13 @@ public function queryLeadFrequencyList(int year, int month, int months,
 # + leadEmail - Lead email to filter on
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + return - Lead approval detail rows if the query succeeds, otherwise an error
-public function queryLeadApprovalDetail(string leadEmail, int year, int month, int months)
-        returns LeadApprovalDetailRow[]|error {
+public function queryLeadApprovalDetail(string leadEmail, int year, int month, int monthRange) returns LeadApprovalDetailRow[]|error {
+    check validateDateRangeInputs(month, monthRange);
     stream<LeadApprovalDetailRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getLeadApprovalDetailQuery(leadEmail, year, month, months),
+            getLeadApprovalDetailQuery(leadEmail, year, month, monthRange),
             LeadApprovalDetailRow
         );
     return check from LeadApprovalDetailRow row in resultStream
@@ -197,14 +217,15 @@ public function queryLeadApprovalDetail(string leadEmail, int year, int month, i
 # + category - Expense category label to filter on
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included in the reporting range
+# + monthRange - Number of months included in the reporting range
 # + statusFilter - Optional status group filter: "Approved" or "Pending"
 # + return - Employee category transaction rows if the query succeeds, otherwise an error
 public function queryEmployeeCategoryTransactions(string email, string category,
-        int year, int month, int months, string? statusFilter = ()) returns EmployeeCategoryTransactionRow[]|error {
+        int year, int month, int monthRange, string? statusFilter = ()) returns EmployeeCategoryTransactionRow[]|error {
+    check validateDateRangeInputs(month, monthRange);
     stream<EmployeeCategoryTransactionRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getEmployeeCategoryTransactionsQuery(email, category, year, month, months, statusFilter),
+            getEmployeeCategoryTransactionsQuery(email, category, year, month, monthRange, statusFilter),
             EmployeeCategoryTransactionRow
         );
     return check from EmployeeCategoryTransactionRow row in resultStream

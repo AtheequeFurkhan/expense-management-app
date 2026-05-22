@@ -160,7 +160,7 @@ export const fetchOpdClaims = createAsyncThunk<
       params.month = resolvedMonth;
     }
     if (resolvedMonths) {
-      params.months = resolvedMonths;
+      params.monthRange = resolvedMonths;
     }
 
     const response = await apiService.get<Partial<OpdClaimsData & BackendOpdClaimsData> | null>(

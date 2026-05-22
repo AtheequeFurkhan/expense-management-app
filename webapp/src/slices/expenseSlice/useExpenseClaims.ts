@@ -179,8 +179,8 @@ export const fetchExpenseClaims = createAsyncThunk<
   { rejectValue: string }
 >("expenseClaims/fetchExpenseClaims", async ({ filters }, { rejectWithValue }) => {
   try {
-    const { year, month, months } = resolveDateRangeParams(filters.dateRange);
-    const params: Record<string, string> = { year, month, months };
+    const { year, month, monthRange } = resolveDateRangeParams(filters.dateRange);
+    const params: Record<string, string> = { year, month, monthRange };
 
     if (filters.businessUnit && filters.businessUnit !== "All Business Units") {
       params.businessUnit = filters.businessUnit;
