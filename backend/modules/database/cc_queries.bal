@@ -107,15 +107,15 @@ isolated function getCCCardListQuery() returns sql:ParameterizedQuery =>
 #
 # + year - Ending year of the reporting range
 # + month - Ending month of the reporting range
-# + months - Number of months included (0 = all time, no date filter)
+# + monthRange - Number of months included (0 = all time, no date filter)
 # + return - Parameterized SQL fragment
-isolated function getCCDateRangeClause(int year, int month, int months) returns sql:ParameterizedQuery {
-    if months <= 0 {
+isolated function getCCDateRangeClause(int year, int month, int monthRange) returns sql:ParameterizedQuery {
+    if monthRange <= 0 {
         return `1=1`;
     }
     return `t.txn_date >= DATE_SUB(
             STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
-            INTERVAL ${months - 1} MONTH
+            INTERVAL ${monthRange - 1} MONTH
         )
         AND t.txn_date < DATE_ADD(
             STR_TO_DATE(CONCAT(${year}, '-', LPAD(${month}, 2, '0'), '-01'), '%Y-%m-%d'),
@@ -156,11 +156,12 @@ isolated function appendCCCategoryFilter(sql:ParameterizedQuery base, string cat
 
 # Build the query for employee CC spending list ordered by total spend.
 #
-# + year - Ending year
-# + month - Ending month
-# + months - Window size in months (0 = all time)
+# + category - parameter description  
+# + year - Ending year  
+# + month - Ending month  
+# + monthRange - Window size in months (0 = all time)
 # + return - Parameterized SQL query
-isolated function getCCCategoryEmployeesQuery(string category, int year, int month, int months)
+isolated function getCCCategoryEmployeesQuery(string category, int year, int month, int monthRange)
         returns sql:ParameterizedQuery {
     sql:ParameterizedQuery base = `
         SELECT
@@ -170,7 +171,7 @@ isolated function getCCCategoryEmployeesQuery(string category, int year, int mon
         FROM cc_txn t
         WHERE t.employee_email IS NOT NULL
           AND `;
-    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery withDate = sql:queryConcat(base, dateClause);
     sql:ParameterizedQuery withCategory = appendCCCategoryFilter(withDate, category);
     return sql:queryConcat(withCategory, `
@@ -178,7 +179,7 @@ isolated function getCCCategoryEmployeesQuery(string category, int year, int mon
         ORDER BY totalAmount DESC`);
 }
 
-isolated function getCCEmployeeSpendingQuery(int year, int month, int months) returns sql:ParameterizedQuery {
+isolated function getCCEmployeeSpendingQuery(int year, int month, int monthRange) returns sql:ParameterizedQuery {
     sql:ParameterizedQuery base = `
         SELECT
             t.employee_email AS employeeEmail,
@@ -187,7 +188,7 @@ isolated function getCCEmployeeSpendingQuery(int year, int month, int months) re
         FROM cc_txn t
         WHERE t.employee_email IS NOT NULL
           AND `;
-    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, monthRange);
     return sql:queryConcat(sql:queryConcat(base, dateClause), `
         GROUP BY t.employee_email
         ORDER BY totalAmount DESC`);
@@ -198,9 +199,9 @@ isolated function getCCEmployeeSpendingQuery(int year, int month, int months) re
 # + email - Employee email to filter on
 # + year - Ending year
 # + month - Ending month
-# + months - Window size in months (0 = all time)
+# + monthRange - Window size in months (0 = all time)
 # + return - Parameterized SQL query
-isolated function getCCEmployeeCategoryBreakdownQuery(string email, int year, int month, int months)
+isolated function getCCEmployeeCategoryBreakdownQuery(string email, int year, int month, int monthRange)
         returns sql:ParameterizedQuery {
     sql:ParameterizedQuery base = `
         SELECT
@@ -219,7 +220,7 @@ isolated function getCCEmployeeCategoryBreakdownQuery(string email, int year, in
         FROM cc_txn t
         WHERE t.employee_email = ${email}
           AND `;
-    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, monthRange);
     return sql:queryConcat(sql:queryConcat(base, dateClause), `
         GROUP BY category
         ORDER BY total DESC`);
@@ -231,10 +232,10 @@ isolated function getCCEmployeeCategoryBreakdownQuery(string email, int year, in
 # + category - Derived engagement category name
 # + year - Ending year
 # + month - Ending month
-# + months - Window size in months (0 = all time)
+# + monthRange - Window size in months (0 = all time)
 # + return - Parameterized SQL query
 isolated function getCCEmployeeCategoryTransactionsQuery(string email, string category,
-        int year, int month, int months) returns sql:ParameterizedQuery {
+        int year, int month, int monthRange) returns sql:ParameterizedQuery {
     sql:ParameterizedQuery base = `
         SELECT
             TRIM(COALESCE(SUBSTRING(t.txn_reference, 1, 120), t.txn_reference_number, 'Unknown')) AS description,
@@ -244,7 +245,7 @@ isolated function getCCEmployeeCategoryTransactionsQuery(string email, string ca
         FROM cc_txn t
         WHERE t.employee_email = ${email}
           AND `;
-    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, months);
+    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, monthRange);
     sql:ParameterizedQuery withDate = sql:queryConcat(base, dateClause);
     sql:ParameterizedQuery withCategory = appendCCCategoryFilter(withDate, category);
     return sql:queryConcat(withCategory, ` ORDER BY t.txn_date DESC`);

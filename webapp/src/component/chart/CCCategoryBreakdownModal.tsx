@@ -16,10 +16,11 @@
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
-import { X } from "lucide-react";
+import { Download, X } from "lucide-react";
 
 import { useCCCategoryEmployees } from "@slices/creditCardSlice/useCreditCards";
 import { type CurrencyCode, formatWithSymbol } from "@utils/currency";
+import { exportCCCategorySpenders } from "@utils/exportExcel";
 
 export interface CCCategoryBreakdownModalProps {
   open: boolean;
@@ -45,13 +46,11 @@ export default function CCCategoryBreakdownModal({
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
   const { employees, loading, error } = useCCCategoryEmployees(open ? category : null);
 
-  const grandTotal = employees.reduce((sum, e) => sum + e.totalAmount, 0);
-
   return (
     <Dialog
       open={open}
       onClose={onClose}
-      maxWidth="sm"
+      maxWidth="md"
       fullWidth
       PaperProps={{
         sx: {
@@ -89,23 +88,53 @@ export default function CCCategoryBreakdownModal({
             {fmtSym(totalSpend)} total · {txnCount} transactions · {percentage}% of card spend
           </Typography>
         </Box>
-        <Box
-          onClick={onClose}
-          sx={{
-            cursor: "pointer",
-            color: "text.secondary",
-            p: 0.5,
-            borderRadius: 1,
-            "&:hover": { bgcolor: "action.hover", color: "text.primary" },
-          }}
-        >
-          <X size={20} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box
+            onClick={employees.length > 0 ? () => exportCCCategorySpenders({
+              category: category ?? "",
+              totalSpend,
+              txnCount,
+              percentage,
+              currency,
+              employees,
+            }) : undefined}
+            sx={{
+              display: "flex", alignItems: "center", gap: 0.6,
+              cursor: employees.length > 0 ? "pointer" : "not-allowed",
+              opacity: employees.length > 0 ? 1 : 0.5,
+              px: 1.5, py: 0.55,
+              borderRadius: "20px",
+              border: "1.5px solid",
+              borderColor: "warning.main",
+              color: "warning.main",
+              fontWeight: 700,
+              fontSize: 13,
+              transition: "all 0.15s ease",
+              "&:hover": employees.length > 0 ? { bgcolor: "warning.main", color: "#fff" } : {},
+              userSelect: "none",
+            }}
+          >
+            <Download size={14} />
+            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "inherit" }}>Export</Typography>
+          </Box>
+          <Box
+            onClick={onClose}
+            sx={{
+              cursor: "pointer",
+              color: "text.secondary",
+              p: 0.5,
+              borderRadius: 1,
+              "&:hover": { bgcolor: "action.hover", color: "text.primary" },
+            }}
+          >
+            <X size={20} />
+          </Box>
         </Box>
       </Box>
 
       <DialogContent sx={{ p: 2.5 }}>
         <Typography sx={{ fontSize: 13, fontWeight: 700, color: "text.primary", mb: 1.5 }}>
-          Top spenders in this category
+          All spenders in this category
         </Typography>
 
         {loading ? (
@@ -138,75 +167,48 @@ export default function CCCategoryBreakdownModal({
               "&::-webkit-scrollbar-thumb": { bgcolor: "text.disabled", borderRadius: 2 },
             }}
           >
-            {employees.map((emp, idx) => {
-              const sharePct = grandTotal > 0 ? (emp.totalAmount / grandTotal) * 100 : 0;
-              return (
-                <Box
-                  key={emp.email}
-                  sx={{
-                    px: 2,
-                    py: 1.2,
-                    borderRadius: 1.5,
-                    border: "1px solid",
-                    borderColor: "divider",
-                    bgcolor: idx % 2 === 0 ? "transparent" : "action.hover",
-                  }}
-                >
-                  <Box
+            {employees.map((emp, idx) => (
+              <Box
+                key={emp.email}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  px: 2,
+                  py: 1.2,
+                  borderRadius: 1.5,
+                  border: "1px solid",
+                  borderColor: "divider",
+                  bgcolor: idx % 2 === 0 ? "transparent" : "action.hover",
+                }}
+              >
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography
                     sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-start",
-                      mb: 0.8,
+                      fontSize: 14,
+                      fontWeight: 600,
+                      color: "text.primary",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}
                   >
-                    <Box sx={{ minWidth: 0, flex: 1 }}>
-                      <Typography
-                        sx={{
-                          fontSize: 14,
-                          fontWeight: 600,
-                          color: "text.primary",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {emp.name}
-                      </Typography>
-                      <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
-                        {emp.email}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ textAlign: "right", flexShrink: 0, ml: 2 }}>
-                      <Typography sx={{ fontSize: 14, fontWeight: 700, color: "text.primary" }}>
-                        {fmtSym(emp.totalAmount)}
-                      </Typography>
-                      <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
-                        {emp.txnCount} txns
-                      </Typography>
-                    </Box>
-                  </Box>
-                  {/* Share bar */}
-                  <Box sx={{ position: "relative", height: 4, borderRadius: 2, bgcolor: "action.hover" }}>
-                    <Box
-                      sx={{
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        height: "100%",
-                        width: `${sharePct}%`,
-                        bgcolor: color,
-                        borderRadius: 2,
-                        transition: "width 0.4s ease",
-                      }}
-                    />
-                  </Box>
-                  <Typography sx={{ fontSize: 10, color: "text.disabled", mt: 0.4 }}>
-                    {sharePct.toFixed(1)}% of category
+                    {emp.name}
+                  </Typography>
+                  <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
+                    {emp.email}
                   </Typography>
                 </Box>
-              );
-            })}
+                <Box sx={{ textAlign: "right", flexShrink: 0, ml: 2 }}>
+                  <Typography sx={{ fontSize: 14, fontWeight: 700, color: "text.primary" }}>
+                    {fmtSym(emp.totalAmount)}
+                  </Typography>
+                  <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
+                    {emp.txnCount} txns
+                  </Typography>
+                </Box>
+              </Box>
+            ))}
           </Box>
         )}
       </DialogContent>

@@ -283,6 +283,134 @@ public type LeadApprovalDetailResponse record {|
     LeadApprovedClaimItem[] claims;
 |};
 
+# ─── Credit Card types ──────────────────────────────────────────────────────
+
+# Summary metrics returned by the credit card dashboard summary endpoint.
+public type CCSummaryResponse record {|
+    # Total CC spend in the current calendar year
+    decimal totalSpend;
+    # Number of active corporate cards
+    int activeCardCount;
+    # Average transaction amount this month
+    decimal avgTransaction;
+    # Display name of the highest-spending card holder
+    string highestSpendCardName;
+    # Total spend of the highest-spending card holder
+    decimal highestSpendCardAmount;
+    # Year-over-year trend for total spend (percentage)
+    decimal trendTotalSpend;
+    # Year-over-year trend for active card count (percentage, currently 0)
+    decimal trendActiveCards;
+    # Month-over-month trend for average transaction (percentage)
+    decimal trendAvgTransaction;
+|};
+
+# Single category entry in the Card Type Analysis chart.
+public type CCCardTypeItem record {|
+    # Derived engagement category label (e.g. "Sales", "R&D")
+    string cardType;
+    # Total spend in the category
+    decimal totalSpend;
+    # Number of transactions in the category
+    int txnCount;
+    # Percentage of total CC spend
+    decimal percentage;
+|};
+
+# Top-spending corporate card item.
+public type CCTopCardItem record {|
+    # Corporate card number
+    string cardNumber;
+    # Display name of the card holder
+    string holderName;
+    # Total spend on the card
+    decimal usedAmount;
+    # Number of transactions on the card
+    int txnCount;
+|};
+
+# Full corporate card record for the cards list table.
+public type CCCardListItem record {|
+    # Database row ID of the card
+    string cardId;
+    # Corporate card number
+    string cardNumber;
+    # Display name of the card holder
+    string holderName;
+    # Email / login of the card holder
+    string holderEmail;
+    # Total spend on the card
+    decimal usedAmount;
+    # Card provider code (AMEX, SVB, etc.)
+    string cardType;
+    # Card status (Active / Inactive)
+    string status;
+|};
+
+# Employee CC spending summary item (used in list and category drill-down).
+public type CCEmployeeSpendingItem record {|
+    # Display name of the employee
+    string name;
+    # Employee email
+    string email;
+    # Total CC spend amount
+    decimal totalAmount;
+    # Number of CC transactions
+    int txnCount;
+|};
+
+# Single category entry in an employee's CC spending breakdown.
+public type CCEmployeeCategoryItem record {|
+    # Derived engagement category label
+    string category;
+    # Total spend in the category
+    decimal total;
+    # Number of transactions in the category
+    int txnCount;
+    # Percentage of the employee's total CC spend
+    decimal percentage;
+|};
+
+# Full CC spending breakdown for a single employee.
+public type CCEmployeeBreakdownResponse record {|
+    # Display name of the employee
+    string name;
+    # Employee email
+    string email;
+    # Total CC spend across all categories
+    decimal totalAmount;
+    # Total number of CC transactions
+    int txnCount;
+    # Per-category breakdown sorted by total spend
+    CCEmployeeCategoryItem[] categories;
+|};
+
+# Individual CC transaction within an employee's category drill-down.
+public type CCEmployeeCategoryTransactionItem record {|
+    # Transaction description or reference
+    string description;
+    # Transaction date formatted as YYYY-MM-DD
+    string txnDate;
+    # Transaction amount
+    decimal amount;
+    # Transaction status
+    string status;
+|};
+
+# ─── Application Configuration update ────────────────────────────────────────
+
+# Request body for updating application configuration via the admin PUT endpoint.
+public type AppConfigUpdateRequest record {|
+    # Updated annual OPD claim limit, or null to leave unchanged
+    decimal? claimLimit = ();
+    # Updated chart bucket step size, or null to leave unchanged
+    decimal? claimRangeStep = ();
+    # Updated grace period in days, or null to leave unchanged
+    int? lastYearClaimGracePeriodInDays = ();
+    # Updated list of allowed submission locations, or null to leave unchanged
+    string[]? submissionsAllowedLocations = ();
+|};
+
 # Standard error payload returned to API clients.
 public type ErrorResponse record {|
     # Client-safe error message.

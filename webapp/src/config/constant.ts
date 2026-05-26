@@ -101,6 +101,16 @@ export const MONTH_OPTIONS = [
 export const PAGE_SIZE_EMPLOYEES = 7;
 export const PAGE_SIZE_LEADS = 7;
 export const PAGE_SIZE_RECURRING = 8;
+export const PAGE_SIZE_CC_CARDS = 10;
+
+export const CC_DATE_RANGE_OPTIONS = [
+  { value: "All Time", label: "All Time" },
+  { value: "This Month", label: "This Month" },
+  { value: "Last Month", label: "Last Month" },
+  { value: "Last 3 Months", label: "Last 3 Months" },
+  { value: "Last 6 Months", label: "Last 6 Months" },
+  { value: "Last Year", label: "Last Year" },
+];
 
 export const MS_PER_DAY = 86_400_000;
 export const DAYS_PER_MONTH = 30;

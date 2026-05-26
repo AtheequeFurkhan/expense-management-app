@@ -14,8 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import UnderDevelopment from "@src/layout/pages/Maintenance";
+import UserSettings from "./panel/userSettings";
 
 export default function Settings() {
-  return <UnderDevelopment />;
+  return <UserSettings />;
 }

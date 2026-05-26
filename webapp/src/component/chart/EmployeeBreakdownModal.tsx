@@ -571,7 +571,7 @@ export default function EmployeeBreakdownModal({
                 category: cat.category,
                 year: params.year,
                 month: params.month,
-                months: params.months,
+                monthRange: params.monthRange,
                 ...(statusParam ? { statusFilter: statusParam } : {}),
               },
             })
@@ -676,19 +676,22 @@ export default function EmployeeBreakdownModal({
               alignItems: "center",
               gap: 0.6,
               cursor: breakdown && !exportLoading ? "pointer" : "not-allowed",
-              opacity: breakdown && !exportLoading ? 1 : 0.4,
-              color: "primary.main",
-              px: 1.25,
-              py: 0.5,
-              borderRadius: 1,
-              border: "1px solid",
-              borderColor: "primary.main",
-              "&:hover": breakdown && !exportLoading ? { bgcolor: "primary.main", color: "#fff" } : {},
-              transition: "all 0.2s",
+              opacity: breakdown && !exportLoading ? 1 : 0.5,
+              px: 1.5,
+              py: 0.55,
+              borderRadius: "20px",
+              border: "1.5px solid",
+              borderColor: "warning.main",
+              color: "warning.main",
+              fontWeight: 700,
+              fontSize: 13,
+              transition: "all 0.15s ease",
+              "&:hover": breakdown && !exportLoading ? { bgcolor: "warning.main", color: "#fff" } : {},
+              userSelect: "none",
             }}
           >
             {exportLoading ? <CircularProgress size={14} color="inherit" /> : <Download size={14} />}
-            <Typography sx={{ fontSize: 12, fontWeight: 700 }}>
+            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "inherit" }}>
               {exportLoading ? "Exporting..." : "Export"}
             </Typography>
           </Box>

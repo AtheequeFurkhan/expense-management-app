@@ -105,7 +105,6 @@ const hiddenNavigationPaths = new Set([
   "/profile",
   "/admin",
   "/employee-summary",
-  "/credit-card-summary",
   "/report-summary",
 ]);
 

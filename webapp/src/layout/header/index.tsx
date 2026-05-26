@@ -29,10 +29,14 @@ import {
   useTheme,
 } from "@wso2/oxygen-ui";
 import { LogOut, Menu as MenuIcon, PanelLeftClose } from "@wso2/oxygen-ui-icons-react";
+import { ShieldCheck, Settings, User } from "lucide-react";
 
 import { useCallback, useEffect, useState } from "react";
 
-import { useBasicUserInfo, useSignOut } from "../../slices/authSlice/auth";
+import { useNavigate } from "react-router-dom";
+
+import { APP_NAME } from "@config/config";
+import { Role, useBasicUserInfo, useSignOut } from "../../slices/authSlice/auth";
 import { useAppSelector } from "../../slices/store";
 
 interface HeaderProps {
@@ -46,12 +50,16 @@ function Header({ open, handleDrawerToggle, drawerWidth, collapsedWidth }: Heade
   const theme = useTheme();
   const { getBasicUserInfo } = useBasicUserInfo();
   const { signOut } = useSignOut();
+  const navigate = useNavigate();
+  const roles = useAppSelector((state) => state.auth.roles);
+  const isAdmin = roles.includes(Role.ADMIN);
 
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [userName, setUserName] = useState("");
   const [userEmail, setUserEmail] = useState("");
   const menuOpen = Boolean(anchorEl);
-  const appConfig = useAppSelector((state) => state.appConfig.config);
+
+
 
   const fetchUserInfo = useCallback(async () => {
     try {
@@ -100,7 +108,7 @@ function Header({ open, handleDrawerToggle, drawerWidth, collapsedWidth }: Heade
         </IconButton>
 
         <Typography variant="h6" noWrap sx={{ flexGrow: 1, color: theme.palette.text.primary }}>
-          {appConfig?.appName || ""}
+          {APP_NAME || "Expense Management Dashboard"}
         </Typography>
 
         <Box sx={{ display: "flex", alignItems: "center" }}>
@@ -119,19 +127,40 @@ function Header({ open, handleDrawerToggle, drawerWidth, collapsedWidth }: Heade
           onClose={handleMenuClose}
           transformOrigin={{ horizontal: "right", vertical: "top" }}
           anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
+          slotProps={{ paper: { sx: { minWidth: 220, mt: 0.5 } } }}
         >
-          <Box sx={{ px: 2, py: 1 }}>
-            <Typography variant="subtitle1" fontWeight="bold">
+          {/* User info header */}
+          <Box sx={{ px: 2, py: 1.25 }}>
+            <Typography variant="subtitle1" fontWeight="bold" sx={{ lineHeight: 1.3 }}>
               {userName}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" sx={{ fontSize: 12 }}>
               {userEmail}
             </Typography>
           </Box>
           <Divider />
-          <MenuItem onClick={handleSignOut}>
-            <ListItemIcon>
-              <LogOut size={18} />
+
+          <MenuItem onClick={() => { handleMenuClose(); navigate("/profile"); }}>
+            <ListItemIcon><User size={16} /></ListItemIcon>
+            Profile
+          </MenuItem>
+
+          <MenuItem onClick={() => { handleMenuClose(); navigate("/settings"); }}>
+            <ListItemIcon><Settings size={16} /></ListItemIcon>
+            Settings
+          </MenuItem>
+
+          {isAdmin && (
+            <MenuItem onClick={() => { handleMenuClose(); navigate("/admin"); }}>
+              <ListItemIcon><ShieldCheck size={16} /></ListItemIcon>
+              Admin Panel
+            </MenuItem>
+          )}
+
+          <Divider />
+          <MenuItem onClick={handleSignOut} sx={{ color: "error.main" }}>
+            <ListItemIcon sx={{ color: "error.main" }}>
+              <LogOut size={16} />
             </ListItemIcon>
             Sign Out
           </MenuItem>

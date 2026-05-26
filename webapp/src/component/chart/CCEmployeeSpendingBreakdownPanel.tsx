@@ -13,16 +13,20 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
+import dayjs, { type Dayjs } from "dayjs";
+
+import DateRangePickerButton from "@component/common/DateRangePickerButton";
 
 import { useEffect, useMemo, useState } from "react";
 
 import CCEmployeeBreakdownModal from "@component/chart/CCEmployeeBreakdownModal";
 import ChartCard from "@component/chart/ChartCard";
-import ChartPeriodFilter from "@component/chart/ChartPeriodFilter";
 import PaginationBar from "@component/common/PaginationBar";
 import SearchBox from "@component/common/SearchBox";
-import { MONTH_OPTIONS, PAGE_SIZE_EMPLOYEES } from "@config/constant";
+import { PAGE_SIZE_EMPLOYEES } from "@config/constant";
 import {
   type CCEmployeeSpendingItem,
   useCCEmployeeSpendingList,
@@ -33,18 +37,32 @@ interface CCEmployeeSpendingBreakdownPanelProps {
   currency: CurrencyCode;
 }
 
+const now = dayjs();
+const DEFAULT_FROM = now.subtract(11, "month").startOf("month");
+const DEFAULT_TO = now.startOf("month");
+
+function buildDateRange(from: Dayjs, to: Dayjs): string {
+  return `custom:${from.year()}-${from.month() + 1}:${to.year()}-${to.month() + 1}`;
+}
+
+function formatDateLabel(d: Dayjs): string {
+  return d.format("DD MMM YYYY");
+}
+
 export default function CCEmployeeSpendingBreakdownPanel({
   currency,
 }: CCEmployeeSpendingBreakdownPanelProps) {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
-  const [chartPeriod, setChartPeriod] = useState("All Time");
+  const [fromDate, setFromDate] = useState<Dayjs>(DEFAULT_FROM);
+  const [toDate, setToDate] = useState<Dayjs>(DEFAULT_TO);
   const [selectedEmployee, setSelectedEmployee] = useState<CCEmployeeSpendingItem | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
 
-  const { employees, loading, error } = useCCEmployeeSpendingList(chartPeriod);
+  const dateRange = buildDateRange(fromDate, toDate);
+  const { employees, loading, error } = useCCEmployeeSpendingList(dateRange);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return employees;
@@ -56,7 +74,7 @@ export default function CCEmployeeSpendingBreakdownPanel({
 
   useEffect(() => {
     setPage(0);
-  }, [search]);
+  }, [search, dateRange]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE_EMPLOYEES);
   const paginated = filtered.slice(page * PAGE_SIZE_EMPLOYEES, (page + 1) * PAGE_SIZE_EMPLOYEES);
@@ -66,17 +84,22 @@ export default function CCEmployeeSpendingBreakdownPanel({
     setModalOpen(true);
   };
 
+  const dateRangeLabel = `${formatDateLabel(fromDate)} – ${formatDateLabel(toDate)}`;
+
   return (
-    <>
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <>
       <ChartCard
         title="Employee CC Spending Breakdown"
         subtitle="Cardholders with highest corporate card spend"
         minHeight={420}
         action={
-          <ChartPeriodFilter
-            value={chartPeriod}
-            options={MONTH_OPTIONS}
-            onChange={setChartPeriod}
+          <DateRangePickerButton
+            fromDate={fromDate}
+            toDate={toDate}
+            onFromChange={setFromDate}
+            onToChange={setToDate}
+            maxTo={now}
           />
         }
       >
@@ -100,7 +123,7 @@ export default function CCEmployeeSpendingBreakdownPanel({
           ) : filtered.length === 0 ? (
             <Box sx={{ py: 6, textAlign: "center" }}>
               <Typography sx={{ color: "text.disabled", fontSize: 13 }}>
-                {search ? "No cardholders match your search" : "No cardholder data available"}
+                {search ? "No cardholders match your search" : "No cardholder data for this period"}
               </Typography>
             </Box>
           ) : (
@@ -188,9 +211,10 @@ export default function CCEmployeeSpendingBreakdownPanel({
         onClose={() => setModalOpen(false)}
         employeeEmail={selectedEmployee?.email ?? null}
         employeeName={selectedEmployee?.name ?? ""}
-        dateRange={chartPeriod}
+        dateRange={dateRangeLabel}
         currency={currency}
       />
     </>
+    </LocalizationProvider>
   );
 }
