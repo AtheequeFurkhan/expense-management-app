@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { Box, Divider, Stack, Tooltip, Typography, useTheme } from "@mui/material";
+import { Box, Divider, Stack, Tooltip, Typography, useTheme } from "@wso2/oxygen-ui";
 import { ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
 
 import { useMemo, useState } from "react";

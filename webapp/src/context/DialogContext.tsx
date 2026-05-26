@@ -19,15 +19,21 @@ import DoneIcon from "@mui/icons-material/Done";
 import SaveAltIcon from "@mui/icons-material/SaveAlt";
 import SendIcon from "@mui/icons-material/Send";
 import LoadingButton from "@mui/lab/LoadingButton";
-import { IconButton, Stack, TextField } from "@mui/material";
-import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
-import DialogTitle from "@mui/material/DialogTitle";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
+  Stack,
+  TextField,
+  DatePickers,
+} from "@wso2/oxygen-ui";
+
+const { LocalizationProvider } = DatePickers;
 
 import * as React from "react";
 import { useContext, useState } from "react";
