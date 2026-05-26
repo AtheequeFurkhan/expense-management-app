@@ -48,6 +48,7 @@ export interface CCCardListItem {
   cardId: string;
   cardNumber: string;
   holderName: string;
+  holderEmail: string;
   usedAmount: number;
   cardType: string;
   status: string;
@@ -96,7 +97,7 @@ export function useCCSummary() {
   return { data, loading, error };
 }
 
-export function useCCCardTypeAnalysis() {
+export function useCCCardTypeAnalysis(dateRange = "All Time") {
   const [items, setItems] = useState<CCCardTypeItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -106,8 +107,10 @@ export function useCCCardTypeAnalysis() {
     setLoading(true);
     setError(null);
 
+    const { year, month, monthRange } = resolveCCDateRangeParams(dateRange);
+
     apiService
-      .get<CCCardTypeItem[]>("/cc-card-type-analysis")
+      .get<CCCardTypeItem[]>("/cc-card-type-analysis", { params: { year, month, monthRange } })
       .then((res) => {
         if (!cancelled) {
           setItems(
@@ -132,7 +135,7 @@ export function useCCCardTypeAnalysis() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [dateRange]);
 
   return { items, loading, error };
 }
@@ -206,29 +209,38 @@ export interface CCEmployeeCategoryTransactionItem {
   status: string;
 }
 
-export function resolveCCDateRangeParams(dateRange: string): { year: string; month: string; months: string } {
+export function resolveCCDateRangeParams(dateRange: string): { year: string; month: string; monthRange: string } {
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
 
   switch (dateRange) {
     case "All Time":
-      return { year: String(currentYear), month: String(currentMonth), months: "0" };
+      return { year: String(currentYear), month: String(currentMonth), monthRange: "0" };
     case "This Month":
-      return { year: String(currentYear), month: String(currentMonth), months: "1" };
+      return { year: String(currentYear), month: String(currentMonth), monthRange: "1" };
     case "Last Month": {
       const m = currentMonth === 1 ? 12 : currentMonth - 1;
       const y = currentMonth === 1 ? currentYear - 1 : currentYear;
-      return { year: String(y), month: String(m), months: "1" };
+      return { year: String(y), month: String(m), monthRange: "1" };
     }
     case "Last 3 Months":
-      return { year: String(currentYear), month: String(currentMonth), months: "3" };
+      return { year: String(currentYear), month: String(currentMonth), monthRange: "3" };
     case "Last 6 Months":
-      return { year: String(currentYear), month: String(currentMonth), months: "6" };
+      return { year: String(currentYear), month: String(currentMonth), monthRange: "6" };
     case "Last Year":
-      return { year: String(currentYear - 1), month: "12", months: "12" };
-    default:
-      return { year: String(currentYear), month: String(currentMonth), months: "0" };
+      return { year: String(currentYear - 1), month: "12", monthRange: "12" };
+    default: {
+      // "custom:YYYY-M:YYYY-M" — arbitrary from/to month range
+      if (dateRange.startsWith("custom:")) {
+        const [fromStr, toStr] = dateRange.slice(7).split(":");
+        const [fromYear, fromMonth] = fromStr.split("-").map(Number);
+        const [toYear, toMonth] = toStr.split("-").map(Number);
+        const monthRange = Math.max(1, (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1);
+        return { year: String(toYear), month: String(toMonth), monthRange: String(monthRange) };
+      }
+      return { year: String(currentYear), month: String(currentMonth), monthRange: "0" };
+    }
   }
 }
 
@@ -249,7 +261,7 @@ export function useCCCategoryEmployees(category: string | null) {
 
     apiService
       .get<CCEmployeeSpendingItem[]>("/cc-category-employees", {
-        params: { category, months: "0" },
+        params: { category, monthRange: "0" },
       })
       .then((res) => {
         if (!cancelled) {
@@ -289,10 +301,10 @@ export function useCCEmployeeSpendingList(dateRange: string) {
     setLoading(true);
     setError(null);
 
-    const { year, month, months } = resolveCCDateRangeParams(dateRange);
+    const { year, month, monthRange } = resolveCCDateRangeParams(dateRange);
 
     apiService
-      .get<CCEmployeeSpendingItem[]>("/cc-employee-spending", { params: { year, month, months } })
+      .get<CCEmployeeSpendingItem[]>("/cc-employee-spending", { params: { year, month, monthRange } })
       .then((res) => {
         if (!cancelled) {
           setEmployees(
@@ -340,11 +352,11 @@ export function useCCEmployeeBreakdown(email: string | null, dateRange: string) 
     setError(null);
     setBreakdown(null);
 
-    const { year, month, months } = resolveCCDateRangeParams(dateRange);
+    const { year, month, monthRange } = resolveCCDateRangeParams(dateRange);
 
     apiService
       .get<CCEmployeeBreakdownResponse>("/cc-employee-breakdown", {
-        params: { email, year, month, months },
+        params: { email, year, month, monthRange },
       })
       .then((res) => {
         if (!cancelled && res.data) {
@@ -417,11 +429,11 @@ export function useCCEmployeeCategoryTransactions(
       setLoading(true);
       setError(null);
 
-      const { year, month, months } = resolveCCDateRangeParams(dateRange);
+      const { year, month, monthRange } = resolveCCDateRangeParams(dateRange);
 
       apiService
         .get<CCEmployeeCategoryTransactionItem[]>("/cc-employee-category-transactions", {
-          params: { email: emp, category: cat, year, month, months },
+          params: { email: emp, category: cat, year, month, monthRange },
         })
         .then((res) => {
           if (!mountedRef.current) return;

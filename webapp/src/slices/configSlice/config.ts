@@ -23,18 +23,16 @@ import { SnackMessage } from "@config/constant";
 import { enqueueSnackbarMessage } from "@slices/commonSlice/common";
 import { APIService } from "@utils/apiService";
 
-interface SupportTeamEmail {
-  team: string;
-  email: string;
-}
-
-interface AppConfigInfo {
-  appName: string;
-  supportTeamEmails: SupportTeamEmail[];
+export interface AppConfigInfo {
+  claimLimit: number;
+  claimRangeStep: number;
+  lastYearClaimGracePeriodInDays: number;
+  submissionsAllowedLocations: string[];
 }
 
 interface AppConfigState {
   state: State;
+  updateState: State;
   stateMessage: string | null;
   errorMessage: string | null;
   config: AppConfigInfo | null;
@@ -42,6 +40,7 @@ interface AppConfigState {
 
 const initialState: AppConfigState = {
   state: State.idle,
+  updateState: State.idle,
   stateMessage: null,
   errorMessage: null,
   config: null,
@@ -51,8 +50,8 @@ export const fetchAppConfig = createAsyncThunk(
   "appConfig/fetchAppConfig",
   async (_, { dispatch, rejectWithValue }) => {
     try {
-      const response = await APIService.getInstance().get(AppConfig.serviceUrls.appConfig);
-      return response.data as AppConfigInfo;
+      const response = await APIService.get<AppConfigInfo>(AppConfig.serviceUrls.appConfig);
+      return response.data;
     } catch (error) {
       if (axios.isCancel(error)) {
         return rejectWithValue("Request canceled");
@@ -76,12 +75,44 @@ export const fetchAppConfig = createAsyncThunk(
   },
 );
 
+export const updateAppConfig = createAsyncThunk(
+  "appConfig/updateAppConfig",
+  async (payload: Partial<AppConfigInfo>, { dispatch, rejectWithValue }) => {
+    try {
+      const response = await APIService.put<AppConfigInfo>(AppConfig.serviceUrls.appConfig, payload);
+      dispatch(
+        enqueueSnackbarMessage({
+          message: "Application configuration updated successfully.",
+          type: "success",
+        }),
+      );
+      return response.data;
+    } catch (error) {
+      if (axios.isCancel(error)) {
+        return rejectWithValue("Request canceled");
+      }
+      const message =
+        (error as { response?: { data?: { message?: string } } }).response?.data?.message ||
+        (error as Error).message ||
+        "Failed to update application configuration.";
+      dispatch(
+        enqueueSnackbarMessage({
+          message,
+          type: "error",
+        }),
+      );
+      return rejectWithValue(message);
+    }
+  },
+);
+
 const AppConfigSlice = createSlice({
   name: "appConfig",
   initialState,
   reducers: {
     resetSubmitState(state) {
       state.state = State.idle;
+      state.updateState = State.idle;
     },
   },
   extraReducers: (builder) => {
@@ -93,12 +124,32 @@ const AppConfigSlice = createSlice({
       .addCase(fetchAppConfig.fulfilled, (state, action) => {
         state.state = State.success;
         state.stateMessage = "Successfully fetched app configurations!";
-        state.config = action.payload;
+        state.config = {
+          claimLimit: Number(action.payload.claimLimit),
+          claimRangeStep: Number(action.payload.claimRangeStep),
+          lastYearClaimGracePeriodInDays: Number(action.payload.lastYearClaimGracePeriodInDays),
+          submissionsAllowedLocations: action.payload.submissionsAllowedLocations ?? [],
+        };
       })
       .addCase(fetchAppConfig.rejected, (state, action) => {
         state.state = State.failed;
         state.stateMessage = "Failed to fetch application configurations.";
         state.errorMessage = (action.payload as string) ?? action.error?.message ?? null;
+      })
+      .addCase(updateAppConfig.pending, (state) => {
+        state.updateState = State.loading;
+      })
+      .addCase(updateAppConfig.fulfilled, (state, action) => {
+        state.updateState = State.success;
+        state.config = {
+          claimLimit: Number(action.payload.claimLimit),
+          claimRangeStep: Number(action.payload.claimRangeStep),
+          lastYearClaimGracePeriodInDays: Number(action.payload.lastYearClaimGracePeriodInDays),
+          submissionsAllowedLocations: action.payload.submissionsAllowedLocations ?? [],
+        };
+      })
+      .addCase(updateAppConfig.rejected, (state) => {
+        state.updateState = State.failed;
       });
   },
 });

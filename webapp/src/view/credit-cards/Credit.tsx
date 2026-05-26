@@ -13,9 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import CreditCard from "./panel/creditCard";
 
-import UnderDevelopment from "@src/layout/pages/Maintenance";
-
-export default function Opd() {
-  return <UnderDevelopment />;
+export default function Credit() {
+  return <CreditCard />;
 }

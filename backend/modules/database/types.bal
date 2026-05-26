@@ -199,3 +199,11 @@ public type EmployeeCategoryTransactionRow record {|
     # Human-readable status label.
     string status;
 |};
+
+# Query result for a single application setting key-value pair.
+public type AppSettingRow record {|
+    # Setting identifier
+    string settingKey;
+    # Setting value stored as a string
+    string settingValue;
+|};

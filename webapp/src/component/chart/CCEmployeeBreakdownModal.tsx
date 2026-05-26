@@ -16,7 +16,7 @@
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import { Box, CircularProgress, Skeleton, Typography } from "@wso2/oxygen-ui";
-import { ChevronDown, ChevronRight, TrendingDown, TrendingUp, X } from "lucide-react";
+import { Download, ChevronDown, ChevronRight, TrendingDown, TrendingUp, X } from "lucide-react";
 
 import { useEffect, useState } from "react";
 
@@ -26,6 +26,7 @@ import {
   useCCEmployeeCategoryTransactions,
 } from "@slices/creditCardSlice/useCreditCards";
 import { type CurrencyCode, formatWithSymbol } from "@utils/currency";
+import { exportCCEmployeeBreakdown } from "@utils/exportExcel";
 
 const SEGMENT_COLORS = [
   "#00B4D8",
@@ -511,6 +512,32 @@ export default function CCEmployeeBreakdownModal({
   const maxComp = compBreakdown ? Math.max(...compBreakdown.categories.map((c) => c.total), 1) : 1;
   const compMap = new Map((compBreakdown?.categories ?? []).map((c) => [c.category, c]));
 
+  const handleDownload = () => {
+    if (!breakdown || !employeeEmail) return;
+    exportCCEmployeeBreakdown({
+      name: employeeName,
+      email: employeeEmail,
+      dateRange,
+      currency,
+      compareMode,
+      totalAmount: breakdown.totalAmount,
+      txnCount: breakdown.txnCount,
+      prevTotalAmount: compBreakdown?.totalAmount ?? 0,
+      prevTxnCount: compBreakdown?.txnCount ?? 0,
+      categories: breakdown.categories.map((cat) => {
+        const cmp = compMap.get(cat.category);
+        return {
+          category: cat.category,
+          total: cat.total,
+          txnCount: cat.txnCount,
+          percentage: cat.percentage,
+          compTotal: cmp?.total ?? 0,
+          compTxnCount: cmp?.txnCount ?? 0,
+        };
+      }),
+    });
+  };
+
   return (
     <Dialog
       open={open}
@@ -552,17 +579,43 @@ export default function CCEmployeeBreakdownModal({
             </Typography>
           )}
         </Box>
-        <Box
-          onClick={onClose}
-          sx={{
-            cursor: "pointer",
-            color: "text.secondary",
-            p: 0.5,
-            borderRadius: 1,
-            "&:hover": { bgcolor: "action.hover", color: "text.primary" },
-          }}
-        >
-          <X size={20} />
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Box
+            onClick={breakdown ? handleDownload : undefined}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 0.6,
+              cursor: breakdown ? "pointer" : "not-allowed",
+              px: 1.5,
+              py: 0.55,
+              borderRadius: "20px",
+              border: "1.5px solid",
+              borderColor: breakdown ? "warning.main" : "text.disabled",
+              color: breakdown ? "warning.main" : "text.disabled",
+              opacity: breakdown ? 1 : 0.5,
+              fontWeight: 700,
+              fontSize: 13,
+              transition: "all 0.15s ease",
+              "&:hover": breakdown ? { bgcolor: "warning.main", color: "#fff" } : {},
+              userSelect: "none",
+            }}
+          >
+            <Download size={14} />
+            Export
+          </Box>
+          <Box
+            onClick={onClose}
+            sx={{
+              cursor: "pointer",
+              color: "text.secondary",
+              p: 0.5,
+              borderRadius: 1,
+              "&:hover": { bgcolor: "action.hover", color: "text.primary" },
+            }}
+          >
+            <X size={20} />
+          </Box>
         </Box>
       </Box>
 

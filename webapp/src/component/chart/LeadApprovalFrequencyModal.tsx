@@ -335,15 +335,21 @@ export default function LeadApprovalFrequencyModal({
             sx={{
               display: "flex", alignItems: "center", gap: 0.6,
               cursor: detail ? "pointer" : "not-allowed",
-              opacity: detail ? 1 : 0.4,
-              color: "primary.main", px: 1.25, py: 0.5,
-              borderRadius: 1, border: "1px solid", borderColor: "primary.main",
-              "&:hover": detail ? { bgcolor: "primary.main", color: "#fff" } : {},
-              transition: "all 0.2s",
+              opacity: detail ? 1 : 0.5,
+              px: 1.5, py: 0.55,
+              borderRadius: "20px",
+              border: "1.5px solid",
+              borderColor: "warning.main",
+              color: "warning.main",
+              fontWeight: 700,
+              fontSize: 13,
+              transition: "all 0.15s ease",
+              "&:hover": detail ? { bgcolor: "warning.main", color: "#fff" } : {},
+              userSelect: "none",
             }}
           >
             <Download size={14} />
-            <Typography sx={{ fontSize: 12, fontWeight: 700 }}>Export</Typography>
+            <Typography sx={{ fontSize: 13, fontWeight: 700, color: "inherit" }}>Export</Typography>
           </Box>
           <Box
             onClick={onClose}

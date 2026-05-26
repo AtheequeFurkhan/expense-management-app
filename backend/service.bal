@@ -60,6 +60,47 @@ isolated function fetchNameMap(string[] emails) returns map<string> {
     return hrNames is map<string> ? hrNames : {};
 }
 
+function buildEffectiveAppConfig() returns AppConfig {
+    map<string>|error dbSettings = database:getAppSettings();
+    if dbSettings is error {
+        log:printWarn("Could not read app_settings from DB; using Config.toml defaults.", dbSettings);
+        return appConfig;
+    }
+
+    decimal claimLimit = appConfig.claimLimit;
+    decimal claimRangeStep = appConfig.claimRangeStep;
+    int lastYearClaimGracePeriodInDays = appConfig.lastYearClaimGracePeriodInDays;
+    string[] submissionsAllowedLocations = appConfig.submissionsAllowedLocations;
+
+    string? rawLimit = dbSettings["claimLimit"];
+    if rawLimit is string {
+        decimal|error v = decimal:fromString(rawLimit);
+        if v is decimal { claimLimit = v; }
+    }
+
+    string? rawStep = dbSettings["claimRangeStep"];
+    if rawStep is string {
+        decimal|error v = decimal:fromString(rawStep);
+        if v is decimal { claimRangeStep = v; }
+    }
+
+    string? rawGrace = dbSettings["lastYearClaimGracePeriodInDays"];
+    if rawGrace is string {
+        int|error v = int:fromString(rawGrace);
+        if v is int { lastYearClaimGracePeriodInDays = v; }
+    }
+
+    string? rawLocations = dbSettings["submissionsAllowedLocations"];
+    if rawLocations is string && rawLocations.length() > 0 {
+        submissionsAllowedLocations = from string part in re `,`.split(rawLocations)
+            let string t = part.trim()
+            where t.length() > 0
+            select t;
+    }
+
+    return {claimLimit, claimRangeStep, lastYearClaimGracePeriodInDays, submissionsAllowedLocations};
+}
+
 service class ErrorInterceptor {
     *http:ResponseErrorInterceptor;
 
@@ -94,10 +135,83 @@ service http:InterceptableService / on new http:Listener(9090) {
     public function createInterceptors() returns http:Interceptor[] =>
         [new authorization:JwtInterceptor(), new ErrorInterceptor()];
 
-    # Get frontend application configuration.
+    # Get frontend application configuration, merging any admin overrides from the database.
     #
-    # + return - Application configuration used by the frontend
-    resource function get app\-config() returns AppConfig => appConfig;
+    # + return - Effective application configuration
+    resource function get app\-config() returns AppConfig {
+        return buildEffectiveAppConfig();
+    }
+
+    # Update application configuration. Restricted to finance administrators.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + payload - Fields to update; omitted fields are left unchanged
+    # + return - Updated application configuration, or an error response
+    resource function put app\-config(http:RequestContext ctx, @http:Payload AppConfigUpdateRequest payload)
+        returns AppConfig|http:BadRequest|http:Forbidden|HttpInternalServerError {
+
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
+        }
+
+        if !authorization:checkPermissions([authorization:authorizedRoles.financeAdminRole], authResult.groups) {
+            return <http:Forbidden>{body: {message: "Only administrators can update application configuration."}};
+        }
+
+        string updatedBy = authResult.email;
+
+        decimal? newClaimLimit = payload.claimLimit;
+        if newClaimLimit is decimal {
+            if newClaimLimit <= 0.0d {
+                return <http:BadRequest>{body: {message: "Claim limit must be a positive value."}};
+            }
+            error? err = database:upsertAppSetting("claimLimit", newClaimLimit.toString(), updatedBy);
+            if err is error {
+                log:printError("Failed to persist claimLimit.", err);
+                return <HttpInternalServerError>{body: {message: "Failed to update claim limit."}};
+            }
+        }
+
+        decimal? newClaimRangeStep = payload.claimRangeStep;
+        if newClaimRangeStep is decimal {
+            if newClaimRangeStep <= 0.0d {
+                return <http:BadRequest>{body: {message: "Claim range step must be a positive value."}};
+            }
+            error? err = database:upsertAppSetting("claimRangeStep", newClaimRangeStep.toString(), updatedBy);
+            if err is error {
+                log:printError("Failed to persist claimRangeStep.", err);
+                return <HttpInternalServerError>{body: {message: "Failed to update claim range step."}};
+            }
+        }
+
+        int? newGracePeriod = payload.lastYearClaimGracePeriodInDays;
+        if newGracePeriod is int {
+            if newGracePeriod < 0 {
+                return <http:BadRequest>{body: {message: "Grace period cannot be negative."}};
+            }
+            error? err = database:upsertAppSetting("lastYearClaimGracePeriodInDays", newGracePeriod.toString(), updatedBy);
+            if err is error {
+                log:printError("Failed to persist lastYearClaimGracePeriodInDays.", err);
+                return <HttpInternalServerError>{body: {message: "Failed to update grace period."}};
+            }
+        }
+
+        string[]? newLocations = payload.submissionsAllowedLocations;
+        if newLocations is string[] {
+            if newLocations.length() == 0 {
+                return <http:BadRequest>{body: {message: "At least one allowed location is required."}};
+            }
+            string locationsValue = string:'join(",", ...newLocations);
+            error? err = database:upsertAppSetting("submissionsAllowedLocations", locationsValue, updatedBy);
+            if err is error {
+                log:printError("Failed to persist submissionsAllowedLocations.", err);
+                return <HttpInternalServerError>{body: {message: "Failed to update allowed locations."}};
+            }
+        }
+
+        return buildEffectiveAppConfig();
+    }
 
     # Get user information and privileges for the authenticated user.
     #
@@ -582,6 +696,356 @@ service http:InterceptableService / on new http:Listener(9090) {
             claimTypeBreakdown: claimTypeBreakdown,
             claims: claims
         };
+    }
+
+    # Get the credit card summary metrics including spend totals and trends.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + return - Credit card summary if successful, otherwise an HTTP error response
+    resource function get cc\-summary(http:RequestContext ctx)
+        returns CCSummaryResponse|http:BadRequest|HttpInternalServerError {
+
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
+        }
+
+        database:CCSpendStatsRow|error statsRow = database:queryCCSpendStats();
+        if statsRow is error {
+            log:printError("Failed to fetch CC spend stats.", statsRow);
+            return <HttpInternalServerError>{body: {message: "Failed to fetch credit card summary."}};
+        }
+
+        database:CCActiveCountRow|error activeRow = database:queryCCActiveCount();
+        if activeRow is error {
+            log:printError("Failed to fetch CC active card count.", activeRow);
+            return <HttpInternalServerError>{body: {message: "Failed to fetch credit card summary."}};
+        }
+
+        database:CCHighestSpendRow|error highestRow = database:queryCCHighestSpend();
+        if highestRow is error {
+            log:printError("Failed to fetch CC highest spend.", highestRow);
+            return <HttpInternalServerError>{body: {message: "Failed to fetch credit card summary."}};
+        }
+
+        map<string> nameMap = fetchNameMap([highestRow.holderName]);
+        string highestSpendCardName = nameMap[highestRow.holderName.toLowerAscii()] ?: deriveDisplayName(highestRow.holderName);
+
+        decimal trendTotalSpend = statsRow.prevYearSpend > 0.0d
+            ? ((statsRow.currentYearSpend - statsRow.prevYearSpend) / statsRow.prevYearSpend) * 100.0d
+            : 0.0d;
+        decimal trendAvgTransaction = statsRow.prevMonthAvg > 0.0d
+            ? ((statsRow.currentMonthAvg - statsRow.prevMonthAvg) / statsRow.prevMonthAvg) * 100.0d
+            : 0.0d;
+
+        return {
+            totalSpend: statsRow.currentYearSpend,
+            activeCardCount: activeRow.activeCount,
+            avgTransaction: statsRow.currentMonthAvg,
+            highestSpendCardName: highestSpendCardName,
+            highestSpendCardAmount: highestRow.usedAmount,
+            trendTotalSpend: trendTotalSpend,
+            trendActiveCards: 0.0d,
+            trendAvgTransaction: trendAvgTransaction
+        };
+    }
+
+    # Get spend and transaction count grouped by engagement category.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + return - Card type analysis items if successful, otherwise an HTTP error response
+    resource function get cc\-card\-type\-analysis(http:RequestContext ctx)
+        returns CCCardTypeItem[]|http:BadRequest|HttpInternalServerError {
+
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
+        }
+
+        database:CCCardTypeRow[]|error rows = database:queryCCCardTypeAnalysis();
+        if rows is error {
+            log:printError("Failed to fetch CC card type analysis.", rows);
+            return <HttpInternalServerError>{body: {message: "Failed to fetch card type analysis."}};
+        }
+
+        decimal grandTotal = 0.0d;
+        foreach database:CCCardTypeRow row in rows {
+            grandTotal = grandTotal + row.totalSpend;
+        }
+
+        return from database:CCCardTypeRow row in rows
+            select {
+                cardType: row.cardType,
+                totalSpend: row.totalSpend,
+                txnCount: row.txnCount,
+                percentage: grandTotal > 0.0d ? (row.totalSpend / grandTotal) * 100.0d : 0.0d
+            };
+    }
+
+    # Get the top-spending corporate cards.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + return - Top card items if successful, otherwise an HTTP error response
+    resource function get cc\-top\-cards(http:RequestContext ctx)
+        returns CCTopCardItem[]|http:BadRequest|HttpInternalServerError {
+
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
+        }
+
+        database:CCTopCardRow[]|error rows = database:queryCCTopCards();
+        if rows is error {
+            log:printError("Failed to fetch CC top cards.", rows);
+            return <HttpInternalServerError>{body: {message: "Failed to fetch top cards."}};
+        }
+
+        string[] emails = from database:CCTopCardRow row in rows select row.holderName;
+        map<string> nameMap = fetchNameMap(emails);
+
+        return from database:CCTopCardRow row in rows
+            select {
+                cardNumber: row.cardNumber,
+                holderName: nameMap[row.holderName.toLowerAscii()] ?: deriveDisplayName(row.holderName),
+                usedAmount: row.usedAmount,
+                txnCount: row.txnCount
+            };
+    }
+
+    # Get the full corporate card list ordered by spend.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + return - Card list if successful, otherwise an HTTP error response
+    resource function get cc\-cards(http:RequestContext ctx)
+        returns CCCardListItem[]|http:BadRequest|HttpInternalServerError {
+
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
+        }
+
+        database:CCCardRow[]|error rows = database:queryCCCardList();
+        if rows is error {
+            log:printError("Failed to fetch CC card list.", rows);
+            return <HttpInternalServerError>{body: {message: "Failed to fetch card list."}};
+        }
+
+        string[] emails = from database:CCCardRow row in rows select row.holderName;
+        map<string> nameMap = fetchNameMap(emails);
+
+        return from database:CCCardRow row in rows
+            select {
+                cardId: row.cardId,
+                cardNumber: row.cardNumber,
+                holderName: nameMap[row.holderName.toLowerAscii()] ?: deriveDisplayName(row.holderName),
+                holderEmail: row.holderName,
+                usedAmount: row.usedAmount,
+                cardType: row.cardType,
+                status: row.status
+            };
+    }
+
+    # Get employees and their total CC spend for a given engagement category and date range.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + category - Engagement category name to filter on
+    # + year - Optional ending year (defaults to current year)
+    # + month - Optional ending month (defaults to current month)
+    # + monthRange - Number of months in the reporting window (0 = all time)
+    # + return - Employee spending items if successful, otherwise an HTTP error response
+    resource function get cc\-category\-employees(http:RequestContext ctx, string category,
+            int? year = (), int? month = (), int monthRange = 0)
+        returns CCEmployeeSpendingItem[]|http:BadRequest|HttpInternalServerError {
+
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
+        }
+
+        if category.trim().length() == 0 {
+            return <http:BadRequest>{body: {message: "Category is required."}};
+        }
+
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
+        }
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
+
+        database:CCEmployeeSpendingRow[]|error rows = database:queryCCCategoryEmployees(
+                category, effectiveYear, effectiveMonth, monthRange
+        );
+        if rows is error {
+            log:printError("Failed to fetch CC category employees.", rows);
+            return <HttpInternalServerError>{body: {message: "Failed to fetch category employees."}};
+        }
+
+        string[] emails = from database:CCEmployeeSpendingRow row in rows select row.employeeEmail;
+        map<string> nameMap = fetchNameMap(emails);
+
+        return from database:CCEmployeeSpendingRow row in rows
+            select {
+                name: nameMap[row.employeeEmail.toLowerAscii()] ?: deriveDisplayName(row.employeeEmail),
+                email: row.employeeEmail,
+                totalAmount: row.totalAmount,
+                txnCount: row.txnCount
+            };
+    }
+
+    # Get all employees and their total CC spend for a given date range.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + year - Optional ending year (defaults to current year)
+    # + month - Optional ending month (defaults to current month)
+    # + monthRange - Number of months in the reporting window (0 = all time)
+    # + return - Employee spending items if successful, otherwise an HTTP error response
+    resource function get cc\-employee\-spending(http:RequestContext ctx,
+            int? year = (), int? month = (), int monthRange = 1)
+        returns CCEmployeeSpendingItem[]|http:BadRequest|HttpInternalServerError {
+
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
+        }
+
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
+        }
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
+
+        database:CCEmployeeSpendingRow[]|error rows = database:queryCCEmployeeSpending(
+                effectiveYear, effectiveMonth, monthRange
+        );
+        if rows is error {
+            log:printError("Failed to fetch CC employee spending.", rows);
+            return <HttpInternalServerError>{body: {message: "Failed to fetch CC employee spending."}};
+        }
+
+        string[] emails = from database:CCEmployeeSpendingRow row in rows select row.employeeEmail;
+        map<string> nameMap = fetchNameMap(emails);
+
+        return from database:CCEmployeeSpendingRow row in rows
+            select {
+                name: nameMap[row.employeeEmail.toLowerAscii()] ?: deriveDisplayName(row.employeeEmail),
+                email: row.employeeEmail,
+                totalAmount: row.totalAmount,
+                txnCount: row.txnCount
+            };
+    }
+
+    # Get the CC spending breakdown by engagement category for a specific employee.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + email - Employee email address
+    # + year - Optional ending year (defaults to current year)
+    # + month - Optional ending month (defaults to current month)
+    # + monthRange - Number of months in the reporting window (0 = all time)
+    # + return - Employee CC breakdown if successful, otherwise an HTTP error response
+    resource function get cc\-employee\-breakdown(http:RequestContext ctx, string email,
+            int? year = (), int? month = (), int monthRange = 1)
+        returns CCEmployeeBreakdownResponse|http:BadRequest|HttpInternalServerError {
+
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
+        }
+
+        if email.trim().length() == 0 {
+            return <http:BadRequest>{body: {message: "Employee email is required."}};
+        }
+
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
+        }
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
+
+        database:CCEmployeeCategoryRow[]|error catRows = database:queryCCEmployeeCategoryBreakdown(
+                email, effectiveYear, effectiveMonth, monthRange
+        );
+        if catRows is error {
+            log:printError("Failed to fetch CC employee category breakdown.", catRows);
+            return <HttpInternalServerError>{body: {message: "Failed to fetch CC employee breakdown."}};
+        }
+
+        decimal grandTotal = 0.0d;
+        int totalTxns = 0;
+        foreach database:CCEmployeeCategoryRow r in catRows {
+            grandTotal = grandTotal + r.total;
+            totalTxns = totalTxns + r.txnCount;
+        }
+
+        CCEmployeeCategoryItem[] categories = from database:CCEmployeeCategoryRow row in catRows
+            select {
+                category: row.category,
+                total: row.total,
+                txnCount: row.txnCount,
+                percentage: grandTotal > 0.0d ? (row.total / grandTotal) * 100.0d : 0.0d
+            };
+
+        string empName = deriveDisplayName(email);
+        entity:Employee|error empRecord = entity:fetchEmployeesBasicInfo(email);
+        if empRecord is entity:Employee {
+            empName = empRecord.firstName + " " + empRecord.lastName;
+        }
+
+        return {
+            name: empName,
+            email: email,
+            totalAmount: grandTotal,
+            txnCount: totalTxns,
+            categories: categories
+        };
+    }
+
+    # Get individual CC transactions for a specific employee within an engagement category.
+    #
+    # + ctx - Request context containing authenticated user information
+    # + email - Employee email address
+    # + category - Derived engagement category name
+    # + year - Optional ending year (defaults to current year)
+    # + month - Optional ending month (defaults to current month)
+    # + monthRange - Number of months in the reporting window (0 = all time)
+    # + return - Transaction items if successful, otherwise an HTTP error response
+    resource function get cc\-employee\-category\-transactions(http:RequestContext ctx,
+            string email, string category, int? year = (), int? month = (), int monthRange = 1)
+        returns CCEmployeeCategoryTransactionItem[]|http:BadRequest|HttpInternalServerError {
+
+        authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
+        if authResult is http:BadRequest {
+            return authResult;
+        }
+
+        if email.trim().length() == 0 || category.trim().length() == 0 {
+            return <http:BadRequest>{body: {message: "Employee email and category are required."}};
+        }
+
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
+        }
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
+
+        database:CCEmployeeCategoryTransactionRow[]|error txnRows = database:queryCCEmployeeCategoryTransactions(
+                email, category, effectiveYear, effectiveMonth, monthRange
+        );
+        if txnRows is error {
+            log:printError("Failed to fetch CC employee category transactions.", txnRows);
+            return <HttpInternalServerError>{body: {message: "Failed to fetch CC transactions."}};
+        }
+
+        return from database:CCEmployeeCategoryTransactionRow row in txnRows
+            select {
+                description: row.description,
+                txnDate: row.txnDate,
+                amount: row.amount,
+                status: row.status
+            };
     }
 
     # Get the health status of the service and its database dependency.

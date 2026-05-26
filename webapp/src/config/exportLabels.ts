@@ -57,6 +57,44 @@ export const LEAD_CLAIMS_EXTRA_COLS = {
   claimId: "Claim ID",
 } as const;
 
+// ─── Credit Card Cards ────────────────────────────────────────────────────────
+
+export const CC_CARDS_COLS = {
+  cardId:      "Card ID",
+  cardNumber:  "Card Number",
+  holderName:  "Cardholder",
+  usedAmount:  "Total Spend",
+  cardType:    "Provider",
+  status:      "Status",
+} as const;
+
+export const CC_CATEGORY_COLS = {
+  category:   "Category",
+  totalSpend: "Total Spend",
+  txnCount:   "Transactions",
+  pctOfTotal: "% of Total",
+} as const;
+
+// ─── CC Employee Breakdown ────────────────────────────────────────────────────
+
+export const CC_EMP_SUMMARY_FIELDS = {
+  employeeName: "Employee Name",
+  email:        "Email",
+  period:       "Period",
+  currency:     "Currency",
+  totalAmount:  "Total Amount",
+  totalTxns:    "Total Transactions",
+} as const;
+
+export const CC_EMP_CATEGORY_COLS = {
+  category:      "Category",
+  compAmount:    "Amount",
+  compTxns:      "Transactions",
+  currentAmount: "Current Amount",
+  currentTxns:   "Current Transactions",
+  pctOfTotal:    "% of Total",
+} as const;
+
 // ─── Employee Breakdown ───────────────────────────────────────────────────────
 
 export const EMP_SUMMARY_FIELDS = {

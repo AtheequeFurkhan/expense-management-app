@@ -67,24 +67,25 @@ public function queryCCCardList() returns CCCardRow[]|error {
         select row;
 }
 
-# Query employees and their total CC spend for the given date range.
+# Query employees and their total CC spend for a given engagement category and date range.
 #
+# + category - Engagement category name to filter on
 # + year - Ending year
 # + month - Ending month
-# + months - Window size in months (0 = all time)
+# + monthRange - Window size in months (0 = all time)
 # + return - Employee spending rows if the query succeeds, otherwise an error
-public function queryCCCategoryEmployees(string category, int year, int month, int months)
+public function queryCCCategoryEmployees(string category, int year, int month, int monthRange)
         returns CCEmployeeSpendingRow[]|error {
     stream<CCEmployeeSpendingRow, sql:Error?> resultStream =
-        expenseDbClient->query(getCCCategoryEmployeesQuery(category, year, month, months), CCEmployeeSpendingRow);
+        expenseDbClient->query(getCCCategoryEmployeesQuery(category, year, month, monthRange), CCEmployeeSpendingRow);
     return check from CCEmployeeSpendingRow row in resultStream
         select row;
 }
 
-public function queryCCEmployeeSpending(int year, int month, int months)
+public function queryCCEmployeeSpending(int year, int month, int monthRange)
         returns CCEmployeeSpendingRow[]|error {
     stream<CCEmployeeSpendingRow, sql:Error?> resultStream =
-        expenseDbClient->query(getCCEmployeeSpendingQuery(year, month, months), CCEmployeeSpendingRow);
+        expenseDbClient->query(getCCEmployeeSpendingQuery(year, month, monthRange), CCEmployeeSpendingRow);
     return check from CCEmployeeSpendingRow row in resultStream
         select row;
 }
@@ -94,13 +95,13 @@ public function queryCCEmployeeSpending(int year, int month, int months)
 # + email - Employee email to filter on
 # + year - Ending year
 # + month - Ending month
-# + months - Window size in months (0 = all time)
+# + monthRange - Window size in months (0 = all time)
 # + return - Category rows if the query succeeds, otherwise an error
-public function queryCCEmployeeCategoryBreakdown(string email, int year, int month, int months)
+public function queryCCEmployeeCategoryBreakdown(string email, int year, int month, int monthRange)
         returns CCEmployeeCategoryRow[]|error {
     stream<CCEmployeeCategoryRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getCCEmployeeCategoryBreakdownQuery(email, year, month, months), CCEmployeeCategoryRow
+            getCCEmployeeCategoryBreakdownQuery(email, year, month, monthRange), CCEmployeeCategoryRow
         );
     return check from CCEmployeeCategoryRow row in resultStream
         select row;
@@ -112,13 +113,13 @@ public function queryCCEmployeeCategoryBreakdown(string email, int year, int mon
 # + category - Derived category name (e.g. "Sales", "Infrastructure")
 # + year - Ending year
 # + month - Ending month
-# + months - Window size in months (0 = all time)
+# + monthRange - Window size in months (0 = all time)
 # + return - Transaction rows if the query succeeds, otherwise an error
 public function queryCCEmployeeCategoryTransactions(string email, string category,
-        int year, int month, int months) returns CCEmployeeCategoryTransactionRow[]|error {
+        int year, int month, int monthRange) returns CCEmployeeCategoryTransactionRow[]|error {
     stream<CCEmployeeCategoryTransactionRow, sql:Error?> resultStream =
         expenseDbClient->query(
-            getCCEmployeeCategoryTransactionsQuery(email, category, year, month, months),
+            getCCEmployeeCategoryTransactionsQuery(email, category, year, month, monthRange),
             CCEmployeeCategoryTransactionRow
         );
     return check from CCEmployeeCategoryTransactionRow row in resultStream

@@ -16,6 +16,10 @@
 import * as XLSX from "xlsx";
 
 import {
+  CC_CARDS_COLS,
+  CC_CATEGORY_COLS,
+  CC_EMP_CATEGORY_COLS,
+  CC_EMP_SUMMARY_FIELDS,
   EMP_CATEGORY_COLS,
   EMP_SUMMARY_FIELDS,
   LEAD_BY_EMPLOYEE_COLS,
@@ -240,4 +244,210 @@ export function exportLeadApprovals(p: LeadApprovalsExportParams): void {
     wb,
     `lead-approvals-${safeFileName(p.name)}-${safeFileName(p.dateRange)}.xlsx`,
   );
+}
+
+export interface CCCardDetailsExportParams {
+  holderName: string;
+  holderEmail: string;
+  cardId: string;
+  cardNumber: string;
+  cardType: string;
+  status: string;
+  currency: string;
+  totalSpend: number;
+  txnCount: number;
+  dateRange: string;
+  categories: Array<{
+    category: string;
+    total: number;
+    txnCount: number;
+    percentage: number;
+    compTotal: number;
+    compTxnCount: number;
+  }>;
+}
+
+export function exportCCCardDetails(p: CCCardDetailsExportParams): void {
+  const wb = XLSX.utils.book_new();
+
+  addSheet(wb, "Summary", [
+    ["Field", "Value"],
+    ["Cardholder",     p.holderName],
+    ["Email",          p.holderEmail],
+    ["Card ID",        p.cardId],
+    ["Card Number",    p.cardNumber],
+    ["Provider",       p.cardType],
+    ["Status",         p.status],
+    ["Period",         p.dateRange],
+    ["Currency",       p.currency],
+    [`Total Spend (${p.currency})`, p.totalSpend],
+    ["Total Transactions", p.txnCount],
+  ]);
+
+  addSheet(wb, "Category Breakdown", [
+    ["Category", `Amount (${p.currency})`, "Transactions", "% of Total"],
+    ...p.categories.map((c) => [c.category, c.total, c.txnCount, `${c.percentage.toFixed(1)}%`]),
+  ]);
+
+  XLSX.writeFile(wb, `cc-card-${safeFileName(p.holderName)}-${safeFileName(p.cardNumber)}.xlsx`);
+}
+
+export interface CCCategorySpendersExportParams {
+  category: string;
+  totalSpend: number;
+  txnCount: number;
+  percentage: number;
+  currency: string;
+  employees: Array<{ name: string; email: string; totalAmount: number; txnCount: number }>;
+}
+
+export function exportCCCategorySpenders(p: CCCategorySpendersExportParams): void {
+  const wb = XLSX.utils.book_new();
+
+  addSheet(wb, "Summary", [
+    ["Field", "Value"],
+    ["Category",       p.category],
+    ["Currency",       p.currency],
+    [`Total Spend (${p.currency})`, p.totalSpend],
+    ["Total Transactions", p.txnCount],
+    ["% of Card Spend", `${p.percentage.toFixed(1)}%`],
+    ["Total Spenders", p.employees.length],
+  ]);
+
+  addSheet(wb, "Spenders", [
+    ["Employee", "Email", `Amount (${p.currency})`, "Transactions"],
+    ...p.employees.map((e) => [e.name, e.email, e.totalAmount, e.txnCount]),
+  ]);
+
+  XLSX.writeFile(wb, `cc-category-${safeFileName(p.category)}.xlsx`);
+}
+
+export interface CCEmployeeBreakdownExportParams {
+  name: string;
+  email: string;
+  dateRange: string;
+  currency: string;
+  compareMode: "prevMonth" | "prevYear";
+  totalAmount: number;
+  txnCount: number;
+  prevTotalAmount: number;
+  prevTxnCount: number;
+  categories: Array<{
+    category: string;
+    total: number;
+    txnCount: number;
+    percentage: number;
+    compTotal: number;
+    compTxnCount: number;
+  }>;
+}
+
+export function exportCCEmployeeBreakdown(p: CCEmployeeBreakdownExportParams): void {
+  const wb = XLSX.utils.book_new();
+  const compLabel = p.compareMode === "prevMonth" ? "Last Month" : "Last Year";
+
+  addSheet(wb, "Summary", [
+    ["Field", "Value"],
+    [CC_EMP_SUMMARY_FIELDS.employeeName, p.name],
+    [CC_EMP_SUMMARY_FIELDS.email,        p.email],
+    [CC_EMP_SUMMARY_FIELDS.period,       p.dateRange],
+    [CC_EMP_SUMMARY_FIELDS.currency,     p.currency],
+    [],
+    ["", "Current Period", compLabel],
+    [CC_EMP_SUMMARY_FIELDS.totalAmount, p.totalAmount, p.prevTotalAmount],
+    [CC_EMP_SUMMARY_FIELDS.totalTxns,   p.txnCount,    p.prevTxnCount],
+  ]);
+
+  const catRows: unknown[][] = [
+    [
+      CC_EMP_CATEGORY_COLS.category,
+      `${compLabel} ${CC_EMP_CATEGORY_COLS.compAmount} (${p.currency})`,
+      `${compLabel} ${CC_EMP_CATEGORY_COLS.compTxns}`,
+      `${CC_EMP_CATEGORY_COLS.currentAmount} (${p.currency})`,
+      CC_EMP_CATEGORY_COLS.currentTxns,
+      CC_EMP_CATEGORY_COLS.pctOfTotal,
+    ],
+    ...p.categories.map((c) => [
+      c.category,
+      c.compTotal > 0 ? c.compTotal : "—",
+      c.compTxnCount > 0 ? c.compTxnCount : "—",
+      c.total,
+      c.txnCount,
+      `${c.percentage.toFixed(1)}%`,
+    ]),
+  ];
+  addSheet(wb, "Category Breakdown", catRows);
+
+  XLSX.writeFile(
+    wb,
+    `cc-employee-breakdown-${safeFileName(p.name)}-${safeFileName(p.dateRange)}.xlsx`,
+  );
+}
+
+export interface CCCardsExportParams {
+  currency: string;
+  statusFilter: string;
+  generatedAt: string;
+  cards: Array<{
+    cardId: string;
+    cardNumber: string;
+    holderName: string;
+    usedAmount: number;
+    cardType: string;
+    status: string;
+  }>;
+  categoryBreakdown: Array<{
+    cardType: string;
+    totalSpend: number;
+    txnCount: number;
+    percentage: number;
+  }>;
+}
+
+export function exportCCCards(p: CCCardsExportParams): void {
+  const wb = XLSX.utils.book_new();
+
+  const activeCount = p.cards.filter((c) => c.status === "Active").length;
+  const totalSpend = p.cards.reduce((s, c) => s + c.usedAmount, 0);
+
+  addSheet(wb, "Summary", [
+    ["Field", "Value"],
+    ["Generated At",   p.generatedAt],
+    ["Currency",       p.currency],
+    ["Status Filter",  p.statusFilter],
+    ["Total Cards",    p.cards.length],
+    ["Active Cards",   activeCount],
+    ["Inactive Cards", p.cards.length - activeCount],
+    [`Total Spend (${p.currency})`, totalSpend],
+  ]);
+
+  addSheet(wb, "Corporate Cards", [
+    [
+      CC_CARDS_COLS.cardId,
+      CC_CARDS_COLS.cardNumber,
+      CC_CARDS_COLS.holderName,
+      `${CC_CARDS_COLS.usedAmount} (${p.currency})`,
+      CC_CARDS_COLS.cardType,
+      CC_CARDS_COLS.status,
+    ],
+    ...p.cards.map((c) => [c.cardId, c.cardNumber, c.holderName, c.usedAmount, c.cardType, c.status]),
+  ]);
+
+  addSheet(wb, "Category Breakdown", [
+    [
+      CC_CATEGORY_COLS.category,
+      `${CC_CATEGORY_COLS.totalSpend} (${p.currency})`,
+      CC_CATEGORY_COLS.txnCount,
+      CC_CATEGORY_COLS.pctOfTotal,
+    ],
+    ...p.categoryBreakdown.map((c) => [
+      c.cardType,
+      c.totalSpend,
+      c.txnCount,
+      `${c.percentage.toFixed(1)}%`,
+    ]),
+  ]);
+
+  const date = new Date().toISOString().split("T")[0];
+  XLSX.writeFile(wb, `cc-cards-report-${safeFileName(p.statusFilter)}-${date}.xlsx`);
 }
