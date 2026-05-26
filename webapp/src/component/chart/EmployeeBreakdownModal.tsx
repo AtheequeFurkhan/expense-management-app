@@ -13,9 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import Dialog from "@mui/material/Dialog";
-import DialogContent from "@mui/material/DialogContent";
-import { Box, CircularProgress, Skeleton, Typography } from "@wso2/oxygen-ui";
+import { Box, CircularProgress, Skeleton, Typography, Dialog, DialogContent } from "@wso2/oxygen-ui";
 import { ChevronDown, ChevronRight, Download, TrendingDown, TrendingUp, X } from "lucide-react";
 
 import { useEffect, useState } from "react";

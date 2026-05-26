@@ -13,9 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import Dialog from "@mui/material/Dialog";
-import DialogContent from "@mui/material/DialogContent";
-import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
+import { Box, Skeleton, Typography, Dialog, DialogContent } from "@wso2/oxygen-ui";
 import { Download, X } from "lucide-react";
 
 import { useCCCategoryEmployees } from "@slices/creditCardSlice/useCreditCards";
@@ -52,13 +50,15 @@ export default function CCCategoryBreakdownModal({
       onClose={onClose}
       maxWidth="md"
       fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-          bgcolor: "background.paper",
-          border: "1px solid",
-          borderColor: "divider",
-          backgroundImage: "none",
+      slotProps={{
+        paper: {
+          sx: {
+            borderRadius: 2,
+            bgcolor: "background.paper",
+            border: "1px solid",
+            borderColor: "divider",
+            backgroundImage: "none",
+          },
         },
       }}
     >

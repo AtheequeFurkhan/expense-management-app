@@ -14,9 +14,10 @@
 // specific language governing permissions and limitations
 // under the License.
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
-import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
+import { Box, Skeleton, Typography, DatePickers } from "@wso2/oxygen-ui";
 import dayjs, { type Dayjs } from "dayjs";
+
+const { LocalizationProvider } = DatePickers;
 import { DollarSign, Download, Hash } from "lucide-react";
 
 import { useMemo, useState } from "react";

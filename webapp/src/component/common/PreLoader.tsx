@@ -14,7 +14,7 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { Box, Container, LinearProgress, Typography } from "@mui/material";
+import { Box, Container, LinearProgress, Typography } from "@wso2/oxygen-ui";
 
 import type { PreLoaderProps } from "@utils/types";
 

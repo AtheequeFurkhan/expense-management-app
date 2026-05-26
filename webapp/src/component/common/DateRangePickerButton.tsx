@@ -13,9 +13,9 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import Popover from "@mui/material/Popover";
-import { DatePicker } from "@mui/x-date-pickers/DatePicker";
-import { Box, Typography } from "@wso2/oxygen-ui";
+import { Box, Typography, Popover, DatePickers } from "@wso2/oxygen-ui";
+
+const { DatePicker } = DatePickers;
 import dayjs, { type Dayjs } from "dayjs";
 import { CalendarDays } from "lucide-react";
 
