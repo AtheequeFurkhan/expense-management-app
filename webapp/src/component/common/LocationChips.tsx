@@ -18,9 +18,9 @@ import { Box } from "@wso2/oxygen-ui";
 export default function LocationChips({ locations }: { locations: string[] }) {
   return (
     <Box sx={{ display: "flex", gap: 0.6, flexWrap: "wrap", mt: 0.8 }}>
-      {locations.map((loc) => (
+      {locations.map((loc, idx) => (
         <Box
-          key={loc}
+          key={`${loc}-${idx}`}
           sx={{
             px: 1.2,
             py: 0.35,
