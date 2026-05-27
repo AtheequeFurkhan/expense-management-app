@@ -111,6 +111,7 @@ export default function DateRangePickerButton({
             <Typography sx={{ fontSize: 11, color: "text.secondary", fontWeight: 600 }}>From</Typography>
             <input
               type="date"
+              aria-label="From date"
               value={fromDate.format("YYYY-MM-DD")}
               max={toDate.format("YYYY-MM-DD")}
               onChange={(e) => {
@@ -128,6 +129,7 @@ export default function DateRangePickerButton({
             <Typography sx={{ fontSize: 11, color: "text.secondary", fontWeight: 600 }}>To</Typography>
             <input
               type="date"
+              aria-label="To date"
               value={toDate.format("YYYY-MM-DD")}
               min={fromDate.format("YYYY-MM-DD")}
               max={maxTo?.format("YYYY-MM-DD")}

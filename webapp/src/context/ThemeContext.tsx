@@ -36,9 +36,11 @@ export const ThemeContext = createContext<ThemeContextValue>({
 });
 
 export function ThemeContextProvider({ children }: { children: React.ReactNode }) {
-  const [themeName, setThemeState] = useState<AppThemeName>(
-    () => (localStorage.getItem(STORAGE_KEY) as AppThemeName) ?? "orange",
-  );
+  const [themeName, setThemeState] = useState<AppThemeName>(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    const valid: AppThemeName[] = ["orange", "purple", "base"];
+    return valid.includes(stored as AppThemeName) ? (stored as AppThemeName) : "orange";
+  });
 
   const setThemeName = (t: AppThemeName) => {
     localStorage.setItem(STORAGE_KEY, t);

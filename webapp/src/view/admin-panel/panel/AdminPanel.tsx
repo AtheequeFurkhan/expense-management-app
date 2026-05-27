@@ -201,27 +201,15 @@ export default function AdminPanel() {
             {/* Expense Claims */}
             <Box sx={{ p: 2, borderRadius: 1.5, border: "1px solid", borderColor: "divider" }}>
               <SectionHeader icon={<FileText size={14} />} label="Expense Claims" color="#0ea5e9" />
-              <ConfigRow
-                label="Annual Claim Cap"
-                value={
-                  <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary" }}>
-                    {fmt(config.claimLimit)}
-                  </Typography>
-                }
-              />
-              <ConfigRow
-                label="Claim Range Step"
-                value={
-                  <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary" }}>
-                    {fmt(config.claimRangeStep)}
-                  </Typography>
-                }
-              />
               <Box sx={{ mt: 1 }}>
                 <Typography sx={{ fontSize: 11, color: "text.secondary", mb: 0.3 }}>
                   Allowed Submission Locations
                 </Typography>
-                <LocationChips locations={config.submissionsAllowedLocations} />
+                <Box sx={{ display: "flex", gap: 0.6, flexWrap: "wrap", mt: 0.8 }}>
+                  <Box sx={{ px: 1.2, py: 0.35, borderRadius: 10, bgcolor: "#f0fdf4", border: "1px solid #bbf7d0", fontSize: 11, fontWeight: 600, color: "#15803d" }}>
+                    All Regions
+                  </Box>
+                </Box>
               </Box>
             </Box>
 

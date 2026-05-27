@@ -244,11 +244,16 @@ export function resolveCCDateRangeParams(dateRange: string): { year: string; mon
 
   // "custom:YYYY-M:YYYY-M" — arbitrary from/to month range
   if (dateRange.startsWith("custom:")) {
-    const [fromStr, toStr] = dateRange.slice(7).split(":");
-    const [fromYear, fromMonth] = fromStr.split("-").map(Number);
-    const [toYear, toMonth] = toStr.split("-").map(Number);
-    const monthRange = Math.max(1, (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1);
-    return { year: String(toYear), month: String(toMonth), monthRange: String(monthRange) };
+    const parts = dateRange.slice(7).split(":");
+    if (parts.length === 2) {
+      const [fromYear, fromMonth] = parts[0].split("-").map(Number);
+      const [toYear, toMonth] = parts[1].split("-").map(Number);
+      if (fromYear && fromMonth && toYear && toMonth) {
+        const raw = (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1;
+        const monthRange = Math.min(36, Math.max(1, raw)); // backend rejects > 36
+        return { year: String(toYear), month: String(toMonth), monthRange: String(monthRange) };
+      }
+    }
   }
 
   const PRESETS = new Set<string>(["All Time", "This Month", "This Year", "Last Month", "Last 3 Months", "Last 6 Months", "Last Year"]);

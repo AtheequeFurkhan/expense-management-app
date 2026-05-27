@@ -52,10 +52,12 @@ export default function UserSettings() {
   };
 
   const initials = userInfo
-    ? `${userInfo.firstName?.[0] ?? ""}${userInfo.lastName?.[0] ?? ""}`.toUpperCase()
+    ? (`${userInfo.firstName?.[0] ?? ""}${userInfo.lastName?.[0] ?? ""}`.toUpperCase() || "?")
     : "?";
 
-  const fullName = userInfo ? `${userInfo.firstName} ${userInfo.lastName}` : "—";
+  const fullName = userInfo
+    ? [userInfo.firstName, userInfo.lastName].filter(Boolean).join(" ") || "—"
+    : "—";
 
   return (
     <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3 }}>
