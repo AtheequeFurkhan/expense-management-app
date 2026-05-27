@@ -15,7 +15,7 @@
 // under the License.
 import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
 import dayjs, { type Dayjs } from "dayjs";
-import { DollarSign, Download, Hash } from "lucide-react";
+import { DollarSign, Hash } from "lucide-react";
 
 import { useMemo, useState } from "react";
 
@@ -38,7 +38,7 @@ import {
   useCCSummary,
 } from "@slices/creditCardSlice/useCreditCards";
 import { type CurrencyCode, formatWithSymbol } from "@utils/currency";
-import { exportCCCards } from "@utils/exportExcel";
+
 
 const CATEGORY_COLORS = [
   "#00B4D8", "#FF8A4C", "#F4B400", "#2E8B57", "#AB7AE0",
@@ -73,15 +73,17 @@ export default function CreditCard() {
   const [hoveredCategoryIdx, setHoveredCategoryIdx] = useState<number | null>(null);
   const [catFromDate, setCatFromDate] = useState<Dayjs>(DEFAULT_CAT_FROM);
   const [catToDate, setCatToDate] = useState<Dayjs>(DEFAULT_CAT_TO);
+  const [cardsFromDate, setCardsFromDate] = useState<Dayjs>(DEFAULT_CAT_FROM);
+  const [cardsToDate, setCardsToDate] = useState<Dayjs>(DEFAULT_CAT_TO);
 
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
 
   const catDateRange = buildDateRange(catFromDate, catToDate);
-
+  const cardsDateRange = buildDateRange(cardsFromDate, cardsToDate);
 
   const { data: summary, loading: summaryLoading } = useCCSummary();
   const { items: cardTypes, loading: cardTypesLoading } = useCCCardTypeAnalysis(catDateRange);
-  const { cards: cardList, loading: cardListLoading } = useCCCardList();
+  const { cards: cardList, loading: cardListLoading } = useCCCardList(cardsDateRange);
 
   const filteredCards = useMemo(() => {
     let list = cardList;
@@ -123,17 +125,7 @@ export default function CreditCard() {
     setCardsPage(0);
   };
 
-  const handleDownload = () => {
-    exportCCCards({
-      currency,
-      statusFilter,
-      generatedAt: new Date().toLocaleString(),
-      cards: filteredCards,
-      categoryBreakdown: cardTypes,
-    });
-  };
-
-  const totalCCSpend = cardTypes.reduce((s, i) => s + i.totalSpend, 0);
+const totalCCSpend = cardTypes.reduce((s, i) => s + i.totalSpend, 0);
 
   return (
     <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3 }}>
@@ -287,34 +279,16 @@ export default function CreditCard() {
       {/* Corporate Cards table */}
       <ChartCard
         title="Corporate Cards"
-        subtitle="All issued corporate cards"
+        subtitle="All issued corporate cards — Total Spend reflects the selected period"
         minHeight={300}
         action={
-          !cardListLoading && cardList.length > 0 ? (
-            <Box
-              onClick={handleDownload}
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                gap: 0.6,
-                cursor: "pointer",
-                px: 1.5,
-                py: 0.55,
-                borderRadius: "20px",
-                border: "1.5px solid",
-                borderColor: "warning.main",
-                color: "warning.main",
-                fontWeight: 700,
-                fontSize: 13,
-                transition: "all 0.15s ease",
-                "&:hover": { bgcolor: "warning.main", color: "#fff" },
-                userSelect: "none",
-              }}
-            >
-              <Download size={14} />
-              <Typography sx={{ fontSize: 13, fontWeight: 700, color: "inherit" }}>Export</Typography>
-            </Box>
-          ) : undefined
+          <DateRangePickerButton
+            fromDate={cardsFromDate}
+            toDate={cardsToDate}
+            onFromChange={setCardsFromDate}
+            onToChange={setCardsToDate}
+            maxTo={nowDayjs}
+          />
         }
       >
         {/* Search + Status filter bar */}

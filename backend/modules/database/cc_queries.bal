@@ -15,6 +15,8 @@
 // under the License.
 import ballerina/sql;
 
+// ─── Simple aggregate queries ─────────────────────────────────────────────────
+
 # Build the query for aggregated spend stats used to compute summary metrics and trends.
 # CAST applied because txn_amount is DOUBLE in MySQL and Ballerina requires decimal.
 #
@@ -48,28 +50,6 @@ isolated function getCCHighestSpendQuery() returns sql:ParameterizedQuery =>
      ORDER BY usedAmount DESC
      LIMIT 1`;
 
-# Build the query for spend and transaction count grouped by engagement code category.
-# Groups known prefixes (SAL, MKT, CLO, CS, RND, INF, ADM) and labels the rest "Other".
-#
-# + return - Parameterized SQL query
-isolated function getCCCardTypeAnalysisQuery() returns sql:ParameterizedQuery =>
-    `SELECT
-         CASE
-             WHEN t.engagement_code LIKE 'SAL-%' THEN 'Sales'
-             WHEN t.engagement_code LIKE 'MKT-%' THEN 'Marketing'
-             WHEN t.engagement_code LIKE 'CLO-%' THEN 'Cloud Infrastructure'
-             WHEN t.engagement_code LIKE 'CS-%'  THEN 'Customer Success'
-             WHEN t.engagement_code LIKE 'RND-%' THEN 'R&D'
-             WHEN t.engagement_code LIKE 'INF-%' THEN 'Infrastructure'
-             WHEN t.engagement_code LIKE 'ADM-%' THEN 'Administration'
-             ELSE 'Other'
-         END AS cardType,
-         CAST(COALESCE(SUM(t.txn_amount), 0) AS DECIMAL(15,2)) AS totalSpend,
-         CAST(COUNT(*) AS SIGNED) AS txnCount
-     FROM cc_txn t
-     GROUP BY cardType
-     ORDER BY totalSpend DESC`;
-
 # Build the query for the top-spending corporate cards (total spend per card).
 #
 # + limit - Maximum number of cards to return
@@ -87,20 +67,157 @@ isolated function getCCTopCardsQuery(int 'limit = 5) returns sql:ParameterizedQu
      LIMIT ${'limit}`;
 
 # Build the query for the full corporate card list with total spend per card.
+# Date filter is applied on the JOIN so cards with no transactions in range still appear (with 0 spend).
+#
+# + year - Ending year of the reporting range
+# + month - Ending month of the reporting range
+# + monthRange - Number of months included (0 = all time, no date filter)
+# + return - Parameterized SQL query
+isolated function getCCCardListQuery(int year, int month, int monthRange) returns sql:ParameterizedQuery {
+    sql:ParameterizedQuery joinDateClause = monthRange <= 0
+        ? ``
+        : sql:queryConcat(` AND `, getCCDateRangeClause(year, month, monthRange));
+    return sql:queryConcat(
+        `SELECT
+             CAST(c.id AS CHAR)  AS cardId,
+             c.cc_number         AS cardNumber,
+             c.employee_email    AS holderName,
+             CAST(COALESCE(SUM(t.txn_amount), 0) AS DECIMAL(15,2)) AS usedAmount,
+             c.cc_provider_code  AS cardType,
+             c.status            AS status
+         FROM credit_card c
+         LEFT JOIN cc_txn t ON c.cc_number = t.cc_number`,
+        joinDateClause,
+        ` GROUP BY c.id, c.cc_number, c.employee_email, c.cc_provider_code, c.status
+         ORDER BY usedAmount DESC`
+    );
+}
+
+// ─── Category classification ──────────────────────────────────────────────────
+
+# Return the shared CASE expression that classifies a transaction into an expense type.
+# Priority: engagement_code prefix first; merchant-name keyword fallback second.
+# To add/remove a merchant keyword, update the relevant WHEN block below.
+#
+# + return - SQL CASE … END fragment (no trailing alias)
+isolated function ccCategoryCase() returns sql:ParameterizedQuery => `
+    CASE
+        WHEN t.engagement_code LIKE 'SAL-%' THEN 'Sales'
+        WHEN t.engagement_code LIKE 'MKT-%' THEN 'Marketing'
+        WHEN t.engagement_code LIKE 'CLO-%' THEN 'Cloud Infrastructure'
+        WHEN t.engagement_code LIKE 'CS-%'  THEN 'Customer Success'
+        WHEN t.engagement_code LIKE 'RND-%' THEN 'R&D'
+        WHEN t.engagement_code LIKE 'INF-%' THEN 'Infrastructure'
+        WHEN t.engagement_code LIKE 'ADM-%' THEN 'Administration'
+        WHEN UPPER(t.txn_reference) LIKE '%AMAZON WEB SERVICE%'
+          OR UPPER(t.txn_reference) LIKE '%AWS.AMAZON%'
+          OR UPPER(t.txn_reference) LIKE '%CLOUDFLARE%'
+          OR UPPER(t.txn_reference) LIKE '%RACKSPACE%'
+          OR UPPER(t.txn_reference) LIKE '%DIGITALOCEAN%'
+          OR UPPER(t.txn_reference) LIKE '%VULTR%'
+          OR UPPER(t.txn_reference) LIKE '%AIVEN%'
+          OR UPPER(t.txn_reference) LIKE '%GOOGLE CLOUD%'
+             THEN 'Cloud Services'
+        WHEN UPPER(t.txn_reference) LIKE '%GITHUB%'
+          OR UPPER(t.txn_reference) LIKE '%ADOBE%'
+          OR UPPER(t.txn_reference) LIKE '%SALESFORCE%'
+          OR UPPER(t.txn_reference) LIKE '%ATLASSIAN%'
+          OR UPPER(t.txn_reference) LIKE '%FIGMA%'
+          OR UPPER(t.txn_reference) LIKE '%ASANA%'
+          OR UPPER(t.txn_reference) LIKE '%DOCUSIG%'
+          OR UPPER(t.txn_reference) LIKE '%TABLEAU%'
+          OR UPPER(t.txn_reference) LIKE '%BITWARDEN%'
+          OR UPPER(t.txn_reference) LIKE '%MONGODB%'
+          OR UPPER(t.txn_reference) LIKE '%PAGERDUTY%'
+          OR UPPER(t.txn_reference) LIKE '%PAGER DUTY%'
+          OR UPPER(t.txn_reference) LIKE '%DOCKER%'
+          OR UPPER(t.txn_reference) LIKE '%WISTIA%'
+          OR UPPER(t.txn_reference) LIKE '%INTERCOM%'
+          OR UPPER(t.txn_reference) LIKE '%ALGOLIA%'
+          OR UPPER(t.txn_reference) LIKE '%DISCORD%'
+          OR UPPER(t.txn_reference) LIKE '%LUCIDCHART%'
+          OR UPPER(t.txn_reference) LIKE '%HOTJAR%'
+          OR UPPER(t.txn_reference) LIKE '%SOLARWINDS%'
+          OR UPPER(t.txn_reference) LIKE '%MICROSOFT%'
+          OR UPPER(t.txn_reference) LIKE '%SLACK%'
+          OR UPPER(t.txn_reference) LIKE '%ZOOM%'
+          OR UPPER(t.txn_reference) LIKE '%THINKIFIC%'
+          OR UPPER(t.txn_reference) LIKE '%SPARKTORO%'
+          OR UPPER(t.txn_reference) LIKE '%HUBSPOT%'
+          OR UPPER(t.txn_reference) LIKE '%NOTION%'
+          OR UPPER(t.txn_reference) LIKE '%DROPBOX%'
+          OR UPPER(t.txn_reference) LIKE '%PINGDOM%'
+          OR UPPER(t.txn_reference) LIKE '%SPROUT SOCIAL%'
+          OR UPPER(t.txn_reference) LIKE '%MUCKRACK%'
+          OR UPPER(t.txn_reference) LIKE '%DEMANDBASE%'
+             THEN 'Software & SaaS'
+        WHEN UPPER(t.txn_reference) LIKE '%TWILIO%'
+          OR UPPER(t.txn_reference) LIKE '%ATT BILL%'
+          OR UPPER(t.txn_reference) LIKE '%AT&T%'
+          OR UPPER(t.txn_reference) LIKE '%RINGCENTRAL%'
+          OR UPPER(t.txn_reference) LIKE '%VONAGE%'
+             THEN 'Communication'
+        WHEN UPPER(t.txn_reference) LIKE '%HOTEL%'
+          OR UPPER(t.txn_reference) LIKE '%AIRBNB%'
+          OR UPPER(t.txn_reference) LIKE '%BOOKING.COM%'
+          OR UPPER(t.txn_reference) LIKE '%AGODA%'
+          OR UPPER(t.txn_reference) LIKE '%MARRIOTT%'
+          OR UPPER(t.txn_reference) LIKE '%HILTON%'
+          OR UPPER(t.txn_reference) LIKE '%SHERATON%'
+          OR UPPER(t.txn_reference) LIKE '%HYATT%'
+          OR UPPER(t.txn_reference) LIKE '%IHG%'
+          OR UPPER(t.txn_reference) LIKE '%ACCOR%'
+          OR UPPER(t.txn_reference) LIKE '%HOSTEL%'
+             THEN 'Accommodation'
+        WHEN UPPER(t.txn_reference) LIKE '%UBER%'
+          OR UPPER(t.txn_reference) LIKE '%LYFT%'
+          OR UPPER(t.txn_reference) LIKE '%TAXICAB%'
+          OR UPPER(t.txn_reference) LIKE '%LIMOUSINE%'
+          OR UPPER(t.txn_reference) LIKE '%TAXI%'
+          OR UPPER(t.txn_reference) LIKE '%EXPEDIA%'
+          OR UPPER(t.txn_reference) LIKE '%EMIRATES%'
+          OR UPPER(t.txn_reference) LIKE '%UNITED AIR%'
+          OR UPPER(t.txn_reference) LIKE '%DELTA AIR%'
+          OR UPPER(t.txn_reference) LIKE '%LUFTHANSA%'
+          OR UPPER(t.txn_reference) LIKE '%SINGAPORE AIR%'
+          OR UPPER(t.txn_reference) LIKE '%MAKEMYTRIP%'
+          OR UPPER(t.txn_reference) LIKE '%GOIBIBO%'
+          OR UPPER(t.txn_reference) LIKE '%AIR TICKET%'
+          OR UPPER(t.txn_reference) LIKE '%AIRLINE%'
+          OR UPPER(t.txn_reference) LIKE '%TRAVEL INS%'
+          OR UPPER(t.txn_reference) LIKE '%OLA CABS%'
+          OR UPPER(t.txn_reference) LIKE '%GRAB%'
+          OR UPPER(t.txn_reference) LIKE '%GOJEK%'
+             THEN 'Travel'
+        ELSE 'Other'
+    END`;
+
+# Build the query for spend and transaction count grouped by engagement code category.
 #
 # + return - Parameterized SQL query
-isolated function getCCCardListQuery() returns sql:ParameterizedQuery =>
-    `SELECT
-         CAST(c.id AS CHAR)  AS cardId,
-         c.cc_number         AS cardNumber,
-         c.employee_email    AS holderName,
-         CAST(COALESCE(SUM(t.txn_amount), 0) AS DECIMAL(15,2)) AS usedAmount,
-         c.cc_provider_code  AS cardType,
-         c.status            AS status
-     FROM credit_card c
-     LEFT JOIN cc_txn t ON c.cc_number = t.cc_number
-     GROUP BY c.id, c.cc_number, c.employee_email, c.cc_provider_code, c.status
-     ORDER BY usedAmount DESC`;
+isolated function getCCCardTypeAnalysisQuery() returns sql:ParameterizedQuery =>
+    sql:queryConcat(
+        `SELECT `,
+        ccCategoryCase(),
+        ` AS cardType,
+         CAST(COALESCE(SUM(t.txn_amount), 0) AS DECIMAL(15,2)) AS totalSpend,
+         CAST(COUNT(*) AS SIGNED) AS txnCount
+     FROM cc_txn t
+     GROUP BY cardType
+     ORDER BY totalSpend DESC`
+    );
+
+# Append a WHERE condition restricting results to a single expense-type category.
+# Uses the shared CASE expression so classification logic lives in exactly one place.
+#
+# + base - Base parameterized query to extend
+# + category - Display category name (e.g. "Sales", "Cloud Services", "Other")
+# + return - Query extended with the category filter
+isolated function appendCCCategoryFilter(sql:ParameterizedQuery base, string category)
+        returns sql:ParameterizedQuery =>
+    sql:queryConcat(base, ` AND `, ccCategoryCase(), ` = ${category}`);
+
+// ─── Date range helper ────────────────────────────────────────────────────────
 
 # Build a date-range WHERE clause for cc_txn queries (alias t).
 #
@@ -122,42 +239,13 @@ isolated function getCCDateRangeClause(int year, int month, int monthRange) retu
         )`;
 }
 
-# Append an engagement-code LIKE filter for a derived category name.
-# The LIKE patterns are string literals (not user input) so they are safe to inline.
-#
-# + base - Base parameterized query to extend
-# + category - Display category name (e.g. "Sales", "Infrastructure", "Other")
-# + return - Query extended with the category filter
-isolated function appendCCCategoryFilter(sql:ParameterizedQuery base, string category)
-        returns sql:ParameterizedQuery {
-    if category == "Sales" {
-        return sql:queryConcat(base, ` AND t.engagement_code LIKE 'SAL-%'`);
-    } else if category == "Marketing" {
-        return sql:queryConcat(base, ` AND t.engagement_code LIKE 'MKT-%'`);
-    } else if category == "Cloud Infrastructure" {
-        return sql:queryConcat(base, ` AND t.engagement_code LIKE 'CLO-%'`);
-    } else if category == "Customer Success" {
-        return sql:queryConcat(base, ` AND t.engagement_code LIKE 'CS-%'`);
-    } else if category == "R&D" {
-        return sql:queryConcat(base, ` AND t.engagement_code LIKE 'RND-%'`);
-    } else if category == "Infrastructure" {
-        return sql:queryConcat(base, ` AND t.engagement_code LIKE 'INF-%'`);
-    } else if category == "Administration" {
-        return sql:queryConcat(base, ` AND t.engagement_code LIKE 'ADM-%'`);
-    } else {
-        return sql:queryConcat(base, ` AND (t.engagement_code IS NULL OR (
-            t.engagement_code NOT LIKE 'SAL-%' AND t.engagement_code NOT LIKE 'MKT-%' AND
-            t.engagement_code NOT LIKE 'CLO-%' AND t.engagement_code NOT LIKE 'CS-%'  AND
-            t.engagement_code NOT LIKE 'RND-%' AND t.engagement_code NOT LIKE 'INF-%' AND
-            t.engagement_code NOT LIKE 'ADM-%'))`);
-    }
-}
+// ─── Per-employee queries ─────────────────────────────────────────────────────
 
 # Build the query for employee CC spending list ordered by total spend.
 #
-# + category - parameter description  
-# + year - Ending year  
-# + month - Ending month  
+# + category - Expense type category name
+# + year - Ending year
+# + month - Ending month
 # + monthRange - Window size in months (0 = all time)
 # + return - Parameterized SQL query
 isolated function getCCCategoryEmployeesQuery(string category, int year, int month, int monthRange)
@@ -170,8 +258,7 @@ isolated function getCCCategoryEmployeesQuery(string category, int year, int mon
         FROM cc_txn t
         WHERE t.employee_email IS NOT NULL
           AND `;
-    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, monthRange);
-    sql:ParameterizedQuery withDate = sql:queryConcat(base, dateClause);
+    sql:ParameterizedQuery withDate = sql:queryConcat(base, getCCDateRangeClause(year, month, monthRange));
     sql:ParameterizedQuery withCategory = appendCCCategoryFilter(withDate, category);
     return sql:queryConcat(withCategory, `
         GROUP BY t.employee_email
@@ -187,13 +274,12 @@ isolated function getCCEmployeeSpendingQuery(int year, int month, int monthRange
         FROM cc_txn t
         WHERE t.employee_email IS NOT NULL
           AND `;
-    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, monthRange);
-    return sql:queryConcat(sql:queryConcat(base, dateClause), `
+    return sql:queryConcat(base, getCCDateRangeClause(year, month, monthRange), `
         GROUP BY t.employee_email
         ORDER BY totalAmount DESC`);
 }
 
-# Build the query for an employee's CC spend breakdown by engagement category.
+# Build the query for an employee's CC spend breakdown by expense type category.
 #
 # + email - Employee email to filter on
 # + year - Ending year
@@ -201,34 +287,24 @@ isolated function getCCEmployeeSpendingQuery(int year, int month, int monthRange
 # + monthRange - Window size in months (0 = all time)
 # + return - Parameterized SQL query
 isolated function getCCEmployeeCategoryBreakdownQuery(string email, int year, int month, int monthRange)
-        returns sql:ParameterizedQuery {
-    sql:ParameterizedQuery base = `
-        SELECT
-            CASE
-                WHEN t.engagement_code LIKE 'SAL-%' THEN 'Sales'
-                WHEN t.engagement_code LIKE 'MKT-%' THEN 'Marketing'
-                WHEN t.engagement_code LIKE 'CLO-%' THEN 'Cloud Infrastructure'
-                WHEN t.engagement_code LIKE 'CS-%'  THEN 'Customer Success'
-                WHEN t.engagement_code LIKE 'RND-%' THEN 'R&D'
-                WHEN t.engagement_code LIKE 'INF-%' THEN 'Infrastructure'
-                WHEN t.engagement_code LIKE 'ADM-%' THEN 'Administration'
-                ELSE 'Other'
-            END AS category,
+        returns sql:ParameterizedQuery =>
+    sql:queryConcat(
+        `SELECT `,
+        ccCategoryCase(),
+        ` AS category,
             CAST(COALESCE(SUM(t.txn_amount), 0) AS DECIMAL(15,2)) AS total,
             CAST(COUNT(*) AS SIGNED) AS txnCount
         FROM cc_txn t
         WHERE t.employee_email = ${email}
-          AND `;
-    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, monthRange);
-    return sql:queryConcat(sql:queryConcat(base, dateClause), `
-        GROUP BY category
-        ORDER BY total DESC`);
-}
+          AND `,
+        getCCDateRangeClause(year, month, monthRange),
+        ` GROUP BY category ORDER BY total DESC`
+    );
 
 # Build the query for individual CC transactions for an employee within a category.
 #
 # + email - Employee email to filter on
-# + category - Derived engagement category name
+# + category - Expense type category name
 # + year - Ending year
 # + month - Ending month
 # + monthRange - Window size in months (0 = all time)
@@ -244,8 +320,7 @@ isolated function getCCEmployeeCategoryTransactionsQuery(string email, string ca
         FROM cc_txn t
         WHERE t.employee_email = ${email}
           AND `;
-    sql:ParameterizedQuery dateClause = getCCDateRangeClause(year, month, monthRange);
-    sql:ParameterizedQuery withDate = sql:queryConcat(base, dateClause);
+    sql:ParameterizedQuery withDate = sql:queryConcat(base, getCCDateRangeClause(year, month, monthRange));
     sql:ParameterizedQuery withCategory = appendCCCategoryFilter(withDate, category);
     return sql:queryConcat(withCategory, ` ORDER BY t.txn_date DESC`);
 }

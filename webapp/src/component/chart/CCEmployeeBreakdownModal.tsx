@@ -24,6 +24,7 @@ import {
   useCCEmployeeCategoryTransactions,
 } from "@slices/creditCardSlice/useCreditCards";
 import { type CurrencyCode, formatWithSymbol } from "@utils/currency";
+import { formatCCPeriodLabel } from "@utils/dateFormat";
 import { exportCCEmployeeBreakdown } from "@utils/exportExcel";
 
 const SEGMENT_COLORS = [
@@ -447,7 +448,7 @@ function CCPeriodComparison({
             Current Period
           </Typography>
           <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 0.25 }}>
-            {dateRange}
+            {formatCCPeriodLabel(dateRange)}
           </Typography>
           {loadingCurrent ? (
             <Skeleton variant="text" width={100} height={26} sx={{ ml: "auto" }} />

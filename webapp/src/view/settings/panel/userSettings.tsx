@@ -13,117 +13,42 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Button, Skeleton, Typography } from "@wso2/oxygen-ui";
-
+import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
+import { MapPin, ShieldCheck, User } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import CurrencySelector from "@component/common/CurrencySelector";
+import LocationChips from "@component/common/LocationChips";
 import { DEFAULT_CURRENCY } from "@config/constant";
+import { THEMES, useAppTheme } from "@context/ThemeContext";
+import { fetchAppConfig } from "@slices/configSlice/config";
 import { Role } from "@slices/authSlice/auth";
-import { fetchAppConfig, updateAppConfig } from "@slices/configSlice/config";
 import { useAppDispatch, useAppSelector } from "@slices/store";
-import { State } from "@/types/types";
+import { CARD_SX, SECTION_LABEL_SX } from "@src/styles/panelStyles";
 import { type CurrencyCode } from "@utils/currency";
-
-const CARD_SX = {
-  bgcolor: "background.paper",
-  border: "1px solid",
-  borderColor: "divider",
-  borderRadius: 2,
-  p: 3,
-};
-
-const SECTION_LABEL_SX = {
-  fontSize: 11,
-  fontWeight: 700,
-  color: "text.disabled",
-  textTransform: "uppercase" as const,
-  letterSpacing: 0.8,
-  mb: 2,
-};
-
-const INPUT_STYLE: React.CSSProperties = {
-  width: "100%",
-  padding: "9px 12px",
-  borderRadius: 6,
-  border: "1px solid #e5e7eb",
-  fontSize: 14,
-  outline: "none",
-  fontFamily: "inherit",
-  boxSizing: "border-box",
-  color: "#111827",
-};
+import { State } from "@/types/types";
 
 export default function UserSettings() {
   const dispatch = useAppDispatch();
   const userInfo = useAppSelector((state) => state.user.userInfo);
   const roles = useAppSelector((state) => state.auth.roles);
-  const { config, state: configLoadState, updateState } = useAppSelector((state) => state.appConfig);
+  const { config, state: configState } = useAppSelector((state) => state.appConfig);
 
   const isAdmin = roles.includes(Role.ADMIN);
-  const [formError, setFormError] = useState<string | null>(null);
+
+  const { themeName, setThemeName } = useAppTheme();
 
   const [currency, setCurrency] = useState<CurrencyCode>(
     () => (localStorage.getItem("defaultCurrency") as CurrencyCode) ?? DEFAULT_CURRENCY,
   );
 
-  const [form, setForm] = useState({
-    claimLimit: "",
-    claimRangeStep: "",
-    lastYearClaimGracePeriodInDays: "",
-    submissionsAllowedLocations: "",
-  });
-
   useEffect(() => {
-    if (isAdmin) {
-      dispatch(fetchAppConfig());
-    }
-  }, [dispatch, isAdmin]);
-
-  useEffect(() => {
-    if (config) {
-      setForm({
-        claimLimit: String(config.claimLimit),
-        claimRangeStep: String(config.claimRangeStep),
-        lastYearClaimGracePeriodInDays: String(config.lastYearClaimGracePeriodInDays),
-        submissionsAllowedLocations: config.submissionsAllowedLocations.join(", "),
-      });
-    }
-  }, [config]);
+    dispatch(fetchAppConfig());
+  }, [dispatch]);
 
   const handleCurrencyChange = (val: CurrencyCode) => {
     setCurrency(val);
     localStorage.setItem("defaultCurrency", val);
-  };
-
-  const handleSave = () => {
-    const claimLimit = parseFloat(form.claimLimit);
-    const claimRangeStep = parseFloat(form.claimRangeStep);
-    const gracePeriod = parseInt(form.lastYearClaimGracePeriodInDays, 10);
-    const locations = form.submissionsAllowedLocations
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0);
-
-    if (!isFinite(claimLimit) || claimLimit <= 0) {
-      setFormError("Annual Claim Limit must be a positive number.");
-      return;
-    }
-    if (!isFinite(claimRangeStep) || claimRangeStep <= 0) {
-      setFormError("Claim Range Step must be a positive number.");
-      return;
-    }
-    if (!isFinite(gracePeriod) || gracePeriod < 0) {
-      setFormError("Grace Period must be a non-negative whole number.");
-      return;
-    }
-    if (locations.length === 0) {
-      setFormError("At least one allowed location is required.");
-      return;
-    }
-
-    setFormError(null);
-    dispatch(updateAppConfig({ claimLimit, claimRangeStep, lastYearClaimGracePeriodInDays: gracePeriod, submissionsAllowedLocations: locations }));
   };
 
   const initials = userInfo
@@ -131,17 +56,14 @@ export default function UserSettings() {
     : "?";
 
   const fullName = userInfo ? `${userInfo.firstName} ${userInfo.lastName}` : "—";
-  const isSaving = updateState === State.loading;
 
   return (
     <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3 }}>
       {/* Page header */}
       <Box>
-        <Typography variant="h5" sx={{ fontWeight: 700 }}>
-          Settings
-        </Typography>
+        <Typography variant="h5" sx={{ fontWeight: 700 }}>Settings</Typography>
         <Typography variant="body2" sx={{ color: "text.secondary", mt: 0.5 }}>
-          Manage your profile and application preferences
+          Manage your profile and display preferences
         </Typography>
       </Box>
 
@@ -176,50 +98,67 @@ export default function UserSettings() {
             </Typography>
             <Box sx={{ display: "flex", gap: 0.8, mt: 1, flexWrap: "wrap" }}>
               {isAdmin && (
-                <Box
-                  sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    px: 1.2,
-                    py: 0.3,
-                    borderRadius: 1,
-                    bgcolor: "#ede9fe",
-                    color: "#5b21b6",
-                    fontSize: 11,
-                    fontWeight: 700,
-                  }}
-                >
-                  Admin
+                <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, px: 1.2, py: 0.3, borderRadius: 1, bgcolor: "#ede9fe", color: "#5b21b6", fontSize: 11, fontWeight: 700 }}>
+                  <ShieldCheck size={10} /> Finance Admin
                 </Box>
               )}
               {roles.includes(Role.EMPLOYEE) && (
-                <Box
-                  sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    px: 1.2,
-                    py: 0.3,
-                    borderRadius: 1,
-                    bgcolor: "#e0f2fe",
-                    color: "#0369a1",
-                    fontSize: 11,
-                    fontWeight: 700,
-                  }}
-                >
-                  Employee
+                <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, px: 1.2, py: 0.3, borderRadius: 1, bgcolor: "#e0f2fe", color: "#0369a1", fontSize: 11, fontWeight: 700 }}>
+                  <User size={10} /> Employee
                 </Box>
               )}
             </Box>
           </Box>
-          <Box sx={{ textAlign: "right", flexShrink: 0 }}>
-            <Typography sx={{ fontSize: 11, color: "text.disabled" }}>
-              Identity managed by Asgardeo
+        </Box>
+      </Box>
+
+      {/* Theme Appearance */}
+      <Box sx={CARD_SX}>
+        <Typography sx={SECTION_LABEL_SX}>Theme Appearance</Typography>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Box>
+            <Typography sx={{ fontSize: 14, fontWeight: 600, color: "text.primary" }}>
+              Color Theme
             </Typography>
+            <Typography sx={{ fontSize: 12, color: "text.disabled", mt: 0.3 }}>
+              Persisted locally — takes effect immediately
+            </Typography>
+          </Box>
+          <Box sx={{ display: "flex", gap: 1.5 }}>
+            {THEMES.map((t) => (
+              <Box
+                key={t.name}
+                onClick={() => setThemeName(t.name)}
+                role="radio"
+                aria-checked={themeName === t.name}
+                aria-label={`${t.label} theme`}
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setThemeName(t.name); }}
+                sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.6, cursor: "pointer", userSelect: "none" }}
+              >
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: "50%",
+                    bgcolor: t.color,
+                    border: themeName === t.name ? `3px solid ${t.color}` : "3px solid transparent",
+                    outline: themeName === t.name ? `2px solid ${t.ring}` : "2px solid transparent",
+                    outlineOffset: 2,
+                    transition: "outline 0.15s ease, border 0.15s ease",
+                    boxShadow: themeName === t.name ? `0 0 0 2px ${t.ring}` : "none",
+                  }}
+                />
+                <Typography sx={{ fontSize: 10, fontWeight: themeName === t.name ? 700 : 500, color: themeName === t.name ? "text.primary" : "text.disabled" }}>
+                  {t.label}
+                </Typography>
+              </Box>
+            ))}
           </Box>
         </Box>
       </Box>
 
-      {/* Display Preferences card */}
+      {/* Display Preferences */}
       <Box sx={CARD_SX}>
         <Typography sx={SECTION_LABEL_SX}>Display Preferences</Typography>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -235,147 +174,33 @@ export default function UserSettings() {
         </Box>
       </Box>
 
-      {/* Application Configuration card — admin only */}
-      {isAdmin && (
-        <Box sx={CARD_SX}>
-          <Box sx={{ mb: 2.5 }}>
-            <Typography sx={SECTION_LABEL_SX}>Application Configuration</Typography>
-            <Typography sx={{ fontSize: 12, color: "text.disabled" }}>
-              System-wide parameters that affect OPD claim processing. Changes take effect immediately.
-            </Typography>
+      {/* System Info — view only, non-sensitive */}
+      <Box sx={CARD_SX}>
+        <Typography sx={SECTION_LABEL_SX}>System Information</Typography>
+        <Typography sx={{ fontSize: 12, color: "text.disabled", mb: 2 }}>
+          Read-only — managed by your Finance Admin
+        </Typography>
+        {configState === State.loading ? (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+            <Skeleton variant="rectangular" height={28} sx={{ borderRadius: 1 }} />
+            <Skeleton variant="rectangular" height={28} sx={{ borderRadius: 1 }} />
           </Box>
-
-          {configLoadState === State.loading ? (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} variant="rectangular" height={44} sx={{ borderRadius: 1 }} />
-              ))}
-            </Box>
-          ) : (
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
-              {/* Claim Limit + Range Step */}
-              <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 2 }}>
-                <Box>
-                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary", mb: 0.8 }}>
-                    Annual OPD Claim Limit (Rs)
-                  </Typography>
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.claimLimit}
-                    onChange={(e) => setForm((f) => ({ ...f, claimLimit: e.target.value }))}
-                    placeholder="e.g. 40000"
-                    style={INPUT_STYLE}
-                  />
-                  <Typography sx={{ fontSize: 11, color: "text.disabled", mt: 0.5 }}>
-                    Maximum claimable amount per employee per year
-                  </Typography>
-                </Box>
-                <Box>
-                  <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary", mb: 0.8 }}>
-                    Claim Range Step (Rs)
-                  </Typography>
-                  <input
-                    type="number"
-                    min={0}
-                    value={form.claimRangeStep}
-                    onChange={(e) => setForm((f) => ({ ...f, claimRangeStep: e.target.value }))}
-                    placeholder="e.g. 4000"
-                    style={INPUT_STYLE}
-                  />
-                  <Typography sx={{ fontSize: 11, color: "text.disabled", mt: 0.5 }}>
-                    Bucket size for the OPD claim distribution chart
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* Grace Period */}
-              <Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary", mb: 0.8 }}>
-                  Grace Period (days)
-                </Typography>
-                <input
-                  type="number"
-                  min={0}
-                  value={form.lastYearClaimGracePeriodInDays}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, lastYearClaimGracePeriodInDays: e.target.value }))
-                  }
-                  placeholder="e.g. 15"
-                  style={{ ...INPUT_STYLE, width: "48%" }}
-                />
-                <Typography sx={{ fontSize: 11, color: "text.disabled", mt: 0.5 }}>
-                  Days after year-end during which prior-year claims are still accepted
-                </Typography>
-              </Box>
-
-              {/* Allowed Locations */}
-              <Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary", mb: 0.8 }}>
+        ) : config ? (
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <Box>
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                <MapPin size={13} color="#10b981" />
+                <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary" }}>
                   Allowed Submission Locations
                 </Typography>
-                <input
-                  type="text"
-                  value={form.submissionsAllowedLocations}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, submissionsAllowedLocations: e.target.value }))
-                  }
-                  placeholder="e.g. Sri Lanka, India"
-                  style={INPUT_STYLE}
-                />
-                <Typography sx={{ fontSize: 11, color: "text.disabled", mt: 0.5 }}>
-                  Comma-separated list of employee locations permitted to submit claims
-                </Typography>
               </Box>
-
-              {/* Save row */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  pt: 0.5,
-                  borderTop: "1px solid",
-                  borderColor: "divider",
-                }}
-              >
-                <Box>
-                  {formError && (
-                    <Typography sx={{ fontSize: 12, color: "#be123c", fontWeight: 500 }}>{formError}</Typography>
-                  )}
-                  {!formError && updateState === State.success && (
-                    <Typography sx={{ fontSize: 12, color: "#15803d", fontWeight: 500 }}>
-                      Configuration saved successfully.
-                    </Typography>
-                  )}
-                  {!formError && updateState === State.failed && (
-                    <Typography sx={{ fontSize: 12, color: "#be123c", fontWeight: 500 }}>
-                      Failed to save. Please try again.
-                    </Typography>
-                  )}
-                </Box>
-                <Button
-                  type="button"
-                  disabled={isSaving}
-                  onClick={handleSave}
-                  aria-label="Save configuration"
-                  sx={{
-                    display: "inline-flex", alignItems: "center",
-                    px: 2.5, py: 1, mt: 1.5, borderRadius: 1.5,
-                    bgcolor: "#4f46e5", color: "#fff", fontSize: 13, fontWeight: 600,
-                    textTransform: "none",
-                    "&:hover": { bgcolor: "#4338ca" },
-                    "&.Mui-disabled": { bgcolor: "#c7d2fe", color: "#fff" },
-                    transition: "background-color 0.15s ease",
-                  }}
-                >
-                  {isSaving ? "Saving…" : "Save Configuration"}
-                </Button>
-              </Box>
+              <LocationChips locations={config.submissionsAllowedLocations} />
             </Box>
-          )}
-        </Box>
-      )}
+          </Box>
+        ) : (
+          <Typography sx={{ fontSize: 13, color: "text.disabled" }}>Configuration unavailable</Typography>
+        )}
+      </Box>
     </Box>
   );
 }
