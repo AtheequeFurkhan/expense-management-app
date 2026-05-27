@@ -13,7 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Typography, Popover, DatePickers } from "@wso2/oxygen-ui";
+import { Box, Button, Typography, Popover, DatePickers } from "@wso2/oxygen-ui";
 
 const { DatePicker } = DatePickers;
 import dayjs, { type Dayjs } from "dayjs";
@@ -65,13 +65,15 @@ export default function DateRangePickerButton({
 
   return (
     <>
-      <Box
+      <Button
+        type="button"
+        aria-label={`Date range: ${rangeLabel}`}
+        aria-expanded={open}
         onClick={(e) => setAnchorEl(e.currentTarget)}
         sx={{
           display: "inline-flex",
           alignItems: "center",
           gap: 0.75,
-          cursor: "pointer",
           px: 1.5,
           py: 0.6,
           borderRadius: 1.5,
@@ -80,8 +82,9 @@ export default function DateRangePickerButton({
           color: open ? "primary.main" : "text.secondary",
           bgcolor: open ? "action.selected" : "transparent",
           transition: "all 0.15s ease",
-          "&:hover": { borderColor: "primary.main", color: "primary.main" },
-          userSelect: "none",
+          textTransform: "none",
+          minWidth: 0,
+          "&:hover": { borderColor: "primary.main", color: "primary.main", bgcolor: open ? "action.selected" : "transparent" },
           whiteSpace: "nowrap",
         }}
       >
@@ -89,7 +92,7 @@ export default function DateRangePickerButton({
         <Typography sx={{ fontSize: 13, fontWeight: 600, color: "inherit", lineHeight: 1 }}>
           {rangeLabel}
         </Typography>
-      </Box>
+      </Button>
 
       <Popover
         open={open}

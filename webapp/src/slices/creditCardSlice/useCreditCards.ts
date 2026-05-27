@@ -15,6 +15,8 @@
 // under the License.
 import axios from "axios";
 
+import { type CCDateRangePreset } from "@config/constant";
+
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { apiService } from "@utils/apiService";
@@ -209,12 +211,12 @@ export interface CCEmployeeCategoryTransactionItem {
   status: string;
 }
 
-export function resolveCCDateRangeParams(dateRange: string): { year: string; month: string; monthRange: string } {
+function resolvePreset(preset: CCDateRangePreset): { year: string; month: string; monthRange: string } {
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
 
-  switch (dateRange) {
+  switch (preset) {
     case "All Time":
       return { year: String(currentYear), month: String(currentMonth), monthRange: "0" };
     case "This Month":
@@ -230,18 +232,30 @@ export function resolveCCDateRangeParams(dateRange: string): { year: string; mon
       return { year: String(currentYear), month: String(currentMonth), monthRange: "6" };
     case "Last Year":
       return { year: String(currentYear - 1), month: "12", monthRange: "12" };
-    default: {
-      // "custom:YYYY-M:YYYY-M" — arbitrary from/to month range
-      if (dateRange.startsWith("custom:")) {
-        const [fromStr, toStr] = dateRange.slice(7).split(":");
-        const [fromYear, fromMonth] = fromStr.split("-").map(Number);
-        const [toYear, toMonth] = toStr.split("-").map(Number);
-        const monthRange = Math.max(1, (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1);
-        return { year: String(toYear), month: String(toMonth), monthRange: String(monthRange) };
-      }
-      return { year: String(currentYear), month: String(currentMonth), monthRange: "0" };
-    }
   }
+}
+
+export function resolveCCDateRangeParams(dateRange: string): { year: string; month: string; monthRange: string } {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1;
+
+  // "custom:YYYY-M:YYYY-M" — arbitrary from/to month range
+  if (dateRange.startsWith("custom:")) {
+    const [fromStr, toStr] = dateRange.slice(7).split(":");
+    const [fromYear, fromMonth] = fromStr.split("-").map(Number);
+    const [toYear, toMonth] = toStr.split("-").map(Number);
+    const monthRange = Math.max(1, (toYear - fromYear) * 12 + (toMonth - fromMonth) + 1);
+    return { year: String(toYear), month: String(toMonth), monthRange: String(monthRange) };
+  }
+
+  // Preset tokens — TypeScript enforces exhaustiveness in resolvePreset
+  const PRESETS = new Set<string>(["All Time", "This Month", "Last Month", "Last 3 Months", "Last 6 Months", "Last Year"]);
+  if (PRESETS.has(dateRange)) {
+    return resolvePreset(dateRange as CCDateRangePreset);
+  }
+
+  return { year: String(currentYear), month: String(currentMonth), monthRange: "0" };
 }
 
 export function useCCCategoryEmployees(category: string | null) {
@@ -409,6 +423,7 @@ export function useCCEmployeeCategoryTransactions(
   const [error, setError] = useState<string | null>(null);
   const cacheRef = useRef<Map<string, CCEmployeeCategoryTransactionItem[]>>(new Map());
   const mountedRef = useRef(true);
+  const reqCountRef = useRef(0);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -429,6 +444,7 @@ export function useCCEmployeeCategoryTransactions(
       setLoading(true);
       setError(null);
 
+      const reqId = ++reqCountRef.current;
       const { year, month, monthRange } = resolveCCDateRangeParams(dateRange);
 
       apiService
@@ -436,17 +452,17 @@ export function useCCEmployeeCategoryTransactions(
           params: { email: emp, category: cat, year, month, monthRange },
         })
         .then((res) => {
-          if (!mountedRef.current) return;
+          if (!mountedRef.current || reqId !== reqCountRef.current) return;
           const data = (res.data ?? []).map((t) => ({ ...t, amount: Number(t.amount) }));
           cacheRef.current.set(cacheKey, data);
           setTransactions(data);
         })
         .catch((err) => {
-          if (!mountedRef.current || axios.isCancel(err)) return;
+          if (!mountedRef.current || reqId !== reqCountRef.current || axios.isCancel(err)) return;
           setError("Failed to load transactions.");
         })
         .finally(() => {
-          if (mountedRef.current) setLoading(false);
+          if (mountedRef.current && reqId === reqCountRef.current) setLoading(false);
         });
     },
     [dateRange],

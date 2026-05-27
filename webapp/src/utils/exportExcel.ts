@@ -29,8 +29,16 @@ import {
   LEAD_SUMMARY_FIELDS,
 } from "@config/exportLabels";
 
+function sanitizeCell(v: unknown): unknown {
+  if (typeof v === "string" && /^[=+\-@]/.test(v)) {
+    return `'${v}`;
+  }
+  return v;
+}
+
 function addSheet(wb: XLSX.WorkBook, name: string, rows: unknown[][]): void {
-  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const sanitized = rows.map((row) => row.map(sanitizeCell));
+  const ws = XLSX.utils.aoa_to_sheet(sanitized);
   applyAutoWidths(ws);
   XLSX.utils.book_append_sheet(wb, ws, name);
 }

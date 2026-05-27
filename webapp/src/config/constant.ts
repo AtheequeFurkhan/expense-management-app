@@ -110,7 +110,9 @@ export const CC_DATE_RANGE_OPTIONS = [
   { value: "Last 3 Months", label: "Last 3 Months" },
   { value: "Last 6 Months", label: "Last 6 Months" },
   { value: "Last Year", label: "Last Year" },
-];
+] as const;
+
+export type CCDateRangePreset = (typeof CC_DATE_RANGE_OPTIONS)[number]["value"];
 
 export const MS_PER_DAY = 86_400_000;
 export const DAYS_PER_MONTH = 30;
