@@ -13,12 +13,9 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Button, Typography, Popover, DatePickers } from "@wso2/oxygen-ui";
-
-const { DatePicker } = DatePickers;
+import { Box, Button, Popover, Typography } from "@wso2/oxygen-ui";
 import dayjs, { type Dayjs } from "dayjs";
 import { CalendarDays } from "lucide-react";
-
 import { useState } from "react";
 
 interface DateRangePickerButtonProps {
@@ -29,26 +26,18 @@ interface DateRangePickerButtonProps {
   maxTo?: Dayjs;
 }
 
-const fieldSx = {
-  "& .MuiInputBase-root": { height: 24, borderRadius: 1 },
-  "& .MuiOutlinedInput-notchedOutline": { borderColor: "divider" },
-  "& .MuiInputAdornment-root .MuiIconButton-root": { p: "1px" },
-  "& .MuiSvgIcon-root": { fontSize: 12 },
-  width: 106,
-};
-
-const calendarSx = {
-  "& .MuiPickersCalendarHeader-label": { fontSize: 11, fontWeight: 600 },
-  "& .MuiPickersCalendarHeader-root": { minHeight: 36, pl: 1.5, pr: 0.5 },
-  "& .MuiDayCalendar-weekDayLabel": { fontSize: 10, width: 28, height: 24 },
-  "& .MuiPickersDay-root": { fontSize: 10, width: 28, height: 28 },
-  "& .MuiPickersMonth-monthButton": { fontSize: 11, height: 28 },
-  "& .MuiPickersYear-yearButton": { fontSize: 11, height: 28 },
-  "& .MuiDateCalendar-root": { width: 240, height: "auto" },
-  "& .MuiDayCalendar-slideTransition": { minHeight: 180 },
-  "& .MuiPickersArrowSwitcher-button": { p: "2px" },
-  "& .MuiPickersArrowSwitcher-spacer": { width: 8 },
-  "& .MuiSvgIcon-root": { fontSize: 16 },
+const inputStyle: React.CSSProperties = {
+  width: 140,
+  height: 34,
+  padding: "0 10px",
+  borderRadius: 6,
+  border: "1px solid #e5e7eb",
+  fontSize: 13,
+  fontFamily: "inherit",
+  color: "#111827",
+  outline: "none",
+  cursor: "pointer",
+  boxSizing: "border-box",
 };
 
 export default function DateRangePickerButton({
@@ -100,68 +89,54 @@ export default function DateRangePickerButton({
         onClose={() => setAnchorEl(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
-        disablePortal={false}
         slotProps={{
           paper: {
             sx: {
               mt: 0.5,
-              p: 1.5,
+              p: 2,
               borderRadius: 2,
               border: "1px solid",
               borderColor: "divider",
               boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-              overflow: "visible",
             },
           },
         }}
       >
-        <Typography sx={{ fontSize: 10, fontWeight: 700, color: "text.secondary", mb: 1, textTransform: "uppercase", letterSpacing: 0.6 }}>
+        <Typography sx={{ fontSize: 10, fontWeight: 700, color: "text.secondary", mb: 1.5, textTransform: "uppercase", letterSpacing: 0.6 }}>
           Date range
         </Typography>
 
-        <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1 }}>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.3 }}>
-            <Typography sx={{ fontSize: 10, color: "text.secondary", fontWeight: 600 }}>From</Typography>
-            <DatePicker
-              value={fromDate}
-              onChange={(val) => {
-                const d = dayjs(val as Parameters<typeof dayjs>[0]);
+        <Box sx={{ display: "flex", alignItems: "flex-end", gap: 1.5 }}>
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+            <Typography sx={{ fontSize: 11, color: "text.secondary", fontWeight: 600 }}>From</Typography>
+            <input
+              type="date"
+              value={fromDate.format("YYYY-MM-DD")}
+              max={toDate.format("YYYY-MM-DD")}
+              onChange={(e) => {
+                const d = dayjs(e.target.value);
                 if (!d.isValid()) return;
                 onFromChange(d.isAfter(toDate) ? toDate : d);
               }}
-              views={["year", "month", "day"]}
-              openTo="day"
-              maxDate={toDate}
-              slotProps={{
-                textField: { size: "small", sx: fieldSx, inputProps: { style: { fontSize: 11, padding: "2px 6px" } } },
-                actionBar: { actions: [] },
-                popper: { disablePortal: false, sx: { zIndex: 1500 } },
-                desktopPaper: { sx: calendarSx },
-              }}
+              style={inputStyle}
             />
           </Box>
 
-          <Typography sx={{ fontSize: 12, color: "text.disabled", pb: 0.5 }}>→</Typography>
+          <Typography sx={{ fontSize: 14, color: "text.disabled", pb: 0.3 }}>→</Typography>
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.3 }}>
-            <Typography sx={{ fontSize: 10, color: "text.secondary", fontWeight: 600 }}>To</Typography>
-            <DatePicker
-              value={toDate}
-              onChange={(val) => {
-                const d = dayjs(val as Parameters<typeof dayjs>[0]);
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
+            <Typography sx={{ fontSize: 11, color: "text.secondary", fontWeight: 600 }}>To</Typography>
+            <input
+              type="date"
+              value={toDate.format("YYYY-MM-DD")}
+              min={fromDate.format("YYYY-MM-DD")}
+              max={maxTo?.format("YYYY-MM-DD")}
+              onChange={(e) => {
+                const d = dayjs(e.target.value);
                 if (!d.isValid()) return;
                 onToChange(d.isBefore(fromDate) ? fromDate : d);
               }}
-              views={["year", "month", "day"]}
-              openTo="day"
-              minDate={fromDate}
-              maxDate={maxTo}
-              slotProps={{
-                textField: { size: "small", sx: fieldSx, inputProps: { style: { fontSize: 11, padding: "2px 6px" } } },
-                actionBar: { actions: [] },
-                popper: { disablePortal: false, sx: { zIndex: 1500 } },
-                desktopPaper: { sx: calendarSx },
-              }}
+              style={inputStyle}
             />
           </Box>
         </Box>

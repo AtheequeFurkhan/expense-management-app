@@ -13,10 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { Box, Skeleton, Typography, DatePickers } from "@wso2/oxygen-ui";
-
-const { LocalizationProvider } = DatePickers;
+import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
 import dayjs, { type Dayjs } from "dayjs";
 
 import DateRangePickerButton from "@component/common/DateRangePickerButton";
@@ -46,9 +43,6 @@ function buildDateRange(from: Dayjs, to: Dayjs): string {
   return `custom:${from.year()}-${from.month() + 1}:${to.year()}-${to.month() + 1}`;
 }
 
-function formatDateLabel(d: Dayjs): string {
-  return d.format("DD MMM YYYY");
-}
 
 export default function CCEmployeeSpendingBreakdownPanel({
   currency,
@@ -85,11 +79,8 @@ export default function CCEmployeeSpendingBreakdownPanel({
     setModalOpen(true);
   };
 
-  const dateRangeLabel = `${formatDateLabel(fromDate)} – ${formatDateLabel(toDate)}`;
-
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <>
+    <>
       <ChartCard
         title="Employee CC Spending Breakdown"
         subtitle="Cardholders with highest corporate card spend"
@@ -216,6 +207,5 @@ export default function CCEmployeeSpendingBreakdownPanel({
         currency={currency}
       />
     </>
-    </LocalizationProvider>
   );
 }

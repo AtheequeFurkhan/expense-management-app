@@ -13,11 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { Box, Skeleton, Typography, DatePickers } from "@wso2/oxygen-ui";
+import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
 import dayjs, { type Dayjs } from "dayjs";
-
-const { LocalizationProvider } = DatePickers;
 import { DollarSign, Download, Hash } from "lucide-react";
 
 import { useMemo, useState } from "react";
@@ -139,7 +136,6 @@ export default function CreditCard() {
   const totalCCSpend = cardTypes.reduce((s, i) => s + i.totalSpend, 0);
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
     <Box sx={{ p: 3, display: "flex", flexDirection: "column", gap: 3 }}>
 
       {/* Filters bar */}
@@ -497,6 +493,5 @@ export default function CreditCard() {
         />
       )}
     </Box>
-    </LocalizationProvider>
   );
 }
