@@ -60,6 +60,28 @@ isolated function fetchNameMap(string[] emails) returns map<string> {
     return hrNames is map<string> ? hrNames : {};
 }
 
+isolated function validateCCDateParams(int? year, int? month, int monthRange) returns http:BadRequest? {
+    if year is int && (year < 1970 || year > 2100) {
+        return <http:BadRequest>{body: {message: "Invalid year. Expected a value between 1970 and 2100."}};
+    }
+    if month is int && (month < 1 || month > 12) {
+        return <http:BadRequest>{body: {message: "Invalid month. Expected a value between 1 and 12."}};
+    }
+    if monthRange < 0 || monthRange > 36 {
+        return <http:BadRequest>{body: {message: "monthRange must be between 0 and 36."}};
+    }
+    return ();
+}
+
+isolated function maskCardNumber(string cardNumber) returns string {
+    string digits = re `\D`.replaceAll(cardNumber, "");
+    if digits.length() < 4 {
+        return "**** **** **** ****";
+    }
+    string last4 = digits.substring(digits.length() - 4);
+    return string `**** **** **** ${last4}`;
+}
+
 function buildEffectiveAppConfig() returns AppConfig {
     map<string>|error dbSettings = database:getAppSettings();
     if dbSettings is error {
@@ -298,7 +320,9 @@ service http:InterceptableService / on new http:Listener(9090) {
         int effectiveYear = dateResult[0];
         int effectiveMonth = dateResult[1];
 
+        AppConfig effectiveConfig = buildEffectiveAppConfig();
         OpdClaimSummaryResponse|error summary = getOpdClaimSummary(
+                effectiveConfig,
                 effectiveYear,
                 effectiveMonth,
                 monthRange
@@ -805,7 +829,7 @@ service http:InterceptableService / on new http:Listener(9090) {
 
         return from database:CCTopCardRow row in rows
             select {
-                cardNumber: row.cardNumber,
+                cardNumber: maskCardNumber(row.cardNumber),
                 holderName: nameMap[row.holderName.toLowerAscii()] ?: deriveDisplayName(row.holderName),
                 usedAmount: row.usedAmount,
                 txnCount: row.txnCount
@@ -836,7 +860,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         return from database:CCCardRow row in rows
             select {
                 cardId: row.cardId,
-                cardNumber: row.cardNumber,
+                cardNumber: maskCardNumber(row.cardNumber),
                 holderName: nameMap[row.holderName.toLowerAscii()] ?: deriveDisplayName(row.holderName),
                 holderEmail: row.holderName,
                 usedAmount: row.usedAmount,
@@ -864,6 +888,11 @@ service http:InterceptableService / on new http:Listener(9090) {
 
         if category.trim().length() == 0 {
             return <http:BadRequest>{body: {message: "Category is required."}};
+        }
+
+        http:BadRequest? paramValidation = validateCCDateParams(year, month, monthRange);
+        if paramValidation is http:BadRequest {
+            return paramValidation;
         }
 
         [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
@@ -907,6 +936,11 @@ service http:InterceptableService / on new http:Listener(9090) {
         authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
         if authResult is http:BadRequest {
             return authResult;
+        }
+
+        http:BadRequest? paramValidation = validateCCDateParams(year, month, monthRange);
+        if paramValidation is http:BadRequest {
+            return paramValidation;
         }
 
         [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
@@ -955,6 +989,11 @@ service http:InterceptableService / on new http:Listener(9090) {
 
         if email.trim().length() == 0 {
             return <http:BadRequest>{body: {message: "Employee email is required."}};
+        }
+
+        http:BadRequest? paramValidation = validateCCDateParams(year, month, monthRange);
+        if paramValidation is http:BadRequest {
+            return paramValidation;
         }
 
         [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
@@ -1022,6 +1061,11 @@ service http:InterceptableService / on new http:Listener(9090) {
 
         if email.trim().length() == 0 || category.trim().length() == 0 {
             return <http:BadRequest>{body: {message: "Employee email and category are required."}};
+        }
+
+        http:BadRequest? paramValidation = validateCCDateParams(year, month, monthRange);
+        if paramValidation is http:BadRequest {
+            return paramValidation;
         }
 
         [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);

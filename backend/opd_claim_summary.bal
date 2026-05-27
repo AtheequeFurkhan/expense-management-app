@@ -123,15 +123,16 @@ isolated function buildActiveClaimsChart(database:EmployeeTotalRow[] employeeTot
 
 # Build the OPD claim summary used by the dashboard.
 #
+# + config - Effective app configuration (DB-merged values take precedence over Config.toml)
 # + year - Reporting year for the summary
 # + monthRange - Reporting month for the summary
 # + months - Number of months included in the reporting window
 # + return - OPD claim summary response if all queries succeed, otherwise an error
-public function getOpdClaimSummary(int year, int monthRange, int months = 1) returns OpdClaimSummaryResponse|error {
-    if appConfig.claimLimit <= 0d || appConfig.claimRangeStep <= 0d {
+public function getOpdClaimSummary(AppConfig config, int year, int monthRange, int months = 1) returns OpdClaimSummaryResponse|error {
+    if config.claimLimit <= 0d || config.claimRangeStep <= 0d {
         return error("Invalid appConfig: claimLimit and claimRangeStep must be greater than zero");
     }
-    if appConfig.lastYearClaimGracePeriodInDays < 0 {
+    if config.lastYearClaimGracePeriodInDays < 0 {
         return error("Invalid appConfig: lastYearClaimGracePeriodInDays must be non-negative");
     }
     decimal lastYearClaimAmount = check database:queryClaimAmount(year);
@@ -139,18 +140,18 @@ public function getOpdClaimSummary(int year, int monthRange, int months = 1) ret
     int previousYearClaimCount = check database:queryClaimCount(year - 1);
     int gracePeriodClaims = check database:queryGracePeriodClaimCount(
         year,
-        appConfig.lastYearClaimGracePeriodInDays
+        config.lastYearClaimGracePeriodInDays
     );
     string[] allEmployeeEmails = check database:queryAllClaimEmployeeEmails();
     int totalEmployees = allEmployeeEmails.length();
     database:EmployeeTotalRow[] employeeTotals = check database:queryEmployeeTotals(year, monthRange, months);
 
     map<boolean> employeesWithClaimsSet = toEmployeesWithClaimsSet(employeeTotals);
-    int fullyClaimedEmployees = countFullyClaimedEmployees(employeeTotals, appConfig.claimLimit);
+    int fullyClaimedEmployees = countFullyClaimedEmployees(employeeTotals, config.claimLimit);
     OpdClaimBucket[] activeClaimsChart = buildActiveClaimsChart(
         employeeTotals,
-        appConfig.claimLimit,
-        appConfig.claimRangeStep
+        config.claimLimit,
+        config.claimRangeStep
     );
 
     int unclaimedEmployees = totalEmployees - employeesWithClaimsSet.length();

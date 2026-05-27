@@ -364,7 +364,7 @@ export default function ExpenseClaims() {
 
       <Box sx={{ mt: 2 }}>
         <ChartCard
-          title="Expense Category Breakdown"
+          title="Expense Type Breakdown"
           subtitle={
             selectedRecurringCategory
               ? `${selectedRecurringCategory} sub-expenses`

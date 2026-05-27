@@ -267,7 +267,7 @@ export default function FilterPanel({ filters, onFiltersChange }: FilterPanelPro
             onChange={(v) => updateFilter("department", v)}
           />
           <FilterDropdown
-            label="Expense Category"
+            label="Expense Type"
             value={filters.category}
             options={FILTER_OPTIONS.expenseCategories}
             onChange={(v) => updateFilter("category", v)}
