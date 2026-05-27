@@ -199,7 +199,7 @@ export default function CreditCard() {
 
       {/* Overall Expense Breakdown + Category Drill-down */}
       <ChartCard
-        title="Expense Breakdown by Category"
+        title="Expense Breakdown by Type"
         subtitle="Overall CC spend by engagement area — click a category to view cardholders"
         minHeight={220}
         action={
@@ -408,7 +408,11 @@ export default function CreditCard() {
                   {paginatedCards.map((card) => (
                     <tr
                       key={card.cardId}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`View details for ${card.holderName}`}
                       onClick={() => { setSelectedCard(card); setCardDetailsOpen(true); }}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedCard(card); setCardDetailsOpen(true); } }}
                       style={{ borderBottom: "1px solid #f3f4f6", cursor: "pointer" }}
                       onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#f9fafb")}
                       onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = "")}

@@ -710,7 +710,7 @@ export default function EmployeeBreakdownModal({
 
       <DialogContent sx={{ p: 2.5 }}>
         <Typography sx={{ fontSize: 14, fontWeight: 700, color: "text.primary", mb: 1 }}>
-          Expense breakdown by category
+          Expense breakdown by type
         </Typography>
 
         <Box

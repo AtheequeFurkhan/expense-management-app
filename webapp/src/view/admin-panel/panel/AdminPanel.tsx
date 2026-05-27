@@ -13,7 +13,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Skeleton, Typography } from "@wso2/oxygen-ui";
+import { Box, Button, Skeleton, Typography } from "@wso2/oxygen-ui";
 import {
   MapPin,
   Save,
@@ -79,6 +79,7 @@ export default function AdminPanel() {
   const { config, state: configState, updateState } = useAppSelector((state) => state.appConfig);
 
   const [empSearch, setEmpSearch] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
   const [form, setForm] = useState({
     claimLimit: "",
     claimRangeStep: "",
@@ -103,16 +104,33 @@ export default function AdminPanel() {
   }, [config]);
 
   const handleSave = () => {
+    const claimLimit = parseFloat(form.claimLimit);
+    const claimRangeStep = parseFloat(form.claimRangeStep);
+    const gracePeriod = parseInt(form.lastYearClaimGracePeriodInDays, 10);
     const locations = form.submissionsAllowedLocations
       .split(",")
       .map((s) => s.trim())
       .filter((s) => s.length > 0);
-    dispatch(updateAppConfig({
-      claimLimit: parseFloat(form.claimLimit) || 0,
-      claimRangeStep: parseFloat(form.claimRangeStep) || 0,
-      lastYearClaimGracePeriodInDays: parseInt(form.lastYearClaimGracePeriodInDays) || 0,
-      submissionsAllowedLocations: locations,
-    }));
+
+    if (!isFinite(claimLimit) || claimLimit <= 0) {
+      setFormError("Annual Claim Limit must be a positive number.");
+      return;
+    }
+    if (!isFinite(claimRangeStep) || claimRangeStep <= 0) {
+      setFormError("Claim Range Step must be a positive number.");
+      return;
+    }
+    if (!isFinite(gracePeriod) || gracePeriod < 0) {
+      setFormError("Grace Period must be a non-negative whole number.");
+      return;
+    }
+    if (locations.length === 0) {
+      setFormError("At least one allowed location is required.");
+      return;
+    }
+
+    setFormError(null);
+    dispatch(updateAppConfig({ claimLimit, claimRangeStep, lastYearClaimGracePeriodInDays: gracePeriod, submissionsAllowedLocations: locations }));
   };
 
   const filteredEmployees = (employees ?? []).filter((e) => {
@@ -263,28 +281,34 @@ export default function AdminPanel() {
 
               <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", pt: 1, borderTop: "1px solid", borderColor: "divider" }}>
                 <Box>
-                  {updateState === State.success && (
+                  {formError && (
+                    <Typography sx={{ fontSize: 12, color: "#be123c", fontWeight: 500 }}>{formError}</Typography>
+                  )}
+                  {!formError && updateState === State.success && (
                     <Typography sx={{ fontSize: 12, color: "#15803d", fontWeight: 500 }}>Saved successfully.</Typography>
                   )}
-                  {updateState === State.failed && (
+                  {!formError && updateState === State.failed && (
                     <Typography sx={{ fontSize: 12, color: "#be123c", fontWeight: 500 }}>Failed to save. Try again.</Typography>
                   )}
                 </Box>
-                <Box
-                  onClick={isSaving ? undefined : handleSave}
+                <Button
+                  type="button"
+                  disabled={isSaving}
+                  onClick={handleSave}
+                  aria-label="Save changes"
                   sx={{
                     display: "inline-flex", alignItems: "center", gap: 0.75,
                     px: 2, py: 0.9, borderRadius: 1.5,
-                    bgcolor: isSaving ? "#c7d2fe" : "#4f46e5",
-                    color: "#fff", fontSize: 13, fontWeight: 600,
-                    cursor: isSaving ? "not-allowed" : "pointer",
-                    "&:hover": { bgcolor: isSaving ? "#c7d2fe" : "#4338ca" },
+                    bgcolor: "#4f46e5", color: "#fff", fontSize: 13, fontWeight: 600,
+                    textTransform: "none",
+                    "&:hover": { bgcolor: "#4338ca" },
+                    "&.Mui-disabled": { bgcolor: "#c7d2fe", color: "#fff" },
                     transition: "background-color 0.15s ease",
                   }}
                 >
                   <Save size={14} />
                   {isSaving ? "Saving…" : "Save Changes"}
-                </Box>
+                </Button>
               </Box>
             </Box>
           )}
