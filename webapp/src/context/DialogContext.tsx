@@ -14,12 +14,6 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import CloseIcon from "@mui/icons-material/Close";
-import DoneIcon from "@mui/icons-material/Done";
-import SaveAltIcon from "@mui/icons-material/SaveAlt";
-import SendIcon from "@mui/icons-material/Send";
-import LoadingButton from "@mui/lab/LoadingButton";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import {
   Button,
   Dialog,
@@ -30,10 +24,8 @@ import {
   IconButton,
   Stack,
   TextField,
-  DatePickers,
 } from "@wso2/oxygen-ui";
-
-const { LocalizationProvider } = DatePickers;
+import { Check, Download, Send, X } from "lucide-react";
 
 import * as React from "react";
 import { useContext, useState } from "react";
@@ -159,8 +151,7 @@ const ConfirmationModalContextProvider: React.FC<ConfirmationModalContextProvide
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <ConfirmationModalContext.Provider value={dialogContext}>
+    <ConfirmationModalContext.Provider value={dialogContext}>
         {props.children}
         {content && (
           <Dialog
@@ -195,7 +186,7 @@ const ConfirmationModalContextProvider: React.FC<ConfirmationModalContextProvide
                 color: (theme) => theme.palette.secondary.dark,
               }}
             >
-              <CloseIcon />
+              <X size={16} />
             </IconButton>
             <DialogContent sx={{ p: 0, m: 0, paddingX: 2 }}>
               <DialogContentText variant="body2">{content?.message}</DialogContentText>
@@ -229,7 +220,7 @@ const ConfirmationModalContextProvider: React.FC<ConfirmationModalContextProvide
                 </Button>
 
                 {/* Ok button */}
-                <LoadingButton
+                <Button
                   type="submit"
                   sx={{
                     borderRadius: 2,
@@ -241,25 +232,23 @@ const ConfirmationModalContextProvider: React.FC<ConfirmationModalContextProvide
                   size="small"
                   disabled={content?.inputObj?.mandatory && comment === ""}
                   onClick={() => (content?.inputObj ? handleOk(comment) : handleOk())}
-                  loadingPosition="start"
                   startIcon={
                     content.type === "update" ? (
-                      <SaveAltIcon />
+                      <Download size={14} />
                     ) : content.type === "send" ? (
-                      <SendIcon />
+                      <Send size={14} />
                     ) : (
-                      <DoneIcon />
+                      <Check size={14} />
                     )
                   }
                 >
                   {content?.okText ? content.okText : "Yes"}
-                </LoadingButton>
+                </Button>
               </Stack>
             </DialogActions>
           </Dialog>
         )}
-      </ConfirmationModalContext.Provider>
-    </LocalizationProvider>
+    </ConfirmationModalContext.Provider>
   );
 };
 
