@@ -124,10 +124,11 @@ const AppConfigSlice = createSlice({
       .addCase(fetchAppConfig.fulfilled, (state, action) => {
         state.state = State.success;
         state.stateMessage = "Successfully fetched app configurations!";
+        const toNum = (v: unknown, fallback = 0) => { const n = Number(v); return isFinite(n) ? n : fallback; };
         state.config = {
-          claimLimit: Number(action.payload.claimLimit),
-          claimRangeStep: Number(action.payload.claimRangeStep),
-          lastYearClaimGracePeriodInDays: Number(action.payload.lastYearClaimGracePeriodInDays),
+          claimLimit: toNum(action.payload.claimLimit),
+          claimRangeStep: toNum(action.payload.claimRangeStep),
+          lastYearClaimGracePeriodInDays: toNum(action.payload.lastYearClaimGracePeriodInDays),
           submissionsAllowedLocations: action.payload.submissionsAllowedLocations ?? [],
         };
       })
@@ -141,10 +142,11 @@ const AppConfigSlice = createSlice({
       })
       .addCase(updateAppConfig.fulfilled, (state, action) => {
         state.updateState = State.success;
+        const toNum = (v: unknown, fallback = 0) => { const n = Number(v); return isFinite(n) ? n : fallback; };
         state.config = {
-          claimLimit: Number(action.payload.claimLimit),
-          claimRangeStep: Number(action.payload.claimRangeStep),
-          lastYearClaimGracePeriodInDays: Number(action.payload.lastYearClaimGracePeriodInDays),
+          claimLimit: toNum(action.payload.claimLimit),
+          claimRangeStep: toNum(action.payload.claimRangeStep),
+          lastYearClaimGracePeriodInDays: toNum(action.payload.lastYearClaimGracePeriodInDays),
           submissionsAllowedLocations: action.payload.submissionsAllowedLocations ?? [],
         };
       })
