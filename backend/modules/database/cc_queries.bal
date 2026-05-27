@@ -67,7 +67,6 @@ isolated function getCCCardTypeAnalysisQuery() returns sql:ParameterizedQuery =>
          CAST(COALESCE(SUM(t.txn_amount), 0) AS DECIMAL(15,2)) AS totalSpend,
          CAST(COUNT(*) AS SIGNED) AS txnCount
      FROM cc_txn t
-     WHERE t.engagement_code IS NOT NULL
      GROUP BY cardType
      ORDER BY totalSpend DESC`;
 
