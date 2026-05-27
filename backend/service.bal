@@ -97,27 +97,44 @@ function buildEffectiveAppConfig() returns AppConfig {
     string? rawLimit = dbSettings["claimLimit"];
     if rawLimit is string {
         decimal|error v = decimal:fromString(rawLimit);
-        if v is decimal { claimLimit = v; }
+        if v is decimal && v > 0.0d {
+            claimLimit = v;
+        } else {
+            log:printWarn("Ignoring invalid claimLimit from DB; keeping default.", val = rawLimit);
+        }
     }
 
     string? rawStep = dbSettings["claimRangeStep"];
     if rawStep is string {
         decimal|error v = decimal:fromString(rawStep);
-        if v is decimal { claimRangeStep = v; }
+        if v is decimal && v > 0.0d {
+            claimRangeStep = v;
+        } else {
+            log:printWarn("Ignoring invalid claimRangeStep from DB; keeping default.", val = rawStep);
+        }
     }
 
     string? rawGrace = dbSettings["lastYearClaimGracePeriodInDays"];
     if rawGrace is string {
         int|error v = int:fromString(rawGrace);
-        if v is int { lastYearClaimGracePeriodInDays = v; }
+        if v is int && v >= 0 {
+            lastYearClaimGracePeriodInDays = v;
+        } else {
+            log:printWarn("Ignoring invalid lastYearClaimGracePeriodInDays from DB; keeping default.", val = rawGrace);
+        }
     }
 
     string? rawLocations = dbSettings["submissionsAllowedLocations"];
     if rawLocations is string && rawLocations.length() > 0 {
-        submissionsAllowedLocations = from string part in re `,`.split(rawLocations)
+        string[] parsed = from string part in re `,`.split(rawLocations)
             let string t = part.trim()
             where t.length() > 0
             select t;
+        if parsed.length() > 0 {
+            submissionsAllowedLocations = parsed;
+        } else {
+            log:printWarn("Ignoring empty submissionsAllowedLocations from DB; keeping default.", val = rawLocations);
+        }
     }
 
     return {claimLimit, claimRangeStep, lastYearClaimGracePeriodInDays, submissionsAllowedLocations};
