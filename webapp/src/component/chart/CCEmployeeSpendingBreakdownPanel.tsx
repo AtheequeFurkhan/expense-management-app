@@ -203,7 +203,6 @@ export default function CCEmployeeSpendingBreakdownPanel({
         onClose={() => setModalOpen(false)}
         employeeEmail={selectedEmployee?.email ?? null}
         employeeName={selectedEmployee?.name ?? ""}
-        dateRange={dateRange}
         currency={currency}
       />
     </>

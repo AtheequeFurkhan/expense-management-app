@@ -211,7 +211,7 @@ export interface CCEmployeeCategoryTransactionItem {
   status: string;
 }
 
-function resolvePreset(preset: CCDateRangePreset): { year: string; month: string; monthRange: string } {
+function resolvePreset(preset: CCDateRangePreset | "This Year"): { year: string; month: string; monthRange: string } {
   const now = new Date();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth() + 1;
@@ -221,6 +221,8 @@ function resolvePreset(preset: CCDateRangePreset): { year: string; month: string
       return { year: String(currentYear), month: String(currentMonth), monthRange: "0" };
     case "This Month":
       return { year: String(currentYear), month: String(currentMonth), monthRange: "1" };
+    case "This Year":
+      return { year: String(currentYear), month: String(currentMonth), monthRange: String(currentMonth) };
     case "Last Month": {
       const m = currentMonth === 1 ? 12 : currentMonth - 1;
       const y = currentMonth === 1 ? currentYear - 1 : currentYear;
@@ -249,10 +251,9 @@ export function resolveCCDateRangeParams(dateRange: string): { year: string; mon
     return { year: String(toYear), month: String(toMonth), monthRange: String(monthRange) };
   }
 
-  // Preset tokens — TypeScript enforces exhaustiveness in resolvePreset
-  const PRESETS = new Set<string>(["All Time", "This Month", "Last Month", "Last 3 Months", "Last 6 Months", "Last Year"]);
+  const PRESETS = new Set<string>(["All Time", "This Month", "This Year", "Last Month", "Last 3 Months", "Last 6 Months", "Last Year"]);
   if (PRESETS.has(dateRange)) {
-    return resolvePreset(dateRange as CCDateRangePreset);
+    return resolvePreset(dateRange as CCDateRangePreset | "This Year");
   }
 
   return { year: String(currentYear), month: String(currentMonth), monthRange: "0" };
