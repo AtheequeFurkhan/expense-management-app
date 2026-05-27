@@ -24,7 +24,6 @@ import {
   useCCEmployeeCategoryTransactions,
 } from "@slices/creditCardSlice/useCreditCards";
 import { type CurrencyCode, formatWithSymbol } from "@utils/currency";
-import { formatCCPeriodLabel } from "@utils/dateFormat";
 import { exportCCEmployeeBreakdown } from "@utils/exportExcel";
 
 const SEGMENT_COLORS = [
@@ -324,7 +323,6 @@ interface CCPeriodComparisonProps {
   loadingCurrent: boolean;
   loadingPrev: boolean;
   fmtSym: (v: number) => string;
-  dateRange: string;
   compareMode: CompareMode;
 }
 
@@ -334,11 +332,12 @@ function CCPeriodComparison({
   loadingCurrent,
   loadingPrev,
   fmtSym,
-  dateRange,
   compareMode,
 }: CCPeriodComparisonProps) {
   const prevLabel = compareMode === "prevMonth" ? "Last Month" : "Last Year";
   const prevTitle = compareMode === "prevMonth" ? "Previous Month" : "Previous Year";
+  const curLabel = compareMode === "prevMonth" ? "This Month" : "This Year";
+  const curTitle = compareMode === "prevMonth" ? "Current Month" : "Current Year";
 
   const curTotal = currentBreakdown?.totalAmount ?? 0;
   const prevTotal = prevBreakdown?.totalAmount ?? 0;
@@ -445,10 +444,10 @@ function CCPeriodComparison({
               letterSpacing: 1,
             }}
           >
-            Current Period
+            {curTitle}
           </Typography>
           <Typography sx={{ fontSize: 12, fontWeight: 700, color: "text.primary", mb: 0.25 }}>
-            {formatCCPeriodLabel(dateRange)}
+            {curLabel}
           </Typography>
           {loadingCurrent ? (
             <Skeleton variant="text" width={100} height={26} sx={{ ml: "auto" }} />
@@ -475,7 +474,6 @@ export interface CCEmployeeBreakdownModalProps {
   onClose: () => void;
   employeeEmail: string | null;
   employeeName: string;
-  dateRange: string;
   currency: CurrencyCode;
 }
 
@@ -484,7 +482,6 @@ export default function CCEmployeeBreakdownModal({
   onClose,
   employeeEmail,
   employeeName,
-  dateRange,
   currency,
 }: CCEmployeeBreakdownModalProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
@@ -492,9 +489,10 @@ export default function CCEmployeeBreakdownModal({
 
   const fmtSym = (v: number) => formatWithSymbol(v, currency);
 
-  const { breakdown, loading } = useCCEmployeeBreakdown(open ? employeeEmail : null, dateRange);
-
+  const currentDateRange = compareMode === "prevMonth" ? "This Month" : "This Year";
   const compDateRange = compareMode === "prevMonth" ? "Last Month" : "Last Year";
+
+  const { breakdown, loading } = useCCEmployeeBreakdown(open ? employeeEmail : null, currentDateRange);
   const { breakdown: compBreakdown, loading: loadingComp } = useCCEmployeeBreakdown(
     open ? employeeEmail : null,
     compDateRange,
@@ -516,7 +514,7 @@ export default function CCEmployeeBreakdownModal({
     exportCCEmployeeBreakdown({
       name: employeeName,
       email: employeeEmail,
-      dateRange,
+      dateRange: currentDateRange,
       currency,
       compareMode,
       totalAmount: breakdown.totalAmount,
@@ -644,10 +642,9 @@ export default function CCEmployeeBreakdownModal({
             <CCPeriodComparison
               currentBreakdown={breakdown}
               prevBreakdown={compBreakdown}
-              loadingCurrent={false}
+              loadingCurrent={loading}
               loadingPrev={loadingComp}
               fmtSym={fmtSym}
-              dateRange={dateRange}
               compareMode={compareMode}
             />
 
@@ -759,7 +756,7 @@ export default function CCEmployeeBreakdownModal({
                         compTxnCount={cmp?.txnCount ?? 0}
                         maxCompTotal={maxComp}
                         email={employeeEmail ?? ""}
-                        dateRange={dateRange}
+                        dateRange={currentDateRange}
                         compDateRange={compDateRange}
                         fmtSym={fmtSym}
                         isExpanded={expandedCategory === cat.category}
