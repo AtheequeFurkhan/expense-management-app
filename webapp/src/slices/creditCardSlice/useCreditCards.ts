@@ -479,7 +479,7 @@ export function useCCEmployeeCategoryTransactions(
   return { transactions, loading, error };
 }
 
-export function useCCCardList() {
+export function useCCCardList(dateRange = "All Time") {
   const [cards, setCards] = useState<CCCardListItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -489,8 +489,10 @@ export function useCCCardList() {
     setLoading(true);
     setError(null);
 
+    const { year, month, monthRange } = resolveCCDateRangeParams(dateRange);
+
     apiService
-      .get<CCCardListItem[]>("/cc-cards")
+      .get<CCCardListItem[]>("/cc-cards", { params: { year, month, monthRange } })
       .then((res) => {
         if (!cancelled) {
           setCards(
@@ -513,7 +515,7 @@ export function useCCCardList() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [dateRange]);
 
   return { cards, loading, error };
 }

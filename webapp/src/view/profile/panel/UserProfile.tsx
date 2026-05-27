@@ -13,7 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-import { Box, Divider, Typography } from "@wso2/oxygen-ui";
+import { Box, Typography } from "@wso2/oxygen-ui";
+import { CARD_SX, SECTION_LABEL_SX } from "@src/styles/panelStyles";
 import {
   BadgeCheck,
   Building2,
@@ -26,23 +27,6 @@ import { useNavigate } from "react-router-dom";
 
 import { Role } from "@slices/authSlice/auth";
 import { useAppSelector } from "@slices/store";
-
-const CARD_SX = {
-  bgcolor: "background.paper",
-  border: "1px solid",
-  borderColor: "divider",
-  borderRadius: 2,
-  p: 3,
-};
-
-const SECTION_LABEL_SX = {
-  fontSize: 11,
-  fontWeight: 700,
-  color: "text.disabled",
-  textTransform: "uppercase" as const,
-  letterSpacing: 0.8,
-  mb: 2,
-};
 
 function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
@@ -118,7 +102,7 @@ export default function UserProfile() {
             <Box sx={{ display: "flex", gap: 0.75, flexWrap: "wrap", justifyContent: "center" }}>
               {isAdmin && (
                 <Box sx={{ display: "inline-flex", alignItems: "center", gap: 0.5, px: 1.2, py: 0.4, borderRadius: 1, bgcolor: "#ede9fe", color: "#5b21b6", fontSize: 11, fontWeight: 700 }}>
-                  <ShieldCheck size={11} /> Admin
+                  <ShieldCheck size={11} /> Finance Admin
                 </Box>
               )}
               {isEmployee && (
@@ -181,7 +165,7 @@ export default function UserProfile() {
                   <Box sx={{ p: 1.5, borderRadius: 1.5, border: "1px solid #ede9fe", bgcolor: "#faf5ff" }}>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.4 }}>
                       <ShieldCheck size={14} color="#5b21b6" />
-                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#5b21b6" }}>Administrator</Typography>
+                      <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#5b21b6" }}>Finance Admin</Typography>
                     </Box>
                     <Typography sx={{ fontSize: 11, color: "text.secondary" }}>
                       Full access to system configuration, employee management, and all reports.
@@ -203,37 +187,6 @@ export default function UserProfile() {
             )}
           </Box>
 
-          {/* Security */}
-          <Box sx={CARD_SX}>
-            <Typography sx={SECTION_LABEL_SX}>Security</Typography>
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", py: 1 }}>
-              <Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary" }}>
-                  Authentication
-                </Typography>
-                <Typography sx={{ fontSize: 12, color: "text.disabled", mt: 0.2 }}>
-                  Managed externally via Asgardeo SSO
-                </Typography>
-              </Box>
-              <Box sx={{ px: 1.2, py: 0.4, borderRadius: 1, bgcolor: "#f0fdf4", border: "1px solid #bbf7d0" }}>
-                <Typography sx={{ fontSize: 11, fontWeight: 700, color: "#15803d" }}>SSO Active</Typography>
-              </Box>
-            </Box>
-            <Divider sx={{ my: 1 }} />
-            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", py: 1 }}>
-              <Box>
-                <Typography sx={{ fontSize: 13, fontWeight: 600, color: "text.primary" }}>
-                  Password Management
-                </Typography>
-                <Typography sx={{ fontSize: 12, color: "text.disabled", mt: 0.2 }}>
-                  Passwords are managed by your identity provider
-                </Typography>
-              </Box>
-              <Box sx={{ px: 1.2, py: 0.4, borderRadius: 1, bgcolor: "#f8fafc", border: "1px solid", borderColor: "divider" }}>
-                <Typography sx={{ fontSize: 11, fontWeight: 600, color: "text.secondary" }}>Asgardeo</Typography>
-              </Box>
-            </Box>
-          </Box>
         </Box>
       </Box>
     </Box>

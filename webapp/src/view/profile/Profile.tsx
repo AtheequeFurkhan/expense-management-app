@@ -14,8 +14,8 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import UnderDevelopment from "@src/layout/pages/Maintenance";
+import UserProfile from "@view/profile/panel/UserProfile";
 
 export default function Profile() {
-  return <UnderDevelopment />;
+  return <UserProfile />;
 }

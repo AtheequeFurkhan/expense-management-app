@@ -853,11 +853,15 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
     }
 
-    # Get the full corporate card list ordered by spend.
+    # Get the full corporate card list ordered by spend within the given date range.
     #
     # + ctx - Request context containing authenticated user information
+    # + year - Optional ending year (defaults to current year)
+    # + month - Optional ending month (defaults to current month)
+    # + monthRange - Number of months in the reporting window (0 = all time)
     # + return - Card list if successful, otherwise an HTTP error response
-    resource function get cc\-cards(http:RequestContext ctx)
+    resource function get cc\-cards(http:RequestContext ctx,
+            int? year = (), int? month = (), int monthRange = 0)
         returns CCCardListItem[]|http:BadRequest|HttpInternalServerError {
 
         authorization:UserInfo|http:BadRequest authResult = extractUserInfo(ctx);
@@ -865,7 +869,19 @@ service http:InterceptableService / on new http:Listener(9090) {
             return authResult;
         }
 
-        database:CCCardRow[]|error rows = database:queryCCCardList();
+        http:BadRequest? paramValidation = validateCCDateParams(year, month, monthRange);
+        if paramValidation is http:BadRequest {
+            return paramValidation;
+        }
+
+        [int, int]|HttpInternalServerError dateResult = resolveEffectiveDate(year, month);
+        if dateResult is HttpInternalServerError {
+            return dateResult;
+        }
+        int effectiveYear = dateResult[0];
+        int effectiveMonth = dateResult[1];
+
+        database:CCCardRow[]|error rows = database:queryCCCardList(effectiveYear, effectiveMonth, monthRange);
         if rows is error {
             log:printError("Failed to fetch CC card list.", rows);
             return <HttpInternalServerError>{body: {message: "Failed to fetch card list."}};

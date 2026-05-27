@@ -15,26 +15,41 @@
 // under the License.
 
 import { AuthProvider } from "@asgardeo/auth-react";
-import { AcrylicOrangeTheme, OxygenUIThemeProvider } from "@wso2/oxygen-ui";
+import { AcrylicOrangeTheme, AcrylicPurpleTheme, OxygenTheme, OxygenUIThemeProvider } from "@wso2/oxygen-ui";
 import { Provider } from "react-redux";
 
 import AppHandler from "@app/AppHandler";
 import { AsgardeoConfig } from "@config/config";
 import AppAuthProvider from "@context/AuthContext";
+import { ThemeContextProvider, useAppTheme } from "@context/ThemeContext";
 import { store } from "@slices/store";
 
 import "./styles/fonts.css";
 
+function ThemedApp() {
+  const { themeName } = useAppTheme();
+  const theme =
+    themeName === "purple" ? AcrylicPurpleTheme
+    : themeName === "base" ? OxygenTheme
+    : AcrylicOrangeTheme;
+
+  return (
+    <OxygenUIThemeProvider theme={theme}>
+      <AuthProvider config={AsgardeoConfig}>
+        <AppAuthProvider>
+          <AppHandler />
+        </AppAuthProvider>
+      </AuthProvider>
+    </OxygenUIThemeProvider>
+  );
+}
+
 export default function App() {
   return (
     <Provider store={store}>
-      <OxygenUIThemeProvider theme={AcrylicOrangeTheme}>
-        <AuthProvider config={AsgardeoConfig}>
-          <AppAuthProvider>
-            <AppHandler />
-          </AppAuthProvider>
-        </AuthProvider>
-      </OxygenUIThemeProvider>
+      <ThemeContextProvider>
+        <ThemedApp />
+      </ThemeContextProvider>
     </Provider>
   );
 }

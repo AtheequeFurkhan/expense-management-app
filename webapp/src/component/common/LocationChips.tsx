@@ -13,9 +13,28 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
+import { Box } from "@wso2/oxygen-ui";
 
-import AdminPanel from "@view/admin-panel/panel/AdminPanel";
-
-export default function Admin() {
-  return <AdminPanel />;
+export default function LocationChips({ locations }: { locations: string[] }) {
+  return (
+    <Box sx={{ display: "flex", gap: 0.6, flexWrap: "wrap", mt: 0.8 }}>
+      {locations.map((loc) => (
+        <Box
+          key={loc}
+          sx={{
+            px: 1.2,
+            py: 0.35,
+            borderRadius: 10,
+            bgcolor: "#f0fdf4",
+            border: "1px solid #bbf7d0",
+            fontSize: 11,
+            fontWeight: 600,
+            color: "#15803d",
+          }}
+        >
+          {loc}
+        </Box>
+      ))}
+    </Box>
+  );
 }

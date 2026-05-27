@@ -14,8 +14,19 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import AdminPanel from "@view/admin-panel/panel/AdminPanel";
+export const CARD_SX = {
+  bgcolor: "background.paper",
+  border: "1px solid",
+  borderColor: "divider",
+  borderRadius: 2,
+  p: 3,
+} as const;
 
-export default function Admin() {
-  return <AdminPanel />;
-}
+export const SECTION_LABEL_SX = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: "text.disabled",
+  textTransform: "uppercase" as const,
+  letterSpacing: 0.8,
+  mb: 2,
+} as const;

@@ -57,12 +57,15 @@ public function queryCCTopCards(int topN = 5) returns CCTopCardRow[]|error {
         select row;
 }
 
-# Query the full list of corporate cards ordered by spend.
+# Query the full list of corporate cards ordered by spend within the given date range.
 #
+# + year - Ending year
+# + month - Ending month
+# + monthRange - Window size in months (0 = all time)
 # + return - Card rows if the query succeeds, otherwise an error
-public function queryCCCardList() returns CCCardRow[]|error {
+public function queryCCCardList(int year, int month, int monthRange) returns CCCardRow[]|error {
     stream<CCCardRow, sql:Error?> resultStream =
-        expenseDbClient->query(getCCCardListQuery(), CCCardRow);
+        expenseDbClient->query(getCCCardListQuery(year, month, monthRange), CCCardRow);
     return check from CCCardRow row in resultStream
         select row;
 }
